@@ -1161,201 +1161,79 @@ selp(1)
 function wxInitIntro()
 	local vp=(workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize) or Vector2.new(800,360)
 	local W2,H2=vp.X,vp.Y
-	local hh=math.min(W2*0.1547,H2*0.085)
-	local th=0.20*hh
-	local cx,cy=W2/2,H2*0.4
-	local wA=(1.38+0.07+0.98)*hh
-	local wB=(3*0.62+2*0.07)*hh
-	local wD=hh
-	local bw,bh=math.min(236,W2*0.62),56
-	local bx,by=cx,cy+0.5*hh+56+bh/2
-	local TI,T_BTN,WIPE=4.2,5.0,1.5
-	local cl=function(v,a,b) a=a or 0 b=b or 1 if v<a then return a elseif v>b then return b end return v end
-	local eO3=function(u) return 1-(1-u)^3 end
-	local eI3=function(u) return u*u*u end
-	local eB=function(u) return 1+3.2*(u-1)^3+2.2*(u-1)^2 end
-	local sg=B("ScreenGui",{Name="wx_Intro",IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=2000,Parent=LP.PlayerGui})
-	local root=B("Frame",{Size=UDim2.fromScale(1,1),BackgroundColor3=Color3.fromRGB(8,9,14),BorderSizePixel=0,Parent=sg})
-	local sceneRoot=B("Frame",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Parent=root})
-	local bgLayer=B("Frame",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Parent=sceneRoot})
-	local bgCol=Color3.fromRGB(150,180,255)
-	local strips={}
 	local rnd=Random.new()
-	for i=1,16 do
-		local depth=0.45+rnd:NextNumber()*1.05
-		local pick=rnd:NextNumber()
-		local ang
-		if pick<0.42 then ang=0 elseif pick<0.72 then ang=math.pi/2 elseif pick<0.86 then ang=math.pi/4 else ang=-math.pi/4 end
-		local n=rnd:NextInteger(5,16)
-		local s=math.max(9,math.floor(20*depth))
-		local gap=s*1.35
-		local ux,uy=math.cos(ang),math.sin(ang)
-		local spd=(50+rnd:NextNumber()*150)*depth
-		if rnd:NextNumber()<0.5 then spd=-spd end
-		local g=B("Frame",{Size=UDim2.fromOffset(0,0),BackgroundTransparency=1,Parent=bgLayer})
-		local op=0.10+0.18*depth
-		for k=0,n-1 do
-			B("TextLabel",{Position=UDim2.fromOffset(math.floor(k*ux*gap),math.floor(k*uy*gap)),Size=UDim2.fromOffset(s,s),BackgroundTransparency=1,Text="L",Font=Enum.Font.Code,TextSize=math.floor(s*1.15),TextColor3=bgCol,TextTransparency=1-op,Rotation=(k%2==1) and 180 or 0,Parent=g})
-		end
-		local us=Instance.new("UIScale") us.Scale=depth us.Parent=g
-		local sx=rnd:NextNumber(-0.15,1.0)*W2
-		local sy=rnd:NextNumber(-0.15,1.0)*H2
-		g.Position=UDim2.fromOffset(math.floor(sx),math.floor(sy))
-		strips[i]={g=g,ux=ux,uy=uy,spd=spd,len=n*gap*depth,x=sx,y=sy}
+	local sg=B("ScreenGui",{Name="wx_Intro",IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=2000,Parent=LP.PlayerGui})
+	local root=B("Frame",{Size=UDim2.fromScale(1,1),BackgroundColor3=Color3.fromRGB(6,7,10),BorderSizePixel=0,Parent=sg})
+	local cx,cy=W2/2,H2*0.46
+	local dots={}
+	for i=1,110 do
+		local d=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),Size=UDim2.fromOffset(2,2),BackgroundColor3=Color3.fromRGB(150,190,255),BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(rnd:NextInteger(0,W2),rnd:NextInteger(0,H2)),Parent=root}) R(d,0.5)
+		dots[i]={f=d,ph=rnd:NextNumber(0,6.283),sp=rnd:NextNumber(0.6,1.8)}
 	end
-	local function makeSet(w,fn)
-		local holder=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromOffset(cx,cy),Size=UDim2.fromOffset(w,hh),BackgroundTransparency=1,ZIndex=5,Parent=sceneRoot})
-		local us=Instance.new("UIScale") us.Scale=1 us.Parent=holder
-		local segs={}
-		local function seg(x1,y1,x2,y2,ww)
-			local dx,dy=x2-x1,y2-y1
-			local len=math.sqrt(dx*dx+dy*dy)
-			local mid=cl((y1+y2)/2/hh,0,1)
-			local col=Color3.new(1-0.294*mid,1-0.224*mid,1)
-			local f=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromOffset((x1+x2)/2,(y1+y2)/2),Size=UDim2.fromOffset(len,ww),Rotation=math.deg(math.atan2(dy,dx)),BackgroundColor3=col,BorderSizePixel=0,ZIndex=5,BackgroundTransparency=1,Parent=holder}) R(f,ww/2)
-			segs[#segs+1]=f
+	local line=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromOffset(cx,cy),Size=UDim2.fromOffset(0,1),BackgroundColor3=Color3.fromRGB(160,200,255),BackgroundTransparency=1,BorderSizePixel=0,Parent=root})
+	local tag=B("TextLabel",{AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromOffset(cx,cy),Size=UDim2.fromOffset(W2-40,44),BackgroundTransparency=1,Text="WX—LLLLLLLL",Font=Enum.Font.GothamBold,TextSize=math.floor(math.min(W2*0.085,30)),TextColor3=W,TextTransparency=1,TextStrokeTransparency=1,TextStrokeColor3=Color3.fromRGB(0,0,0),ZIndex=5,Parent=root})
+	local bw,bh=118,42
+	local by=cy-48
+	local btn=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromOffset(cx,by),Size=UDim2.fromOffset(bw,bh),BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=1,ClipsDescendants=true,ZIndex=7,Visible=false,Parent=root}) R(btn,8)
+	local bst=Instance.new("UIStroke") bst.Color=W bst.Thickness=1.4 bst.Transparency=1 bst.Parent=btn
+	local blbl=B("TextLabel",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="访问",Font=Enum.Font.GothamBold,TextSize=15,TextColor3=W,TextTransparency=1,ZIndex=8,Parent=btn})
+	local bhit=B("TextButton",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="",AutoButtonColor=false,ZIndex=9,Parent=btn})
+	local flash=B("Frame",{Size=UDim2.fromScale(1,1),BackgroundColor3=W,BackgroundTransparency=1,BorderSizePixel=0,ZIndex=10,Parent=btn})
+	local done=false local conn=nil local breath=nil
+	local function dissolve()
+		for i=1,60 do
+			local p=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromOffset(cx,by),Size=UDim2.fromOffset(rnd:NextInteger(2,5),rnd:NextInteger(2,5)),BackgroundColor3=(i%3==0 and Color3.fromRGB(150,190,255) or W),BackgroundTransparency=0,BorderSizePixel=0,ZIndex=12,Parent=root}) R(p,0.5)
+			local ang=rnd:NextNumber(0,6.283)
+			local dist=rnd:NextNumber(120,420)
+			local tx=cx+math.cos(ang)*dist
+			local ty=by+math.sin(ang)*dist
+			TS:Create(p,TweenInfo.new(rnd:NextNumber(0.7,1.1),Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Position=UDim2.fromOffset(tx,ty),BackgroundTransparency=1,Size=UDim2.fromOffset(1,1)}):Play()
+			task.delay(1.3,function() if p and p.Parent then p:Destroy() end end)
 		end
-		fn(seg)
-		return holder,us,segs
-	end
-	local wW=1.38*hh
-	local gA,scA,segsA=makeSet(wA,function(seg)
-		local v1,v2,m,yt=0.26*wW,0.74*wW,0.5*wW,0.22*hh
-		seg(0,0,v1,hh,1.3*th) seg(v1,hh,m,yt,1.3*th) seg(m,yt,v2,hh,1.3*th) seg(v2,hh,wW,0,1.3*th)
-		local ox=wW+0.07*hh
-		seg(ox,0,ox+0.98*hh,hh,1.2*th) seg(ox+0.98*hh,0,ox,hh,1.2*th)
-	end)
-	local gB,scB,segsB=makeSet(wB,function(seg)
-		for i=0,2 do
-			local ox=i*(0.62+0.07)*hh
-			seg(ox,0,ox,hh,th) seg(ox,hh-0.5*th,ox+0.62*hh,hh-0.5*th,th)
-		end
-	end)
-	local dash=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromOffset(cx,cy),Size=UDim2.fromOffset(0,math.floor(0.125*hh)),BackgroundColor3=Color3.fromRGB(228,235,255),BackgroundTransparency=1,ZIndex=6,Parent=sceneRoot}) R(dash,4)
-	local ring=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromOffset(cx,cy),Size=UDim2.fromOffset(0,0),BackgroundTransparency=1,ZIndex=7,Parent=sceneRoot}) R(ring,0.5)
-	local ringS=Instance.new("UIStroke") ringS.Color=Color3.fromRGB(160,200,255) ringS.Thickness=2 ringS.Transparency=1 ringS.Parent=ring
-	local flash=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromOffset(cx,cy),Size=UDim2.fromOffset(0,0),BackgroundColor3=Color3.fromRGB(200,220,255),BackgroundTransparency=1,ZIndex=8,Parent=sceneRoot}) R(flash,0.5)
-	local parts={} local pPool={}
-	for i=1,80 do
-		pPool[i]=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),Size=UDim2.fromOffset(2,2),BackgroundColor3=W,BorderSizePixel=0,Visible=false,ZIndex=7,Parent=sceneRoot})
-	end
-	local pcol={Color3.new(1,1,1),Color3.fromRGB(150,199,255),Color3.fromRGB(120,161,255),Color3.fromRGB(199,171,255),Color3.fromRGB(255,214,150)}
-		local function boom()
-		for i=1,80 do
-			local a=math.random()*6.283
-			local v=60+math.random()^2*900
-			parts[#parts+1]={f=pPool[i],x=cx+(math.random()-0.5)*8,y=cy+(math.random()-0.5)*hh*0.9,vx=math.cos(a)*v*1.2,vy=math.sin(a)*v*0.8,l=0.7+math.random()*1.1,age=0,w=1+math.random()*2.6,c=pcol[math.random(5)]}
-			pPool[i].Visible=true
-		end
-	end
-	local btn=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromOffset(bx,by),Size=UDim2.fromOffset(bw,bh),BackgroundColor3=Color3.fromRGB(236,250,252),BackgroundTransparency=1,ClipsDescendants=true,ZIndex=20,Visible=false,Parent=root}) R(btn,bh/2)
-	local bst=Instance.new("UIStroke") bst.Color=Color3.fromRGB(255,255,255) bst.Thickness=1.2 bst.Transparency=1 bst.Parent=btn
-	local bgr=Instance.new("UIGradient") bgr.Rotation=105
-	bgr.Color=ColorSequence.new{ColorSequenceKeypoint.new(0,Color3.fromRGB(255,255,255)),ColorSequenceKeypoint.new(0.45,Color3.fromRGB(200,244,248)),ColorSequenceKeypoint.new(1,Color3.fromRGB(130,206,222))}
-	bgr.Transparency=NumberSequence.new{NumberSequenceKeypoint.new(0,0.35),NumberSequenceKeypoint.new(0.5,0.55),NumberSequenceKeypoint.new(1,0.3)}
-	bgr.Parent=btn
-	local blbl=B("TextLabel",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="访问",Font=Enum.Font.GothamBold,TextSize=20,TextColor3=Color3.fromRGB(18,20,26),TextTransparency=1,ZIndex=21,Parent=btn})
-	local bhit=B("TextButton",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="",AutoButtonColor=false,ZIndex=22,Parent=btn})
-	local wipe=B("Frame",{Size=UDim2.fromScale(1,1),BackgroundColor3=Color3.fromRGB(8,9,14),BackgroundTransparency=0,BorderSizePixel=0,ZIndex=500,Visible=false,Parent=root})
-	local wgr=Instance.new("UIGradient") wgr.Rotation=135
-	wgr.Transparency=NumberSequence.new{NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.42,1),NumberSequenceKeypoint.new(0.52,0),NumberSequenceKeypoint.new(1,0)}
-	wgr.Offset=Vector2.new(-1.4,0) wgr.Parent=wipe
-	local t=0 local fired=false local shown=false local exiting=false local finished=false
-	local conn
-	bhit.MouseButton1Click:Connect(function()
-		if not shown or exiting then return end
-		exiting=true
-		wipe.Visible=true
-		local tw=TS:Create(wgr,TweenInfo.new(WIPE,Enum.EasingStyle.Quad,Enum.EasingDirection.InOut),{Offset=Vector2.new(1.4,0)})
-		tw:Play()
-		tw.Completed:Connect(function()
-			finished=true
+		TS:Create(tag,TweenInfo.new(0.8),{TextTransparency=1,TextStrokeTransparency=1}):Play()
+		TS:Create(blbl,TweenInfo.new(0.7),{TextTransparency=1}):Play()
+		TS:Create(btn,TweenInfo.new(0.8),{BackgroundTransparency=1}):Play()
+		TS:Create(bst,TweenInfo.new(0.8),{Transparency=1}):Play()
+		task.delay(1.35,function()
+			if breath then breath:Disconnect() breath=nil end
+			if conn then conn:Disconnect() conn=nil end
 			if sg then sg:Destroy() end
-			pn.Visible=true icon.Visible=false
+			powerState(true)
 		end)
+	end
+	local function showBtn()
+		btn.Visible=true
+		TS:Create(btn,TweenInfo.new(1.1,Enum.EasingStyle.Quad),{BackgroundTransparency=0.05}):Play()
+		TS:Create(bst,TweenInfo.new(1.1,Enum.EasingStyle.Quad),{Transparency=0}):Play()
+		TS:Create(blbl,TweenInfo.new(1.1,Enum.EasingStyle.Quad),{TextTransparency=0}):Play()
+		breath=RS.Heartbeat:Connect(function()
+			if done then return end
+			bst.Transparency=0.28+math.sin(os.clock()*3)*0.22
+		end)
+	end
+	bhit.MouseButton1Click:Connect(function()
+		if done then return end
+		done=true
+		flash.BackgroundTransparency=0
+		TS:Create(flash,TweenInfo.new(0.22),{BackgroundTransparency=1}):Play()
+		task.delay(0.12,function() dissolve() end)
 	end)
-	conn=RS.RenderStepped:Connect(function(dt)
-		if finished then if conn then conn:Disconnect() conn=nil end return end
-		local d=math.min(dt,0.05)
-		t=t+d
-		if t>=TI and not fired then fired=true boom() end
-		local post=t-TI
-		for i=1,#strips do
-			local o=strips[i]
-			o.x=o.x+o.ux*o.spd*d
-			o.y=o.y+o.uy*o.spd*d
-			local pad=160
-			if o.x<-o.len-pad then o.x=W2+pad elseif o.x>W2+pad then o.x=-o.len-pad end
-			if o.y<-o.len-pad then o.y=H2+pad elseif o.y>H2+pad then o.y=-o.len-pad end
-			o.g.Position=UDim2.fromOffset(math.floor(o.x),math.floor(o.y))
+	local t0=os.clock()
+	conn=RS.RenderStepped:Connect(function()
+		local tt=os.clock()-t0
+		for i=1,#dots do
+			local o=dots[i]
+			o.f.BackgroundTransparency=0.55+math.sin(tt*o.sp+o.ph)*0.35
 		end
-		local ra=eO3(cl((t-2.75)/0.8))
-		local a1,b1=W2*0.26-W2*0.045*ra,W2*0.74+W2*0.045*ra
-		local ac,bc=cx-wA/2,cx+wB/2
-		local af,bf=ac-wD/2,bc+wD/2
-		local u=cl((t-3.75)/0.45)
-		local A2,B2=a1,b1
-		if post>=0 then
-			local v=eB(cl(post/0.6))
-			A2,B2=ac+(af-ac)*v,bc+(bf-bc)*v
-		elseif t>=3.75 then
-			A2,B2=a1+(ac-a1)*eI3(u),b1+(bc-b1)*eI3(u)
-		end
-		local al=eO3(cl((t-0.35)/2.2))
-		local sc=(0.92+0.08*al)*(1+0.14*math.exp(-math.max(0,post)*6))
-		local tilt=0.07*ra*(1-cl((t-3.75)/0.15))
-		gA.Position=UDim2.fromOffset(A2,cy) gB.Position=UDim2.fromOffset(B2,cy)
-		scA.Scale=sc scB.Scale=sc
-		gA.Rotation=math.deg(-tilt) gB.Rotation=math.deg(tilt)
-		for i=1,#segsA do segsA[i].BackgroundTransparency=1-al end
-		for i=1,#segsB do segsB[i].BackgroundTransparency=1-al end
-		if post>0 then
-			local sh=10*math.exp(-post*9)
-			sceneRoot.Position=UDim2.fromOffset(math.floor((math.random()-0.5)*sh*2),math.floor((math.random()-0.5)*sh*2))
-		else sceneRoot.Position=UDim2.fromOffset(0,0) end
-		if post>0 then
-			local dv=eO3(cl(post/0.35))
-			dash.Size=UDim2.fromOffset(math.floor(wD*0.86*dv),math.floor(0.125*hh))
-			dash.BackgroundTransparency=1-al
-		else dash.Size=UDim2.fromOffset(0,math.floor(0.125*hh)) end
-		for i=#parts,1,-1 do
-			local p=parts[i]
-			p.age=p.age+d
-			if p.age>=p.l then p.f.Visible=false table.remove(parts,i)
-			else
-				local k=math.exp(-1.7*d)
-				p.vx=p.vx*k p.vy=p.vy*k+170*d
-				p.x=p.x+p.vx*d p.y=p.y+p.vy*d
-				local a=1-p.age/p.l
-				p.f.Position=UDim2.fromOffset(math.floor(p.x),math.floor(p.y))
-				p.f.Size=UDim2.fromOffset(math.floor(p.w*2),math.floor(p.w*2))
-				p.f.BackgroundColor3=p.c
-				p.f.BackgroundTransparency=1-a^1.6
-			end
-		end
-		if post>0 then
-			local ra2=math.exp(-post*4.5)
-			if ra2>0.02 then
-				local r=post*1100
-				ring.Size=UDim2.fromOffset(math.floor(r*2),math.floor(r*2))
-				ringS.Transparency=1-ra2*0.8
-				ringS.Thickness=2+10*ra2
-			else ringS.Transparency=1 end
-			local fa=0.6*math.exp(-post*7)
-			if fa>0.01 then
-				local r2=math.max(W2,H2)*0.7
-				flash.Size=UDim2.fromOffset(math.floor(r2*2),math.floor(r2*2))
-				flash.BackgroundTransparency=1-fa
-			else flash.BackgroundTransparency=1 end
-		end
-		if t>=T_BTN and not shown then shown=true btn.Visible=true end
-		if shown then
-			local k=cl((t-T_BTN)/0.9)
-			local a=eO3(k)
-			btn.BackgroundTransparency=1-a*0.7
-			bst.Transparency=1-a*0.75
-			blbl.TextTransparency=1-a
-			btn.Position=UDim2.fromOffset(bx,by+18*(1-a))
+		local la=math.clamp((tt-0.2)/1.2,0,1)
+		line.Size=UDim2.fromOffset(math.floor(W2*0.5*la),1)
+		line.BackgroundTransparency=1-la*0.7
+		local a=math.clamp((tt-0.6)/1.5,0,1)
+		tag.TextTransparency=1-a
+		tag.TextStrokeTransparency=1-a*0.7
+		if tt>1.5 and not btn.Visible and not done then
+			if conn then conn:Disconnect() conn=nil end
+			showBtn()
 		end
 	end)
 end
