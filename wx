@@ -1,6 +1,13 @@
 local P=game:GetService("Players") local RS=game:GetService("RunService") local UI=game:GetService("UserInputService") local TS=game:GetService("TweenService") local LP=P.LocalPlayer
 local PG0=LP:WaitForChild("PlayerGui")
 for _,g in ipairs(PG0:GetChildren()) do if g:IsA("ScreenGui") and string.sub(g.Name,1,3)=="wx_" then g:Destroy() end end
+local function safeParent()
+	local ok,h=pcall(function() return gethui() end)
+	if ok and typeof(h)=="Instance" then return h end
+	local ok2,c=pcall(function() return game:GetService("CoreGui") end)
+	if ok2 and typeof(c)=="Instance" then return c end
+	return LP.PlayerGui
+end
 local function B(c,p) local o=Instance.new(c) for k,v in pairs(p) do if k~="Parent" then o[k]=v end end if p.Parent then o.Parent=p.Parent end return o end
 local function R(o,r) local u=Instance.new("UICorner") u.CornerRadius=(r>1) and UDim.new(0,r) or UDim.new(r,0) u.Parent=o end
 local function SK(o,c,t) local s=Instance.new("UIStroke") s.Color=c s.Thickness=1 s.Transparency=t or 0 s.Parent=o return s end
@@ -9,8 +16,8 @@ local C={bg=Color3.fromRGB(12,12,14),row=Color3.fromRGB(28,28,32),off=Color3.fro
 local S={SpOn=false,SpV=50,JpOn=false,JpInf=false,JpH=50,FlOn=false,FlV=35,FlMd="物理",NcOn=false,ESMax=5000,TrPos="顶部",AiOn=false,AiTeam=true,AiVis=true,AiWall=false,AiMiss=false,AiAcc=100,AiType="玩家",AiPart="Head",AiPrio="准星最近",AiMax=500,SilentMode="Raycast",AiSilent=true,FovOn=true,FovR=55,FovFixed=true,ShowT=true,TgtC={Col=Color3.fromRGB(60,90,255),Rain=false},RainOn=false,RainSpd=1,InfoStyle="独立面板",ShowName=true,ShowHp=true,ShowDist=true,ShowType=true,AiHl=false,ArR=0,BoxMd="2D",HlC={Col=W,Rain=false},HlRain=false,DmgOn=false,HitSnd="关闭",TLine=false,TrC={Col=YEL,Rain=false},Lock="无",NameHunt=false,NameInput="",SecOn=false,AutoOn=false,IRange=false,IVal=20,NpcOn=false,NpcHl=false,NpcBx=false,NpcNm=false,NpcHp=false,NpcDs=false,NV=false,LPlOn=false,NoFog=false,NoShake=false,FC=false,FCSpd=1,ESPInt=false,GravOn=false,GravV=196.2,InvisOn=false}
 -- [反检测伪装层参数]
 S.SafeOn   = S.SafeOn==nil and true or S.SafeOn   -- 伪装总开关
-S.SafeSpd  = S.SafeSpd  or 24                     -- 移动伪装速度上限
-S.SafeFlV  = S.SafeFlV  or 22                     -- 飞行水平伪装上限
+S.SafeSpd  = S.SafeSpd  or 20                     -- 移动伪装速度上限
+S.SafeFlV  = S.SafeFlV  or 18                     -- 飞行水平伪装上限
 S.SafeFlVv = S.SafeFlVv or 12                     -- 飞行垂直伪装上限
 S.SafeJump = S.SafeJump or 24                     -- 跳跃初速上限
 S.LandInt  = S.LandInt  or 1.1                    -- 落地节拍间隔(秒)
@@ -265,7 +272,7 @@ function invisSet(v)
 end
 local EIT={{"Nm","名称"},{"Ds","距离"},{"Bx","方框"},{"Hp","血量"},{"Tr","射线"},{"Ar","箭头"},{"Hl","高亮"}}
 local ES={} for _,t in ipairs(EIT) do ES[t[1]]={On=false,Rain=false,Col=W} end
-local LG=B("ScreenGui",{Name="wx_ESP",ResetOnSpawn=false,IgnoreGuiInset=true,DisplayOrder=998,Parent=LP.PlayerGui})
+local LG=B("ScreenGui",{Name="wx_ESP_"..tostring(math.random(100000,999999)),ResetOnSpawn=false,IgnoreGuiInset=true,DisplayOrder=998,Parent=safeParent()})
 local DD={} local Q={}
 local function gc(c) if c.Rain then return Color3.fromHSV(hue,1,1) end return c.Col end
 local function drop(p) local d=DD[p] if not d then return end for _,o in ipairs(d.o) do pcall(function() o:Destroy() end) end DD[p]=nil end
@@ -361,7 +368,7 @@ local function esp()
 		if not p.Parent or not ch or ch~=d.ch then drop(p) end
 	end
 end
-local AG=B("ScreenGui",{Name="wx_Aim",ResetOnSpawn=false,IgnoreGuiInset=true,DisplayOrder=997,Parent=LP.PlayerGui})
+local AG=B("ScreenGui",{Name="wx_Aim_"..tostring(math.random(100000,999999)),ResetOnSpawn=false,IgnoreGuiInset=true,DisplayOrder=997,Parent=safeParent()})
 local fov=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),BackgroundTransparency=1,Visible=false,Parent=AG}) R(fov,0.5)
 local fs=Instance.new("UIStroke") fs.Thickness=1.5 fs.Color=S.TgtC.Col fs.Parent=fov
 local tline=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),BorderSizePixel=0,Visible=false,Parent=AG})
@@ -432,7 +439,7 @@ local function as(dt)
 	if S.InfoStyle=="名称头顶" then
 		inf.Visible=false
 		if not hdB then
-			hdB=B("BillboardGui",{Size=UDim2.fromOffset(170,32),AlwaysOnTop=true,Enabled=false,Parent=LP.PlayerGui})
+			hdB=B("BillboardGui",{Size=UDim2.fromOffset(170,32),AlwaysOnTop=true,Enabled=false,Parent=safeParent()})
 			hdT1=B("TextLabel",{Size=UDim2.new(1,0,0,15),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=9,TextStrokeTransparency=0.4,Parent=hdB})
 			hdT2=B("TextLabel",{Size=UDim2.new(1,0,0,13),Position=UDim2.fromOffset(0,15),BackgroundTransparency=1,Font=Enum.Font.GothamMedium,TextSize=8,TextColor3=YEL,TextStrokeTransparency=0.4,Parent=hdB})
 		end
@@ -462,7 +469,7 @@ local function as(dt)
 	else tline.Visible=false end
 	if S.AiHl then
 		if not aimBB then
-			aimBB=B("BillboardGui",{Size=UDim2.fromOffset(90,20),AlwaysOnTop=true,Enabled=false,Parent=LP.PlayerGui})
+			aimBB=B("BillboardGui",{Size=UDim2.fromOffset(90,20),AlwaysOnTop=true,Enabled=false,Parent=safeParent()})
 			aimTG=B("TextLabel",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="目标",Font=Enum.Font.GothamBold,TextSize=12,TextColor3=W,TextStrokeTransparency=0.2,Parent=aimBB})
 		end
 		aimBB.Adornee=best.ch:FindFirstChild("Head") or part
@@ -504,10 +511,11 @@ local function hookSilent()
 	end)
 end
                            NESP=nil
-pcall(function()
-	local ok,lib=pcall(function()
-		return loadstring(game:HttpGet("https://raw.githubusercontent.com/Unwalker1337/SwagModeESPlibrary/main/init.lua?t="..tostring(os.time())))()
-	end)
+task.delay(3,function()
+	pcall(function()
+		local ok,lib=pcall(function()
+			return loadstring(game:HttpGet("https://raw.githubusercontent.com/Unwalker1337/SwagModeESPlibrary/main/init.lua?t="..tostring(os.time())))()
+		end)
 	if not ok or not lib then return end
 	local e=lib.new({
 		TeamCheck=false,
@@ -526,6 +534,7 @@ pcall(function()
 	})
 	e:Start()
 	NESP=e
+	end)
 end)
 function nespApply()
 	if not NESP then return end
@@ -549,7 +558,7 @@ function nespApply()
 end
 nespApply()
 
-local NG=B("ScreenGui",{Name="wx_NPC",ResetOnSpawn=false,IgnoreGuiInset=true,DisplayOrder=998,Parent=LP.PlayerGui})
+local NG=B("ScreenGui",{Name="wx_NPC_"..tostring(math.random(100000,999999)),ResetOnSpawn=false,IgnoreGuiInset=true,DisplayOrder=998,Parent=safeParent()})
 local ND={} local nt=0
 local function npcDrop(m) local d=ND[m] if not d then return end for _,o in ipairs(d.o) do pcall(function() o:Destroy() end) end ND[m]=nil end
 local function npcMk(m)
@@ -640,7 +649,7 @@ local function ipRefresh()
 				local nm=d.ObjectText
 				if nm=="" then nm=d.ActionText end
 				if nm=="" then nm=par.Name end
-				local bb=B("BillboardGui",{Size=UDim2.fromOffset(160,30),StudsOffsetWorldSpace=Vector3.new(0,1.6,0),AlwaysOnTop=true,Adornee=par,Parent=LP.PlayerGui})
+				local bb=B("BillboardGui",{Size=UDim2.fromOffset(160,30),StudsOffsetWorldSpace=Vector3.new(0,1.6,0),AlwaysOnTop=true,Adornee=par,Parent=safeParent()})
 				B("TextLabel",{Size=UDim2.new(1,0,0,15),BackgroundTransparency=1,Text=nm,Font=Enum.Font.GothamBold,TextSize=10,TextColor3=Color3.fromRGB(0,255,120),TextStrokeTransparency=0.35,Parent=bb})
 				B("TextLabel",{Size=UDim2.new(1,0,0,13),Position=UDim2.fromOffset(0,15),BackgroundTransparency=1,Text=(d.ActionText~="" and d.ActionText or "互动"),Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=Color3.fromRGB(150,255,185),TextStrokeTransparency=0.45,Parent=bb})
 				IPG[#IPG+1]=bb
@@ -699,7 +708,7 @@ local function lpTick()
 end
       function wxInitFC()
 	local FC={on=false,yaw=0,pitch=0,mx=0,my=0,vy=0,stid=nil,lid=nil,ow=nil,oj=nil}
-	local FCG=B("ScreenGui",{Name="wx_FC",ResetOnSpawn=false,IgnoreGuiInset=true,DisplayOrder=996,Enabled=false,Parent=LP.PlayerGui})
+	local FCG=B("ScreenGui",{Name="wx_FC_"..tostring(math.random(100000,999999)),ResetOnSpawn=false,IgnoreGuiInset=true,DisplayOrder=996,Enabled=false,Parent=safeParent()})
 	local fst=B("Frame",{AnchorPoint=Vector2.new(0,1),Position=UDim2.new(0,64,1,-110),Size=UDim2.fromOffset(138,138),BackgroundColor3=Color3.fromRGB(10,10,14),BackgroundTransparency=0.55,BorderSizePixel=0,ZIndex=20,Parent=FCG}) R(fst,0.5) SK(fst,Color3.fromRGB(210,235,255),0.5)
 	local fin=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),Size=UDim2.fromOffset(74,74),BackgroundTransparency=1,ZIndex=21,Parent=fst}) R(fin,0.5) SK(fin,Color3.fromRGB(150,242,238),0.75)
 	B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),Size=UDim2.fromOffset(1,18),BackgroundColor3=W,BackgroundTransparency=0.55,BorderSizePixel=0,ZIndex=21,Parent=fst})
@@ -780,14 +789,14 @@ end
 end
 wxInitFC()
 local Stats=game:GetService("Stats")
-local HUD=B("ScreenGui",{Name="wx_HUD",IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=998,Parent=LP.PlayerGui})
+local HUD=B("ScreenGui",{Name="wx_HUD_"..tostring(math.random(100000,999999)),IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=998,Parent=safeParent()})
 local hf=B("Frame",{AnchorPoint=Vector2.new(0,1),Position=UDim2.new(0,12,1,-12),BackgroundTransparency=1,Size=UDim2.fromOffset(0,0),AutomaticSize=Enum.AutomaticSize.Y,Parent=HUD})
 B("UIListLayout",{FillDirection=Enum.FillDirection.Vertical,Padding=UDim.new(0,2),SortOrder=Enum.SortOrder.LayoutOrder,Parent=hf})
 local lH=B("TextLabel",{Size=UDim2.fromOffset(0,14),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=10,TextColor3=Color3.fromRGB(120,255,150),TextStrokeTransparency=0.35,AutomaticSize=Enum.AutomaticSize.X,Text="HP：100",LayoutOrder=1,Parent=hf})
 local lF=B("TextLabel",{Size=UDim2.fromOffset(0,14),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=10,TextColor3=W,TextStrokeTransparency=0.35,AutomaticSize=Enum.AutomaticSize.X,Text="FPS：0",LayoutOrder=2,Parent=hf})
 local lP=B("TextLabel",{Size=UDim2.fromOffset(0,14),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=10,TextColor3=W,TextStrokeTransparency=0.35,AutomaticSize=Enum.AutomaticSize.X,Text="ping：0",LayoutOrder=3,Parent=hf})
 local fsm=60 local hudT=0
-local gui=B("ScreenGui",{Name="wx_Menu",ResetOnSpawn=false,IgnoreGuiInset=true,DisplayOrder=999,Parent=LP.PlayerGui})
+local gui=B("ScreenGui",{Name="wx_Menu_"..tostring(math.random(100000,999999)),ResetOnSpawn=false,IgnoreGuiInset=true,DisplayOrder=999,Parent=safeParent()})
 local vp0=(workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize) or Vector2.new(800,360)
 local PW=340 local PH=250
 local BGID=""
@@ -928,7 +937,7 @@ function wxInitFX()
 		local cam=workspace.CurrentCamera
 		local vp=cam and cam.ViewportSize or Vector2.new(1280,720)
 		local cx,cy=math.floor(vp.X/2),math.floor(vp.Y/2)
-		local sg=B("ScreenGui",{Name="wx_Glitch",IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=3000,Parent=LP.PlayerGui})
+		local sg=B("ScreenGui",{Name="wx_Glitch_"..tostring(math.random(100000,999999)),IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=3000,Parent=safeParent()})
 		local function icon9()
 			local r=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),BackgroundTransparency=1,Size=UDim2.fromOffset(0,0)})
 			local L=72 local h=L*0.866
@@ -1307,7 +1316,7 @@ selp(1)
 		local ax,ay=max(qx,0),max(qy,0)
 		return sqrt(ax*ax+ay*ay)+min(max(qx,qy),0)-r
 	end
-	local sg=B("ScreenGui",{Name="wx_Intro",IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=2000,Parent=LP.PlayerGui})
+	local sg=B("ScreenGui",{Name="wx_Intro_"..tostring(math.random(100000,999999)),IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=2000,Parent=safeParent()})
 	local bgBG=Drawing.new("Square")
 	bgBG.Filled=true bgBG.Thickness=0 bgBG.Size=Vector2.new(vp.X+4,vp.Y+4) bgBG.Position=Vector2.new(-2,-2)
 	bgBG.Color=Color3.new(0,0,0) bgBG.Transparency=0 bgBG.Visible=true
