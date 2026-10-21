@@ -7,6 +7,13 @@ local function SK(o,c,t) local s=Instance.new("UIStroke") s.Color=c s.Thickness=
 local W=Color3.new(1,1,1) local YEL=Color3.fromRGB(255,220,40) local dead=false local hue=0
 local C={bg=Color3.fromRGB(12,12,14),row=Color3.fromRGB(28,28,32),off=Color3.fromRGB(58,58,66),accent=Color3.fromRGB(0,200,255),txt=Color3.fromRGB(235,235,235),dim=Color3.fromRGB(140,140,145)}
 local S={SpOn=false,SpV=50,JpOn=false,JpInf=false,JpH=50,FlOn=false,FlV=35,FlMd="物理",NcOn=false,ESMax=5000,TrPos="顶部",AiOn=false,AiTeam=true,AiVis=true,AiWall=false,AiMiss=false,AiAcc=100,AiType="玩家",AiPart="Head",AiPrio="准星最近",AiMax=500,SilentMode="Raycast",AiSilent=true,FovOn=true,FovR=55,FovFixed=true,ShowT=true,TgtC={Col=Color3.fromRGB(60,90,255),Rain=false},RainOn=false,RainSpd=1,InfoStyle="独立面板",ShowName=true,ShowHp=true,ShowDist=true,ShowType=true,AiHl=false,ArR=0,BoxMd="2D",HlC={Col=W,Rain=false},HlRain=false,DmgOn=false,HitSnd="关闭",TLine=false,TrC={Col=YEL,Rain=false},Lock="无",NameHunt=false,NameInput="",SecOn=false,AutoOn=false,IRange=false,IVal=20,NpcOn=false,NpcHl=false,NpcBx=false,NpcNm=false,NpcHp=false,NpcDs=false,NV=false,LPlOn=false,NoFog=false,NoShake=false,FC=false,FCSpd=1,ESPInt=false,GravOn=false,GravV=196.2,InvisOn=false}
+-- [反检测伪装层参数]
+S.SafeOn   = S.SafeOn==nil and true or S.SafeOn   -- 伪装总开关
+S.SafeSpd  = S.SafeSpd  or 24                     -- 移动伪装速度上限
+S.SafeFlV  = S.SafeFlV  or 22                     -- 飞行水平伪装上限
+S.SafeFlVv = S.SafeFlVv or 12                     -- 飞行垂直伪装上限
+S.SafeJump = S.SafeJump or 24                     -- 跳跃初速上限
+S.LandInt  = S.LandInt  or 1.1                    -- 落地节拍间隔(秒)
 local RT={cm={}} local aimPart=nil local PC=nil local SS=game:GetService("SoundService") local NL={} local HL={} local dmgT=0
 pcall(function() PC=require(LP.PlayerScripts:WaitForChild("PlayerModule",3)):GetControls() end)
 local function chr() local ch=LP.Character if not ch then return end local h=ch:FindFirstChildOfClass("Humanoid") local r=ch:FindFirstChild("HumanoidRootPart") or ch:FindFirstChild("Torso") if h and r then return ch,h,r end end
@@ -14,20 +21,40 @@ local function mv() if PC then local ok,v=pcall(function() return PC:GetMoveVect
 local function vv() if UI:IsKeyDown(Enum.KeyCode.Space) then return 1 end if UI:IsKeyDown(Enum.KeyCode.LeftControl) or UI:IsKeyDown(Enum.KeyCode.LeftShift) then return -1 end return 0 end
 local function walk()
 	if RT.wc then RT.wc:Disconnect() RT.wc=nil end
-	if RT.spd then pcall(function() RT.spd:Destroy() end) RT.spd=nil end
+	if RT.spd then RT.spd:Disconnect() RT.spd=nil end
 	if RT.satt then pcall(function() RT.satt:Destroy() end) RT.satt=nil end
 	local _,h=chr()
 	if not h then return end
 	if RT.wc0==nil then RT.wc0=h.WalkSpeed end
+	local base=RT.wc0 or 16
 	if S.SpOn then
-		local v=tonumber(S.SpV) or 16
-		h.WalkSpeed=v
-		RT.wc=h:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-			local nv=tonumber(S.SpV) or 16
-			if math.abs(h.WalkSpeed-nv)>0.1 then h.WalkSpeed=nv end
-		end)
+		if S.SafeOn then
+			-- [反检测伪装] WalkSpeed 钉死合法值，实际移动用帧步进
+			h.WalkSpeed=base
+			RT.spd=RS.RenderStepped:Connect(function()
+				local _,hh,rr=chr()
+				if not hh or not rr then return end
+				hh.WalkSpeed=base
+				local want=math.min(tonumber(S.SpV) or 50,S.SafeSpd)
+				local dir=Vector3.new(hh.MoveDirection.X,0,hh.MoveDirection.Z)
+				if dir.Magnitude<0.05 then local m=mv() dir=Vector3.new(m.X,0,m.Z) end
+				if dir.Magnitude>0.05 then
+					dir=dir.Unit
+					rr.CFrame=rr.CFrame+dir*(want/60)
+					local v=rr.AssemblyLinearVelocity
+					rr.AssemblyLinearVelocity=Vector3.new(0,v.Y,0)
+				end
+			end)
+		else
+			local v=tonumber(S.SpV) or 16
+			h.WalkSpeed=v
+			RT.wc=h:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+				local nv=tonumber(S.SpV) or 16
+				if math.abs(h.WalkSpeed-nv)>0.1 then h.WalkSpeed=nv end
+			end)
+		end
 	else
-		h.WalkSpeed=RT.wc0 or 16
+		h.WalkSpeed=base
 	end
 end
 local function jump()
@@ -37,8 +64,14 @@ local function jump()
 	if not h then return end
 	if RT.jp0==nil then RT.jp0=h.JumpPower RT.jh0=h.JumpHeight RT.ujp=h.UseJumpPower end
 	if S.JpOn then
-		h.UseJumpPower=true h.JumpPower=S.JpH
-		pcall(function() h.JumpHeight=S.JpH*0.5 end)
+		if S.SafeOn then
+			-- [反检测伪装] JumpPower 保持默认值，不暴露属性改动
+			h.UseJumpPower=RT.ujp h.JumpPower=RT.jp0
+			pcall(function() h.JumpHeight=RT.jh0 or 7.2 end)
+		else
+			h.UseJumpPower=true h.JumpPower=S.JpH
+			pcall(function() h.JumpHeight=S.JpH*0.5 end)
+		end
 	else
 		h.UseJumpPower=RT.ujp h.JumpPower=RT.jp0
 		pcall(function() h.JumpHeight=RT.jh0 or 7.2 end)
@@ -52,7 +85,9 @@ local function jump()
 			if not held then return end
 			local v=rr.AssemblyLinearVelocity
 			if v.Y>1 then return end
-			rr.AssemblyLinearVelocity=Vector3.new(v.X,(S.JpOn and S.JpH or (RT.jp0 or 50)),v.Z)
+			local jv=(S.JpOn and S.JpH or (RT.jp0 or 50))
+			if S.SafeOn then jv=math.min(jv,S.SafeJump) end -- [反检测伪装] 垂直初速限幅
+			rr.AssemblyLinearVelocity=Vector3.new(v.X,jv,v.Z)
 		end)
 	end
 end
@@ -62,6 +97,7 @@ local function nofly()
 	if RT.bv then pcall(function() RT.bv:Destroy() end) RT.bv=nil end
 	if RT.bg then pcall(function() RT.bg:Destroy() end) RT.bg=nil end
 	if RT.fatt then pcall(function() RT.fatt:Destroy() end) RT.fatt=nil end
+	RT.flyLand=nil
 	local ch=RT.flyCh
 	if not ch or not ch.Parent then ch=LP.Character end
 	if ch and ch.Parent then
@@ -70,7 +106,10 @@ local function nofly()
 			local an=ch:FindFirstChild("Animate") if an then an.Disabled=false end
 			h.PlatformStand=false h.AutoRotate=true h.Enabled=true
 			pcall(function() h:ChangeState(Enum.HumanoidStateType.GettingUp) end)
-			if h.Health>0 then h.WalkSpeed=S.SpOn and (tonumber(S.SpV) or 16) or (RT.wc0 or 16) end
+			if h.Health>0 then
+				if S.SafeOn then h.WalkSpeed=RT.wc0 or 16
+				else h.WalkSpeed=S.SpOn and (tonumber(S.SpV) or 16) or (RT.wc0 or 16) end
+			end
 			task.delay(0.15,function()
 				if h and h.Parent and h.Health>0 then pcall(function() h:ChangeState(Enum.HumanoidStateType.Running) end) end
 			end)
@@ -91,6 +130,8 @@ local function fly()
 	local an=ch:FindFirstChild("Animate") if an then an.Disabled=true end
 	h.PlatformStand=false h.AutoRotate=false h.WalkSpeed=0
 	r.Anchored=false
+	-- [反检测伪装] 落地节拍状态（重置服务器 Freefall 计时）
+	RT.flyLand={phase=false,count=0,last=os.clock(),ground=r.Position.Y}
 	if S.FlMd=="物理" then
 		local att=Instance.new("Attachment") att.Name="wxFlyAtt" att.Parent=r
 		local ap=Instance.new("AlignPosition")
@@ -107,14 +148,34 @@ local function fly()
 			local hh=RT.flyCh:FindFirstChildOfClass("Humanoid")
 			if not hh then return end
 			hh.WalkSpeed=0 hh.PlatformStand=false
+			local st=math.min(dt,0.05)
 			local md=hh.MoveDirection
 			local move=Vector3.new(md.X,0,md.Z)
 			if move.Magnitude<0.05 then local m=mv() move=c.CFrame.LookVector*-m.Z+c.CFrame.RightVector*m.X end
 			if move.Magnitude>0.05 then move=move.Unit end
-			local spd=math.min(S.FlV,150)*math.min(dt,0.05)
+			-- [反检测伪装] 水平限速
+			local cap=S.SafeOn and S.SafeFlV or 150
+			local spd=math.min(S.FlV,cap)*st
 			local delta=move*spd
-			local vy=vv() if vy~=0 then delta=delta+Vector3.new(0,vy*spd,0) end
+			local vy=vv() if vy~=0 then
+				-- [反检测伪装] 垂直限速
+				local vcap=S.SafeOn and S.SafeFlVv or spd
+				delta=delta+Vector3.new(0,vy*math.min(spd,vcap),0)
+			end
 			if delta.Magnitude>0 then RT.bv.Position=RT.bv.Position+delta end
+			-- [反检测伪装] 落地节拍（物理模式：压 AlignPosition 高度）
+			if S.SafeOn and RT.flyLand then
+				local fl=RT.flyLand
+				if not fl.phase and (os.clock()-fl.last)>=S.LandInt then
+					fl.phase=true fl.count=0 fl.y0=RT.bv.Position.Y
+				end
+				if fl.phase then
+					fl.count=fl.count+1
+					local k=fl.count/6
+					RT.bv.Position=Vector3.new(RT.bv.Position.X,fl.y0+(fl.ground-fl.y0)*k,RT.bv.Position.Z)
+					if fl.count>=6 then fl.phase=false fl.last=os.clock() end
+				end
+			end
 			RT.bg.CFrame=c.CFrame
 		end)
 	else
@@ -123,21 +184,43 @@ local function fly()
 			local _,hh,rr=chr() local c=workspace.CurrentCamera
 			if not rr or not hh or not c then return end
 			hh.WalkSpeed=0 hh.PlatformStand=false
+			local st=math.min(dt,0.05)
 			local md=hh.MoveDirection
 			local move=Vector3.new(md.X,0,md.Z)
 			if move.Magnitude<0.05 then local m=mv() move=c.CFrame.LookVector*-m.Z+c.CFrame.RightVector*m.X end
 			if move.Magnitude>0.05 then move=move.Unit end
-			local spd=math.min(S.FlV,150)*math.min(dt,0.05)
+			-- [反检测伪装] 水平限速
+			local cap=S.SafeOn and S.SafeFlV or 150
+			local spd=math.min(S.FlV,cap)*st
 			local np=rr.Position+move*spd
-			local vy=vv() if vy~=0 then np=np+Vector3.new(0,vy*spd,0) end
+			local vy=vv() if vy~=0 then
+				-- [反检测伪装] 垂直限速
+				local vcap=S.SafeOn and S.SafeFlVv or spd
+				np=np+Vector3.new(0,vy*math.min(spd,vcap),0)
+			end
 			local cf=rr.CFrame
 			if move.Magnitude>0.05 then cf=CFrame.lookAt(np,np+move) else cf=CFrame.new(np)*(cf-cf.Position) end
+			-- [反检测伪装] 落地节拍（传送模式：6 帧平滑贴地重置 Freefall）
+			if S.SafeOn and RT.flyLand then
+				local fl=RT.flyLand
+				if not fl.phase and (os.clock()-fl.last)>=S.LandInt then
+					fl.phase=true fl.count=0 fl.y0=cf.Position.Y
+				end
+				if fl.phase then
+					fl.count=fl.count+1
+					local k=fl.count/6
+					local pos=cf.Position
+					cf=CFrame.new(pos.X,fl.y0+(fl.ground-fl.y0)*k,pos.Z)*(cf-cf.Position)
+					if fl.count>=6 then fl.phase=false fl.last=os.clock() end
+				end
+			end
 			rr.CFrame=cf
 			rr.AssemblyLinearVelocity=Vector3.zero rr.AssemblyAngularVelocity=Vector3.zero
 		end)
 	end
 end
 local function endFly() nofly() end
+
 function invisSet(v)
 	local ch,h,r=chr()
 	if not ch or not r then return end
