@@ -123,11 +123,12 @@ local function walk()
 				local dir=Vector3.new(hh.MoveDirection.X,0,hh.MoveDirection.Z)
 				if dir.Magnitude<0.05 then local m=mv() dir=Vector3.new(m.X,0,m.Z) end
 				if dir.Magnitude>0.05 then
+				
 					dir=dir.Unit
 					rr.CFrame=rr.CFrame+dir*(want/60)
 					local v=rr.AssemblyLinearVelocity
 					rr.AssemblyLinearVelocity=Vector3.new(0,v.Y,0)
-				end
+end
 			end)
 		else
 			local v=tonumber(S.SpV) or 16
@@ -585,6 +586,7 @@ task.delay(3,function()
 	NESP=e
 	end)
 end)
+
 function nespApply()
 	if not NESP then return end
 	pcall(function()
@@ -593,7 +595,7 @@ function nespApply()
 			MaxDistance=S.ESMax,
 			Name={Enabled=false},
 			Distance={Enabled=false},
-			Box={Enabled=(ES.Bx.On and S.BoxMd=="3D"),Mode="3D",Color=gc(ES.Bx),SecondaryColor=gc(ES.Bx),Thickness=1.5,Transparency=0.9},
+			Box={Enabled=false,Mode="3D",Coloc(ES.Bx),SecondaryColor=gc(ES.Bx),Thickness=1.5,Transparency=0.9},
 			HealthBar={Enabled=false,Width=3,HighColor=Color3.fromRGB(0,255,120),LowColor=Color3.fromRGB(255,40,40)},
 			Tracers={Enabled=false},
 			Skeleton={Enabled=false,Color=hc},
@@ -606,7 +608,6 @@ function nespApply()
 	end)
 end
 nespApply()
-
 local NG=B("ScreenGui",{Name="wx_NPC_"..tostring(math.random(100000,999999)),ResetOnSpawn=false,IgnoreGuiInset=true,DisplayOrder=998,Parent=safeParent()})
 local ND={} local nt=0
 local function npcDrop(m) local d=ND[m] if not d then return end for _,o in ipairs(d.o) do pcall(function() o:Destroy() end) end ND[m]=nil end
