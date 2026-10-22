@@ -339,8 +339,6 @@ local function drawP(p,cam,vp)
 	local fd=math.floor(dist) if fd~=d.last then d.last=fd d.d.Text=fd.."m" end
 	d.h.Visible=ES.Hp.On
 	if ES.Hp.On then d.h.TextColor3=YEL local v=math.floor(hu.Health+0.5) if v~=d.hpv then d.hpv=v d.h.Text="【HP"..v.."】" end end
-	if ES.Bx.On and S.BoxMd=="2D" then
-		local pt=cam:WorldToViewportPoint(hd.Position+Vector3.new(0,0.6,0)) local pb=cam:WorldToViewportPoint(rt.Position-Vector3.new(0,2.6,0))
 			if ES.Bx.On then
 		if S.BoxMd=="2D" then
 			local pt=cam:WorldToViewportPoint(hd.Position+Vector3.new(0,0.6,0)) local pb=cam:WorldToViewportPoint(rt.Position-Vector3.new(0,2.6,0))
