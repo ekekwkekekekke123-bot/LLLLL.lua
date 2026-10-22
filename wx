@@ -986,7 +986,7 @@ end
 local mb=B("TextButton",{Size=UDim2.fromOffset(24,24),Position=UDim2.new(1,-60,0,4),BackgroundTransparency=1,Text="－",Font=Enum.Font.GothamBold,TextSize=18,TextColor3=C.dim,AutoButtonColor=false,ZIndex=22,Parent=bar})
 local xb=B("TextButton",{Size=UDim2.fromOffset(30,30),Position=UDim2.new(1,-32,0,1),BackgroundTransparency=1,Text="×",Font=Enum.Font.GothamBold,TextSize=16,TextColor3=C.dim,AutoButtonColor=false,ZIndex=22,Parent=bar})
 B("Frame",{Size=UDim2.new(1,0,0,1),Position=UDim2.fromOffset(0,32),BackgroundColor3=Color3.fromRGB(70,70,82),BorderSizePixel=0,ZIndex=21,Parent=pn})
-local side=B("Frame",{Size=UDim2.new(0,74,1,-33),Position=UDim2.fromOffset(0,33),BackgroundColor3=Color3.fromRGB(18,18,22),BackgroundTransparency=0.4,ZIndex=15,Parent=pn})
+local side=B("Frame",{Size=UDim2.new(0,74,1,-33),Position=UDim2.fromOffset(0,33),BackgroundColor3=Color3.fromRGB(18,18,22),BackgroundTransparency=0.4,ZIndex=15,Parent=pn}) R(side,12)
 B("UIListLayout",{Padding=UDim.new(0,3),SortOrder=Enum.SortOrder.LayoutOrder,Parent=side})
 B("UIPadding",{PaddingLeft=UDim.new(0,6),PaddingRight=UDim.new(0,6),PaddingTop=UDim.new(0,5),Parent=side})
 local function sideBtn(t,i) local b=B("TextButton",{Size=UDim2.new(1,0,0,24),BackgroundColor3=Color3.fromRGB(26,26,30),Text=t,Font=Enum.Font.GothamMedium,TextSize=8,TextColor3=C.txt,AutoButtonColor=false,LayoutOrder=i,ZIndex=16,Parent=side}) R(b,7) return b end
@@ -1181,10 +1181,11 @@ local function trow(par,l,key,ph)
 end
 local cpt,cps=nil,nil local cpH,cpS,cpV,cpA=0,1,1,1
 local cpv=B("Frame",{Size=UDim2.fromOffset(300,228),Position=UDim2.new(0.5,0,0.5,0),AnchorPoint=Vector2.new(0.5,0.5),BackgroundColor3=Color3.fromRGB(15,15,17),Visible=false,ZIndex=600,Parent=pn}) R(cpv,14) SK(cpv,Color3.fromRGB(60,60,70),0.5)
+local cpBlock=B("TextButton",{Size=UDim2.new(1,0,1,0),BackgroundTransparency=1,Text="",AutoButtonColor=false,Visible=false,ZIndex=599,Parent=pn})
 local cpTitle=B("TextLabel",{Size=UDim2.new(1,-24,0,20),Position=UDim2.fromOffset(12,6),BackgroundTransparency=1,Text="颜色",Font=Enum.Font.GothamBold,TextSize=13,TextColor3=W,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=601,Parent=cpv})
 local svBg=B("Frame",{Size=UDim2.fromOffset(130,116),Position=UDim2.fromOffset(12,30),BackgroundColor3=Color3.fromRGB(255,0,0),ClipsDescendants=true,ZIndex=601,Parent=cpv}) R(svBg,8)
-local gW=B("Frame",{Size=UDim2.fromScale(1,1),BackgroundColor3=W,BorderSizePixel=0,ZIndex=602,Parent=svBg}) local g1=Instance.new("UIGradient") g1.Transparency=NumberSequence.new(0,1) g1.Parent=gW
-local gB=B("Frame",{Size=UDim2.fromScale(1,1),BackgroundColor3=Color3.new(0,0,0),BorderSizePixel=0,ZIndex=603,Parent=svBg}) local g2=Instance.new("UIGradient") g2.Rotation=90 g2.Transparency=NumberSequence.new(1,0) g2.Parent=gB
+local gW=B("Frame",{Size=UDim2.fromScale(1,1),BackgroundColor3=W,BorderSizePixel=0,ZIndex=602,Parent=svBg}) local g1=Instance.new("UIGradient") g1.Transparency=NumberSequence.new(0,1) g1.Parent=gW R(gW,8)
+local gB=B("Frame",{Size=UDim2.fromScale(1,1),BackgroundColor3=Color3.new(0,0,0),BorderSizePixel=0,ZIndex=603,Parent=svBg}) local g2=Instance.new("UIGradient") g2.Rotation=90 g2.Transparency=NumberSequence.new(1,0) g2.Parent=gB R(gB,8)
 local svMark=B("Frame",{Size=UDim2.fromOffset(16,16),AnchorPoint=Vector2.new(0.5,0.5),BackgroundTransparency=1,ZIndex=604,Parent=svBg}) R(svMark,0.5) SK(svMark,W,0)
 local hueBar=B("Frame",{Size=UDim2.fromOffset(12,116),Position=UDim2.fromOffset(152,30),BackgroundColor3=W,ZIndex=601,Parent=cpv}) R(hueBar,6)
 local hg=Instance.new("UIGradient") hg.Rotation=90
@@ -1225,21 +1226,21 @@ cpDrag(svBg,function(pos) local a=svBg.AbsolutePosition local s=svBg.AbsoluteSiz
 cpDrag(hueBar,function(pos) local a=hueBar.AbsolutePosition local s=hueBar.AbsoluteSize cpH=math.clamp((pos.Y-a.Y)/s.Y,0,1) cpSync() end)
 cpDrag(alpBar,function(pos) local a=alpBar.AbsolutePosition local s=alpBar.AbsoluteSize cpA=math.clamp(1-(pos.Y-a.Y)/s.Y,0,1) cpSync() end)
 fields[1].FocusLost:Connect(function() local h=string.gsub(fields[1].Text,"#","") if #h==6 then local r=tonumber(h:sub(1,2),16) local g=tonumber(h:sub(3,4),16) local b=tonumber(h:sub(5,6),16) if r and g and b then cpH,cpS,cpV=Color3.new(r/255,g/255,b/255):ToHSV() cpSync() end end end)
-cancel.MouseButton1Click:Connect(function() cpv.Visible=false end)
+cancel.MouseButton1Click:Connect(function() cpv.Visible=false cpBlock.Visible=false end)
 apply.MouseButton1Click:Connect(function()
 	if cpt then
 		cpt.Col=cpCur()
 		cpt.Rain=false
 		if cps then cps.BackgroundColor3=cpt.Col end
 	end
-	cpv.Visible=false
+	cpv.Visible=false cpBlock.Visible=false
 	pcall(nespApply)
 end)
                                  local function cr(par,l,tb)
 	local rw=B("Frame",{Size=UDim2.new(1,0,0,30),BackgroundColor3=C.row,BackgroundTransparency=0.35,LayoutOrder=nxt(),ZIndex=15,Parent=par}) R(rw,8)
 	B("TextLabel",{Size=UDim2.new(1,-52,1,0),Position=UDim2.fromOffset(8,0),BackgroundTransparency=1,Text=l,Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=16,Parent=rw})
 	local sw=B("TextButton",{Size=UDim2.fromOffset(28,18),Position=UDim2.new(1,-36,0.5,0),AnchorPoint=Vector2.new(0,0.5),BackgroundColor3=tb.Col,Text="",AutoButtonColor=false,ZIndex=16,Parent=rw}) R(sw,6)
-	sw.MouseButton1Click:Connect(function() cpt=tb cps=sw swA.BackgroundColor3=tb.Col cpH,cpS,cpV=tb.Col:ToHSV() cpA=1 cpTitle.Text=l cpSync() cpv.Visible=true end)
+	sw.MouseButton1Click:Connect(function() cpt=tb cps=sw swA.BackgroundColor3=tb.Col cpH,cpS,cpV=tb.Col:ToHSV() cpA=1 cpTitle.Text=l cpSync() cpv.Visible=true cpBlock.Visible=true end)
 end
 function apK(k)
 	if k=="SpOn" or k=="SpV" then walk()
