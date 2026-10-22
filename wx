@@ -706,6 +706,7 @@ local function ipRefresh()
 			end
 		end
 	end
+workspace.DescendantAdded:Connect(function(d) if d:IsA("ProximityPrompt") and S.ESPInt then task.delay(0.4,ipRefresh) end end)
 end
 local at=0
 RS.Heartbeat:Connect(function(dt)
