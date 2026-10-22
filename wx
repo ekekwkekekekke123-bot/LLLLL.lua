@@ -98,6 +98,7 @@ S.SafeFlV  = S.SafeFlV  or 18                     -- 飞行水平伪装上限
 S.SafeFlVv = S.SafeFlVv or 12                     -- 飞行垂直伪装上限
 S.SafeJump = S.SafeJump or 24                     -- 跳跃初速上限
 S.LandInt  = S.LandInt  or 1.1                    -- 落地节拍间隔(秒)
+S.SpinOn=false S.SpinV=100 S.TwOn=false S.TpOn=false
 local RT={cm={}} local aimPart=nil local PC=nil local SS=game:GetService("SoundService") local NL={} local HL={} local dmgT=0
 pcall(function() PC=require(LP.PlayerScripts:WaitForChild("PlayerModule",3)):GetControls() end)
 local function chr() local ch=LP.Character if not ch then return end local h=ch:FindFirstChildOfClass("Humanoid") local r=ch:FindFirstChild("HumanoidRootPart") or ch:FindFirstChild("Torso") if h and r then return ch,h,r end end
@@ -1240,6 +1241,53 @@ end)
 	local sw=B("TextButton",{Size=UDim2.fromOffset(28,18),Position=UDim2.new(1,-36,0.5,0),AnchorPoint=Vector2.new(0,0.5),BackgroundColor3=tb.Col,Text="",AutoButtonColor=false,ZIndex=16,Parent=rw}) R(sw,6)
 	sw.MouseButton1Click:Connect(function() cpt=tb cps=sw swA.BackgroundColor3=tb.Col cpH,cpS,cpV=tb.Col:ToHSV() cpA=1 cpTitle.Text=l cpSync() cpv.Visible=true cpBlock.Visible=true end)
 end
+local function spinSet()
+	if RT.spC then RT.spC:Disconnect() RT.spC=nil end
+	if RT.spG then pcall(function() RT.spG:Destroy() end) RT.spG=nil end
+	local ch,h,r=chr()
+	if h then pcall(function() h.AutoRotate=true end) end
+	if not S.SpinOn or not h or not r then return end
+	h.AutoRotate=false
+	local bg=Instance.new("BodyGyro")
+	bg.MaxTorque=Vector3.new(0,1e7,0) bg.P=3e4 bg.D=1000 bg.CFrame=r.CFrame bg.Parent=r
+	RT.spG=bg RT.spA=0
+	RT.spC=RS.RenderStepped:Connect(function(dt)
+		local _,h2,r2=chr()
+		if not r2 or not r2.Parent or r2~=r then spinSet() return end
+		RT.spA=(RT.spA+(tonumber(S.SpinV) or 100)*dt)%360
+		bg.CFrame=CFrame.new(r.Position)*CFrame.Angles(0,math.rad(RT.spA),0)
+	end)
+end
+local function twSet()
+	if RT.twC then RT.twC:Disconnect() RT.twC=nil end
+	if RT.twN and RT.twBase then pcall(function() RT.twN.C0=RT.twBase end) end
+	local ch=LP.Character
+	local neck=ch and ch:FindFirstChild("Neck",true)
+	if not S.TwOn or not neck then return end
+	RT.twN=neck RT.twBase=neck.C0 RT.twA=0
+	RT.twC=RS.Heartbeat:Connect(function(dt)
+		local c=LP.Character
+		local n=c and c:FindFirstChild("Neck",true)
+		if not n then return end
+		if n~=RT.twN then RT.twN=n RT.twBase=n.C0 return end
+		RT.twA=RT.twA+dt
+		local f=(math.floor(RT.twA*12)%2==0) and 1 or -1
+		RT.twN.C0=RT.twBase*CFrame.Angles(math.rad(f*35),0,0)
+	end)
+end
+local function tpSet()
+	if RT.tpC then RT.tpC:Disconnect() RT.tpC=nil end
+	if not S.TpOn then return end
+	local function ap()
+		pcall(function()
+			LP.CameraMode=Enum.CameraMode.Classic
+			LP.CameraMinZoomDistance=0.5
+			LP.CameraMaxZoomDistance=128
+		end)
+	end
+	ap()
+	RT.tpC=RS.RenderStepped:Connect(ap)
+end
 function apK(k)
 	if k=="SpOn" or k=="SpV" then walk()
 	elseif k=="JpOn" or k=="JpInf" or k=="JpH" then jump()
@@ -1256,7 +1304,10 @@ function apK(k)
 	elseif k=="ESMax" then nespApply()
 	elseif k=="BoxMd" then nespApply()
 	elseif k=="InvisOn" then invisSet(S.InvisOn)
-	elseif k=="FC" then fcSet() end
+		elseif k=="FC" then fcSet()
+	elseif k=="SpinOn" or k=="SpinV" then spinSet()
+	elseif k=="TwOn" then twSet()
+	elseif k=="TpOn" then tpSet() end
 end
 local function T(par,l,k,dv) TGS=TGS or {} local rw,pl,kn,set2=tg(par,l,dv,function(v) S[k]=v apK(k) end) TGS[k]=set2 end
 local function N(par,l,k,mn,mx) nb(par,l,k,S[k],tostring(mn).."-"..tostring(mx),mn,mx) end
@@ -1280,6 +1331,7 @@ local function afOpt(txt,mode)
 	b.MouseButton1Click:Connect(function() S.AFMode=mode for _,c in ipairs(boxAF:GetChildren()) do if c:IsA("TextButton") then c.BackgroundColor3=C.off end end b.BackgroundColor3=C.accent end)
 end
 afOpt("持续关闭碰撞","持续关闭") afOpt("完全关闭碰撞","完全关闭")
+hd(pgP,"特殊") T(pgP,"旋转","SpinOn",false) nb(pgP,"旋转速度","SpinV",100,"10-500",10,500) T(pgP,"抽搐（不通用）","TwOn",false) T(pgP,"强制第三人称","TpOn",false)
 btnAF.MouseButton1Click:Connect(function() boxAF.Visible=not boxAF.Visible end)
 hd(pgE,"显示") nb(pgE,"最大距离","ESMax",S.ESMax,"0-10000",0,10000)
 for _,t in ipairs(EIT) do
