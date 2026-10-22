@@ -70,9 +70,7 @@ do
 		pcall(function() local d=ENV.getgenv and ENV.getgenv().Drawing; if d then ENV.Drawing=d end end)
 	end
 
-	table.unpack=table.unpack or unpack
-	G.unpack=G.unpack or table.unpack
-	if not math.clamp then function math.clamp(v,a,b) if v<a then return a elseif v>b then return b end return v end end
+	
 
 	wxlog(string.format("兼容层OK | genv=%s gethui=%s hookmm=%s namecall=%s fpp=%s Drawing=%s",
 		tostring(R.genv),tostring(R.gethui),tostring(R.hookmm),tostring(R.namecall),tostring(R.fpp),tostring(R.draw)))
