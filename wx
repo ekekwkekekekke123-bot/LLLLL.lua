@@ -341,12 +341,47 @@ local function drawP(p,cam,vp)
 	if ES.Hp.On then d.h.TextColor3=YEL local v=math.floor(hu.Health+0.5) if v~=d.hpv then d.hpv=v d.h.Text="【HP"..v.."】" end end
 	if ES.Bx.On and S.BoxMd=="2D" then
 		local pt=cam:WorldToViewportPoint(hd.Position+Vector3.new(0,0.6,0)) local pb=cam:WorldToViewportPoint(rt.Position-Vector3.new(0,2.6,0))
-		if pt.Z>0 and pb.Z>0 then
-			local rvb=cam.CFrame.RightVector local a1=cam:WorldToViewportPoint(rt.Position+rvb*2.2) local a2=cam:WorldToViewportPoint(rt.Position-rvb*2.2)
-			local x1=math.min(a1.X,a2.X) local x2=math.max(a1.X,a2.X) local y1=math.min(pt.Y,pb.Y) local y2=math.max(pt.Y,pb.Y)
-			d.b.Position=UDim2.fromOffset(x1,y1) d.b.Size=UDim2.fromOffset(math.max(x2-x1,1),math.max(y2-y1,1))
-			d.bs.Color=gc(ES.Bx) d.b.Visible=true
-		else d.b.Visible=false end
+			if ES.Bx.On then
+		if S.BoxMd=="2D" then
+			local pt=cam:WorldToViewportPoint(hd.Position+Vector3.new(0,0.6,0)) local pb=cam:WorldToViewportPoint(rt.Position-Vector3.new(0,2.6,0))
+			if pt.Z>0 and pb.Z>0 then
+				local rvb=cam.CFrame.RightVector local a1=cam:WorldToViewportPoint(rt.Position+rvb*2.2) local a2=cam:WorldToViewportPoint(rt.Position-rvb*2.2)
+				local x1=math.min(a1.X,a2.X) local x2=math.max(a1.X,a2.X) local y1=math.min(pt.Y,pb.Y) local y2=math.max(pt.Y,pb.Y)
+				d.b.Position=UDim2.fromOffset(x1,y1) d.b.Size=UDim2.fromOffset(math.max(x2-x1,1),math.max(y2-y1,1))
+				d.bs.Color=gc(ES.Bx) d.b.Visible=true
+			else d.b.Visible=false end
+		else
+			d.b.Visible=false
+			if not d.e then
+				d.e={}
+				for i=1,12 do
+					local f=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),BorderSizePixel=0,BackgroundTransparency=0,Visible=false,ZIndex=900,Parent=LG})
+					table.insert(d.o,f) d.e[i]=f
+				end
+			end
+			local cf=rt.CFrame local sz=Vector3.new(2.2,3.4,2.2)
+			local cs={} local ci=1
+			for sx=-1,1,2 do for sy=-1,1,2 do for szn=-1,1,2 do
+				local wp=cf*CFrame.new(sx*sz.X*0.5,sy*sz.Y*0.5,szn*sz.Z*0.5)
+				local sp,on=cam:WorldToViewportPoint(wp.Position)
+				cs[ci]={X=sp.X,Y=sp.Y,Z=sp.Z,on=on} ci=ci+1
+			end end end
+			local EDGES={{1,5},{2,6},{3,7},{4,8},{1,3},{2,4},{5,7},{6,8},{1,2},{3,4},{5,6},{7,8}}
+			local col=gc(ES.Bx)
+			for k,e in ipairs(EDGES) do
+				local c1,c2=cs[e[1]],cs[e[2]]
+				local f=d.e[k]
+				if c1.on and c2.on and c1.Z>0 and c2.Z>0 then
+					local dx,dy=c2.X-c1.X,c2.Y-c1.Y
+					local len=math.sqrt(dx*dx+dy*dy)
+					f.Size=UDim2.new(0,math.max(len,1),0,1.5)
+					f.Position=UDim2.fromOffset((c1.X+c2.X)/2,(c1.Y+c2.Y)/2)
+					f.Rotation=math.deg(math.atan2(dy,dx))
+					f.BackgroundColor3=col
+					f.Visible=true
+				else f.Visible=false end
+			end
+		end
 	else d.b.Visible=false end
 	if ES.Tr.On then
 		local pos,on=cam:WorldToViewportPoint(rt.Position) local sx=vp.X/2 local sy=(S.TrPos=="底部") and vp.Y or 0
@@ -379,7 +414,8 @@ local function drawP(p,cam,vp)
 end
 local function esp()
 	local cam=workspace.CurrentCamera if not cam then return end local vp=cam.ViewportSize
-	for _,p in ipairs(P:GetPlayers()) do if p~=LP then drawP(p,cam,vp) end end
+		for _,dd in pairs(DD) do if dd.e then for i=1,12 do dd.e[i].Visible=false end end end
+for _,p in ipairs(P:GetPlayers()) do if p~=LP then drawP(p,cam,vp) end end
 	for p,d in pairs(DD) do
 		local ch=p.Character
 		if not p.Parent or not ch or ch~=d.ch then drop(p) end
