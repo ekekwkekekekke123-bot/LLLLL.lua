@@ -1,3 +1,82 @@
+--===== WX 跨端兼容层：Android / iOS 通用 =====
+do
+	local G=_G
+	local function setg(k,v) pcall(function() G[k]=v end) end
+	local function isfn(k) local ok,v=pcall(function() return G[k] end) return ok and type(v)=="function" end
+	local function wxlog(s) s="[WX] "..tostring(s) pcall(function() warn(s) end) pcall(function() print(s) end) end
+
+	local ENV=G
+	if type(G.getfenv)=="function" then
+		local ok,e=pcall(G.getfenv,1)
+		if ok and type(e)=="table" then ENV=e end
+	end
+
+	local R={genv=isfn("getgenv"),gethui=isfn("gethui"),hookmm=isfn("hookmetamethod"),
+		namecall=isfn("getnamecallmethod"),fpp=isfn("fireproximityprompt"),
+		loadstr=isfn("loadstring"),draw=(ENV.Drawing~=nil)}
+
+	if not R.genv then setg("getgenv",function() return ENV end) end
+
+	local gfOk=false
+	if type(G.getfenv)=="function" then gfOk=pcall(function() return type(G.getfenv(1))=="table" end) end
+	if not gfOk then setg("getfenv",function() return ENV end) end
+	if type(G.setfenv)~="function" then setg("setfenv",function(f) return f end) end
+
+	if not R.gethui then
+		setg("gethui",function()
+			local ok,h=pcall(function() return game:GetService("CoreGui") end)
+			if ok and h then return h end
+			local ok2,h2=pcall(function() return game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui",5) end)
+			return (ok2 and h2) or nil
+		end)
+	end
+
+	if not R.hookmm then
+		local grm=G.getrawmetatable
+		local sro=G.setreadonly or G.make_writeable or G.setwritable
+		local hf=G.hookfunction or G.replaceclosure or G.detour_function
+		if type(grm)=="function" and type(hf)=="function" then
+			setg("hookmetamethod",function(obj,name,fn)
+				local ok,mt=pcall(grm,obj)
+				if not ok or type(mt)~="table" then return function() end end
+				if sro then pcall(sro,mt,false) end
+				local orig=rawget(mt,name)
+				if type(orig)~="function" then
+					if sro then pcall(sro,mt,true) end
+					return function() end
+				end
+				local ok2,old=pcall(hf,orig,function(self,...) return fn(self,...) end)
+				if sro then pcall(sro,mt,true) end
+				return (ok2 and old) or orig
+			end)
+		else
+			setg("hookmetamethod",function() return function() end end)
+		end
+	end
+
+	if not R.namecall then setg("getnamecallmethod",function() return "" end) end
+
+	if not R.fpp then
+		setg("fireproximityprompt",function(p)
+			return (pcall(function() p:InputHoldBegin() task.wait(0.03) p:InputHoldEnd() end))
+		end)
+	end
+
+	if not R.loadstr and type(G.load)=="function" then
+		setg("loadstring",function(s,n) return G.load(s,n) end)
+	end
+
+	if not R.draw and ENV.Drawing==nil then
+		pcall(function() local d=ENV.getgenv and ENV.getgenv().Drawing; if d then ENV.Drawing=d end end)
+	end
+
+	table.unpack=table.unpack or unpack
+	G.unpack=G.unpack or table.unpack
+	if not math.clamp then function math.clamp(v,a,b) if v<a then return a elseif v>b then return b end return v end end
+
+	wxlog(string.format("兼容层OK | genv=%s gethui=%s hookmm=%s namecall=%s fpp=%s Drawing=%s",
+		tostring(R.genv),tostring(R.gethui),tostring(R.hookmm),tostring(R.namecall),tostring(R.fpp),tostring(R.draw)))
+end
 local P=game:GetService("Players") local RS=game:GetService("RunService") local UI=game:GetService("UserInputService") local TS=game:GetService("TweenService") local LP=P.LocalPlayer
 local PG0=LP:WaitForChild("PlayerGui")
 for _,g in ipairs(PG0:GetChildren()) do if g:IsA("ScreenGui") and string.sub(g.Name,1,3)=="wx_" then g:Destroy() end end
@@ -99,30 +178,12 @@ local function jump()
 	end
 end
 local function clip() for p,o in pairs(RT.cm) do if p and p.Parent then pcall(function() p.CanCollide=o end) end end RT.cm={} if RT.nc then RT.nc:Disconnect() end if not S.NcOn then return end local ch=LP.Character if not ch then return end local function gh(p) if p:IsA("BasePart") and RT.cm[p]==nil then RT.cm[p]=p.CanCollide p.CanCollide=false end end for _,d in ipairs(ch:GetDescendants()) do gh(d) end RT.nc=ch.DescendantAdded:Connect(function(d) task.wait(0.1) if S.NcOn then gh(d) end end) end
-local function flyPad(on)
-	if on then
-		if RT.fp then return end
-		local sg=B("ScreenGui",{Name="wx_Fly_"..tostring(math.random(100000,999999)),ResetOnSpawn=false,IgnoreGuiInset=true,DisplayOrder=999,Parent=safeParent()})
-		local function fb(txt,oy,dir)
-			local b=B("TextButton",{Size=UDim2.fromOffset(54,54),Position=UDim2.new(1,-72,0.5,oy),AnchorPoint=Vector2.new(0,0.5),BackgroundColor3=Color3.fromRGB(20,20,26),BackgroundTransparency=0.2,Text=txt,Font=Enum.Font.GothamBold,TextSize=22,TextColor3=W,AutoButtonColor=false,ZIndex=50,Parent=sg})
-			R(b,0.5) SK(b,Color3.fromRGB(150,242,238),0.4)
-			b.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseButton1 then RT.fv=dir end end)
-			b.InputEnded:Connect(function() RT.fv=0 end)
-		end
-		fb("↑",-38,1) fb("↓",38,-1)
-		RT.fp=sg
-	else
-		if RT.fp then pcall(function() RT.fp:Destroy() end) RT.fp=nil end
-		RT.fv=0
-	end
-end
 local function nofly()
 	if RT.fc then RT.fc:Disconnect() RT.fc=nil end
 	if RT.dc then RT.dc:Disconnect() RT.dc=nil end
 	if RT.bv then pcall(function() RT.bv:Destroy() end) RT.bv=nil end
 	if RT.bg then pcall(function() RT.bg:Destroy() end) RT.bg=nil end
 	if RT.fatt then pcall(function() RT.fatt:Destroy() end) RT.fatt=nil end
-	flyPad(false)
 	local ch=RT.flyCh
 	if not ch or not ch.Parent then ch=LP.Character end
 	if ch and ch.Parent then
@@ -147,31 +208,39 @@ local function fly()
 	RT.dc=h.Died:Connect(function() pcall(nofly) end)
 	local an=ch:FindFirstChild("Animate") if an then an.Disabled=true end
 	h.PlatformStand=true h.AutoRotate=false h.WalkSpeed=0
-	local bv=Instance.new("BodyVelocity")
-	bv.Name="wxFlyBV" bv.MaxForce=Vector3.new(1e6,1e6,1e6) bv.Velocity=Vector3.zero bv.Parent=r
-	local bg=Instance.new("BodyGyro")
-	bg.Name="wxFlyBG" bg.MaxTorque=Vector3.new(1e6,1e6,1e6) bg.P=3000 bg.D=300 bg.CFrame=r.CFrame bg.Parent=r
-	RT.bv=bv RT.bg=bg
-	flyPad(true)
+	local phys=(S.FlMd=="物理")
+	if phys then
+		local bv=Instance.new("BodyVelocity")
+		bv.Name="wxFlyBV" bv.MaxForce=Vector3.new(1e6,1e6,1e6) bv.Velocity=Vector3.zero bv.Parent=r
+		local bg=Instance.new("BodyGyro")
+		bg.Name="wxFlyBG" bg.MaxTorque=Vector3.new(1e6,1e6,1e6) bg.P=3000 bg.D=300 bg.CFrame=r.CFrame bg.Parent=r
+		RT.bv=bv RT.bg=bg
+	end
 	RT.fc=RS.RenderStepped:Connect(function(dt)
 		if LP.Character~=RT.flyCh or not RT.flyCh or not RT.flyCh.Parent then nofly() return end
 		local c=workspace.CurrentCamera
-		if not c or not RT.bv or not RT.bg then return end
+		if not c then return end
 		local hh=RT.flyCh:FindFirstChildOfClass("Humanoid")
 		if not hh then return end
 		hh.PlatformStand=true hh.WalkSpeed=0
 		local spd=tonumber(S.FlV) or 35
 		if S.SafeOn then spd=math.min(spd,S.SafeFlV or 18) end
-		local vspd=spd
-		if S.SafeOn then vspd=math.min(vspd,S.SafeFlVv or 12) end
 		local m=mv()
-		local move=c.CFrame.LookVector*(-m.Z)+c.CFrame.RightVector*m.X
-		move=Vector3.new(move.X,0,move.Z)
+		local look=c.CFrame.LookVector
+		local dir=look*(-m.Z)+c.CFrame.RightVector*m.X
 		local vy=vv()
-		if vy==0 then vy=RT.fv or 0 end
-		if vy==0 and hh.Jump then vy=1 end
-		RT.bv.Velocity=move*spd+Vector3.new(0,vy*vspd,0)
-		RT.bg.CFrame=CFrame.new(r.Position,r.Position+c.CFrame.LookVector)
+		if vy~=0 then dir=dir+Vector3.new(0,vy,0) end
+		if dir.Magnitude>0.001 then dir=dir.Unit*spd else dir=Vector3.zero end
+		if phys then
+			if RT.bv and RT.bg then
+				RT.bv.Velocity=dir
+				RT.bg.CFrame=CFrame.new(r.Position,r.Position+look)
+			end
+		else
+			local np=r.Position+dir*dt
+			r.CFrame=CFrame.lookAt(np,np+look)
+			r.AssemblyLinearVelocity=Vector3.zero r.AssemblyAngularVelocity=Vector3.zero
+		end
 	end)
 end
 local function endFly() nofly() end
