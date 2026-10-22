@@ -1302,7 +1302,7 @@ for _,t in ipairs(EIT) do
 end
 hd(pgA,"基础") T(pgA,"启用","AiOn",false) T(pgA,"队伍检查","AiTeam",true) T(pgA,"可见性检查","AiVis",true) T(pgA,"穿墙（静默穿透）","AiWall",false) T(pgA,"漏打模式","AiMiss",false) N(pgA,"命中率","AiAcc",0,100)                    
 hd(pgA,"目标") selrow(pgA,"目标种类",{"玩家","NPC","全部"},"AiType") selrow(pgA,"目标部位",{"Head","HumanoidRootPart","Torso"},"AiPart") selrow(pgA,"优先模式",{"准星最近","距离最近","血量最少"},"AiPrio") N(pgA,"最大距离","AiMax",50,2000) selrow(pgA,"静默瞄准方式",{"Raycast","FireServer","双通道"},"SilentMode")
-hd(pgA,"准星") T(pgA,"显示FOV圈","FovOn",true) cr(pgA,"FOV圈颜色",S.TgtC) N(pgA,"FOV圈半径","FovR",20,200) T(pgA,"固定FOV","FovFixed",true) T(pgA,"显示目标","ShowT",true) T(pgA,"启用彩虹色","RainOn",false) N(pgA,"颜色变换速度","RainSpd",1,10)
+hd(pgA,"准星") T(pgA,"显示FOV圈","FovOn",true) cr(pgA,"FOV圈颜色",S.TgtC) N(pgA,"FOV圈半径","FovR",20,200) T(pgA,"固定FOV","FovFixed",true) T(pgA,"启用彩虹色","RainOn",false) N(pgA,"颜色变换速度","RainSpd",1,10)
 hd(pgA,"信息") selrow(pgA,"信息显示样式",{"名称头顶","独立面板"},"InfoStyle") T(pgA,"显示目标名字","ShowName",true) T(pgA,"显示目标血量","ShowHp",true) T(pgA,"显示目标距离","ShowDist",true) T(pgA,"显示目标类别","ShowType",true)
 hd(pgA,"高亮") T(pgA,"启用高亮","AiHl",false) cr(pgA,"高亮颜色",S.HlC) T(pgA,"高亮彩虹色","HlRain",false) T(pgA,"显示目标追踪线","TLine",false) cr(pgA,"追踪线颜色",S.TrC)
 hd(pgA,"锁定")
