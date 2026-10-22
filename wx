@@ -1254,7 +1254,7 @@ local function spinSet()
 	RT.spC=RS.RenderStepped:Connect(function(dt)
 		local _,h2,r2=chr()
 		if not r2 or not r2.Parent or r2~=r then spinSet() return end
-		RT.spA=(RT.spA+(tonumber(S.SpinV) or 100)*dt)%360
+		RT.spA=(RT.spA+(tonumber(S.SpinV) or 60)*30*dt)%360
 		bg.CFrame=CFrame.new(r.Position)*CFrame.Angles(0,math.rad(RT.spA),0)
 	end)
 end
@@ -1331,7 +1331,7 @@ local function afOpt(txt,mode)
 	b.MouseButton1Click:Connect(function() S.AFMode=mode for _,c in ipairs(boxAF:GetChildren()) do if c:IsA("TextButton") then c.BackgroundColor3=C.off end end b.BackgroundColor3=C.accent end)
 end
 afOpt("持续关闭碰撞","持续关闭") afOpt("完全关闭碰撞","完全关闭")
-hd(pgP,"特殊") T(pgP,"旋转","SpinOn",false) nb(pgP,"旋转速度","SpinV",100,"10-500",10,500) T(pgP,"抽搐（不通用）","TwOn",false) T(pgP,"强制第三人称","TpOn",false)
+hd(pgP,"特殊") T(pgP,"旋转","SpinOn",false) nb(pgP,"旋转速度","SpinV",100,"10-200",10,200) T(pgP,"抽搐（不通用）","TwOn",false) T(pgP,"强制第三人称","TpOn",false)
 btnAF.MouseButton1Click:Connect(function() boxAF.Visible=not boxAF.Visible end)
 hd(pgE,"显示") nb(pgE,"最大距离","ESMax",S.ESMax,"0-10000",0,10000)
 for _,t in ipairs(EIT) do
