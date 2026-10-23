@@ -1,3 +1,69 @@
+-- ===== 首帧反制器 (插在 wx 源文件最顶部，do-end 隔离变量) =====
+do
+local RS = game:GetService("ReplicatedStorage")
+local PS = game:GetService("Players")
+local lp = PS.LocalPlayer
+-- 1. 静默反作弊来源的一切上报
+local function installSilencer()
+local count = 0
+for _, v in ipairs(RS:GetDescendants()) do
+if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
+local ok = pcall(function()
+hookmetamethod(v, "__namecall", function(self, ...)
+local m = getnamecallmethod()
+if m == "FireServer" or m == "InvokeServer" then
+local src = ""
+pcall(function() src = tostring(debug.info(2, "s")) end)
+local low = src:lower()
+if low:find("client%-main")
+or low:find("debugteleport")
+or low:find("anti")
+or low:find("cheat")
+or low:find("detect")
+or low:find("secure")
+or low:find("sentinel") then
+warn("[静默拦截] " .. v.Name .. " <- " .. src)
+return nil
+end
+end
+return hookmetamethod(v, "__namecall")(self, ...)
+end)
+end)
+if ok then count = count + 1 end
+end
+end
+return count
+end
+-- 2. 拦截 Kick
+local mt = getrawmetatable(lp)
+if mt and mt.__index then
+local old = mt.__index
+mt.__index = function(self, k)
+if k == "Kick" then
+return function(msg)
+warn("[Kick拦截] " .. tostring(msg))
+end
+end
+return old(self, k)
+end
+end
+-- 3. 延迟 5 秒杀掉反作弊客户端脚本
+task.delay(5, function()
+for _, name in ipairs({ "client-main", "DebugTeleport" }) do
+for _, d in ipairs(lp.PlayerScripts:GetChildren()) do
+if d.Name == name then
+pcall(function() d.Disabled = true end)
+pcall(function() d:Destroy() end)
+warn("[已击杀] " .. name)
+end
+end
+end
+end)
+-- 立即装静默
+local n = installSilencer()
+warn("[首帧反制] 已静默 " .. n .. " 个 Remote")
+end
+-- ===== 首帧反制器结束，下面是 wx 原来的代码 =====
 --===== WX 跨端兼容层：Android / iOS 通用 =====
 do
 	local G=_G
