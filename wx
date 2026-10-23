@@ -1146,17 +1146,172 @@ local function tg(par,t,dv,cb)
 	rw.MouseButton1Click:Connect(function() set2(not st) if cb then cb(st) end end)
 	return rw,pl,kn,set2
 end
-local function sg(par,t,opts,dv,cb)
-	local h2=B("Frame",{Size=UDim2.new(1,0,0,28),BackgroundColor3=C.row,BackgroundTransparency=0.35,LayoutOrder=nxt(),ZIndex=15,Parent=par}) R(h2,8)
-	B("TextLabel",{Size=UDim2.new(1,-108,1,0),Position=UDim2.fromOffset(8,0),BackgroundTransparency=1,Text=t,Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,ZIndex=16,Parent=h2})
-	local n=#opts local bw=44 local tot=n*bw+(n-1)*4
-	for i,name in ipairs(opts) do
-		local b=B("TextButton",{Size=UDim2.fromOffset(bw,17),Position=UDim2.new(1,-tot+(i-1)*(bw+4)-5,0.5,0),AnchorPoint=Vector2.new(0,0.5),BackgroundColor3=(name==dv) and C.accent or C.off,Text=name,Font=Enum.Font.GothamMedium,TextSize=8,TextColor3=(name==dv) and Color3.new(0,0,0) or C.txt,AutoButtonColor=false,ZIndex=16,Parent=h2}) R(b,5)
-		b.MouseButton1Click:Connect(function()
-			for _,x in ipairs(h2:GetChildren()) do if x:IsA("TextButton") then local on=(x.Text==name) x.BackgroundColor3=on and C.accent or C.off x.TextColor3=on and Color3.new(0,0,0) or C.txt end end
-			if cb then cb(name) end
+local selPop,selBlock=nil,nil
+
+local function closeSel(instant)
+	local p,b=selPop,selBlock
+	selPop=nil
+	selBlock=nil
+	if not p then return end
+	if instant then
+		p:Destroy()
+		if b then b:Destroy() end
+		return
+	end
+	local us=p:FindFirstChildOfClass("UIScale")
+	if us then
+		TS:Create(us,TweenInfo.new(0.16,Enum.EasingStyle.Quart,Enum.EasingDirection.In),{Scale=0.92}):Play()
+	end
+	TS:Create(p,TweenInfo.new(0.16,Enum.EasingStyle.Quart,Enum.EasingDirection.In),{BackgroundTransparency=1}):Play()
+	task.delay(0.18,function()
+		if p then p:Destroy() end
+		if b then b:Destroy() end
+	end)
+end
+
+local function openSel(title,opts,cur,cb,anchor)
+	closeSel(true)
+	local root=pn.Parent
+	if not root then return end
+
+	local block=B("TextButton",{
+		Size=UDim2.fromScale(1,1),
+		BackgroundTransparency=1,
+		Text="",
+		AutoButtonColor=false,
+		Active=true,
+		ZIndex=950,
+		Parent=root
+	})
+	block.MouseButton1Click:Connect(function()
+		closeSel()
+	end)
+
+	local w=226
+	local h=#opts*30+12
+	local pop=B("Frame",{
+		Size=UDim2.fromOffset(w,h),
+		BackgroundColor3=Color3.fromRGB(14,14,17),
+		BackgroundTransparency=1,
+		BorderSizePixel=0,
+		Active=true,
+		ZIndex=951,
+		Parent=root
+	})
+	R(pop,10)
+	SK(pop,Color3.fromRGB(85,85,95),0.35)
+
+	local cam=workspace.CurrentCamera
+	local vw,vh=cam.ViewportSize.X,cam.ViewportSize.Y
+	local x=vw/2-w/2
+	local y=vh/2-h/2
+	if anchor then
+		x=math.clamp(anchor.AbsolutePosition.X,8,vw-w-8)
+		y=anchor.AbsolutePosition.Y+anchor.AbsoluteSize.Y+6
+		if y+h>vh-8 then y=anchor.AbsolutePosition.Y-h-6 end
+		y=math.clamp(y,8,vh-h-8)
+	end
+	pop.Position=UDim2.fromOffset(x,y)
+
+	local us=Instance.new("UIScale")
+	us.Scale=0.9
+	us.Parent=pop
+
+	for i,opt in ipairs(opts) do
+		local isOn=(tostring(opt)==tostring(cur))
+		local ob=B("TextButton",{
+			Size=UDim2.new(1,-12,0,28),
+			Position=UDim2.new(0,6,0,6+(i-1)*30),
+			BackgroundColor3=C.off,
+			BackgroundTransparency=isOn and 0.55 or 1,
+			Text=tostring(opt),
+			TextColor3=isOn and C.accent or C.txt,
+			Font=Enum.Font.GothamMedium,
+			TextSize=9,
+			TextXAlignment=Enum.TextXAlignment.Left,
+			AutoButtonColor=false,
+			ZIndex=952,
+			Parent=pop
+		})
+		R(ob,6)
+		ob.MouseButton1Click:Connect(function()
+			closeSel()
+			if cb then cb(opt) end
 		end)
 	end
+
+	selPop=pop
+	selBlock=block
+	TS:Create(pop,TweenInfo.new(0.2,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{BackgroundTransparency=0.03}):Play()
+	TS:Create(us,TweenInfo.new(0.2,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{Scale=1}):Play()
+end
+
+pn:GetPropertyChangedSignal("Visible"):Connect(function()
+	if not pn.Visible then closeSel(true) end
+end)
+
+local function sg(par,t,opts,dv,cb)
+	local h2=B("TextButton",{
+		Size=UDim2.new(1,0,0,28),
+		BackgroundColor3=C.row,
+		BackgroundTransparency=0.35,
+		Text="",
+		AutoButtonColor=false,
+		LayoutOrder=nxt(),
+		ZIndex=15,
+		Parent=par
+	})
+	R(h2,8)
+
+	B("TextLabel",{
+		Size=UDim2.new(1,-116,1,0),
+		Position=UDim2.fromOffset(8,0),
+		BackgroundTransparency=1,
+		Text=t,
+		Font=Enum.Font.GothamMedium,
+		TextSize=9,
+		TextColor3=C.txt,
+		TextXAlignment=Enum.TextXAlignment.Left,
+		TextTruncate=Enum.TextTruncate.AtEnd,
+		ZIndex=16,
+		Parent=h2
+	})
+
+	local vt=B("TextLabel",{
+		Size=UDim2.new(0,92,1,0),
+		Position=UDim2.new(1,-106,0,0),
+		BackgroundTransparency=1,
+		Text=tostring(dv),
+		Font=Enum.Font.GothamMedium,
+		TextSize=9,
+		TextColor3=C.accent,
+		TextXAlignment=Enum.TextXAlignment.Right,
+		TextTruncate=Enum.TextTruncate.AtEnd,
+		ZIndex=16,
+		Parent=h2
+	})
+
+	B("TextLabel",{
+		Size=UDim2.fromOffset(14,28),
+		Position=UDim2.new(1,-18,0,0),
+		BackgroundTransparency=1,
+		Text="▾",
+		Font=Enum.Font.GothamMedium,
+		TextSize=10,
+		TextColor3=C.dim,
+		ZIndex=16,
+		Parent=h2
+	})
+
+	local cur=dv
+	h2.MouseButton1Click:Connect(function()
+		openSel(t,opts,cur,function(v)
+			cur=v
+			vt.Text=tostring(v)
+			if cb then cb(v) end
+		end,h2)
+	end)
+	return h2
 end
 local function bt(par,t,cb) local b=B("TextButton",{Size=UDim2.new(1,0,0,24),BackgroundColor3=C.row,BackgroundTransparency=0.3,Text=t,Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.txt,AutoButtonColor=false,LayoutOrder=nxt(),ZIndex=15,Parent=par}) R(b,8) b.MouseButton1Click:Connect(cb) end
 local apK
