@@ -225,21 +225,33 @@ local function fly()
 		hh.PlatformStand=true hh.WalkSpeed=0
 		local spd=tonumber(S.FlV) or 35
 		if S.SafeOn then spd=math.min(spd,S.SafeFlV or 18) end
-		local m=mv()
+				local m=mv()
 		local look=c.CFrame.LookVector
-		local dir=look*(-m.Z)+c.CFrame.RightVector*m.X
+		local move=look*(-m.Z)+c.CFrame.RightVector*m.X
 		local vy=vv()
+
+		local face=Vector3.new(move.X,0,move.Z)
+		if face.Magnitude>0.05 then
+			face=face.Unit
+		else
+			face=Vector3.new(look.X,0,look.Z)
+			if face.Magnitude>0.05 then face=face.Unit else face=Vector3.new(0,0,-1) end
+		end
+
+		local dir=move
 		if vy~=0 then dir=dir+Vector3.new(0,vy,0) end
 		if dir.Magnitude>0.001 then dir=dir.Unit*spd else dir=Vector3.zero end
+
 		if phys then
 			if RT.bv and RT.bg then
 				RT.bv.Velocity=dir
-				RT.bg.CFrame=CFrame.new(r.Position,r.Position+look)
+				RT.bg.CFrame=CFrame.lookAt(r.Position,r.Position+face)
 			end
 		else
 			local np=r.Position+dir*dt
-			r.CFrame=CFrame.lookAt(np,np+look)
-			r.AssemblyLinearVelocity=Vector3.zero r.AssemblyAngularVelocity=Vector3.zero
+			r.CFrame=CFrame.lookAt(np,np+face)
+			r.AssemblyLinearVelocity=Vector3.zero
+			r.AssemblyAngularVelocity=Vector3.zero
 		end
 	end)
 end
