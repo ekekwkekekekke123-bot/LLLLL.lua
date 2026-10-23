@@ -1331,11 +1331,55 @@ local function nb(par,l,k,dv,ph,mn,mx)
 	return rw
 end
 local function selrow(par,l,opts,key,cb)
-	local rw=B("TextButton",{Size=UDim2.new(1,0,0,30),BackgroundColor3=C.row,BackgroundTransparency=0.35,Text="",AutoButtonColor=false,LayoutOrder=nxt(),ZIndex=15,Parent=par}) R(rw,8)
-	B("TextLabel",{Size=UDim2.new(1,-124,1,0),Position=UDim2.fromOffset(8,0),BackgroundTransparency=1,Text=l,Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,ZIndex=16,Parent=rw})
-	local vt=B("TextLabel",{Size=UDim2.new(0,104,1,0),Position=UDim2.new(1,-120,0,0),BackgroundTransparency=1,Text=tostring(S[key]),Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=W,TextXAlignment=Enum.TextXAlignment.Right,ZIndex=16,Parent=rw})
-	local i=1 for j=1,#opts do if opts[j]==S[key] then i=j end end
-	rw.MouseButton1Click:Connect(function() i=(i%#opts)+1 S[key]=opts[i] vt.Text=tostring(opts[i]) if cb then cb(opts[i]) end apK(key) end)
+	local rw=B("TextButton",{
+		Size=UDim2.new(1,0,0,30),
+		BackgroundColor3=C.row,
+		BackgroundTransparency=0.35,
+		Text="",
+		AutoButtonColor=false,
+		LayoutOrder=nxt(),
+		ZIndex=15,
+		Parent=par
+	})
+	R(rw,8)
+
+	B("TextLabel",{
+		Size=UDim2.new(1,-124,1,0),
+		Position=UDim2.fromOffset(8,0),
+		BackgroundTransparency=1,
+		Text=l,
+		Font=Enum.Font.GothamMedium,
+		TextSize=9,
+		TextColor3=C.txt,
+		TextXAlignment=Enum.TextXAlignment.Left,
+		TextTruncate=Enum.TextTruncate.AtEnd,
+		ZIndex=16,
+		Parent=rw
+	})
+
+	local vt=B("TextLabel",{
+		Size=UDim2.new(0,104,1,0),
+		Position=UDim2.new(1,-120,0,0),
+		BackgroundTransparency=1,
+		Text=tostring(S[key]),
+		Font=Enum.Font.GothamMedium,
+		TextSize=9,
+		TextColor3=W,
+		TextXAlignment=Enum.TextXAlignment.Right,
+		TextTruncate=Enum.TextTruncate.AtEnd,
+		ZIndex=16,
+		Parent=rw
+	})
+
+	rw.MouseButton1Click:Connect(function()
+		openSel(l,opts,tostring(S[key]),function(v)
+			S[key]=v
+			vt.Text=tostring(v)
+			if cb then cb(v) end
+			apK(key)
+		end,rw)
+	end)
+
 	return rw
 end
 local function trow(par,l,key,ph)
