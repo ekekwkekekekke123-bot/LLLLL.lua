@@ -2363,34 +2363,3 @@ end
 setTheme("dark")
 run(S.s1)
 end)()
-task.delay(2,function()
-	pcall(function()
-		for _,d in ipairs(safeParent():GetDescendants()) do
-			if d:IsA("TextButton") and string.find(d.Text or "","一键互动") then
-				d.MouseButton1Click:Connect(function()
-					local c=LP.Character
-					local hrp=c and c:FindFirstChild("HumanoidRootPart")
-					if not hrp then return end
-					local rad=tonumber(S.IVal) or 20
-					local n=0
-					for _,p in ipairs(workspace:GetDescendants()) do
-						local par=nil
-						if p:IsA("ProximityPrompt") and p.Enabled then
-							par=p.Parent
-							if par and par:IsA("Attachment") then par=par.Parent end
-							if par and par:IsA("BasePart") and (par.Position-hrp.Position).Magnitude<=rad then
-								pcall(fireP,p) n=n+1
-							end
-						elseif p:IsA("ClickDetector") then
-							par=p.Parent
-							if par and par:IsA("BasePart") and (par.Position-hrp.Position).Magnitude<=rad then
-								pcall(function() fireclickdetector(p) end) n=n+1
-							end
-						end
-					end
-				end)
-				break
-			end
-		end
-	end)
-end)
