@@ -974,8 +974,8 @@ function wxInitRain()
 end
 
 local bar=B("Frame",{Size=UDim2.new(1,0,0,32),BackgroundTransparency=1,Active=true,ZIndex=20,Parent=pn})
-local ttl=B("TextLabel",{Size=UDim2.new(0,86,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text="WX-LLL",Font=Enum.Font.GothamBold,TextSize=12,TextColor3=W,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=22,Parent=bar})
-local dvl=B("Frame",{Size=UDim2.new(0,86,0,1),Position=UDim2.fromOffset(10,26),BackgroundColor3=W,BorderSizePixel=0,ZIndex=22,Parent=bar})
+local ttl=B("TextLabel",{Size=UDim2.new(0,86,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text="WX-LLL",Font=Enum.Font.GothamBold,TextSize=12,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=22,Parent=bar})
+local dvl=B("Frame",{Size=UDim2.new(0,86,0,1),Position=UDim2.fromOffset(10,26),BackgroundColor3=C.dim,BorderSizePixel=0,ZIndex=22,Parent=bar})
 local dvg=Instance.new("UIGradient") dvg.Transparency=NumberSequence.new{NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(0.65,0.2),NumberSequenceKeypoint.new(1,1)} dvg.Parent=dvl
 local SANW=242 local SANH=26
 local sanB=B("Frame",{Size=UDim2.new(1,-96,0,28),Position=UDim2.fromOffset(88,2),BackgroundTransparency=1,ClipsDescendants=true,ZIndex=19,Parent=bar})
@@ -1330,7 +1330,7 @@ local function nb(par,l,k,dv,ph,mn,mx)
 	local lo=mn or 1 local hi=mx or 500
 	local rw=B("Frame",{Size=UDim2.new(1,0,0,28),BackgroundColor3=C.row,BackgroundTransparency=0.35,LayoutOrder=nxt(),ZIndex=15,Parent=par}) R(rw,8)
 	B("TextLabel",{Size=UDim2.new(1,-104,1,0),Position=UDim2.fromOffset(8,0),BackgroundTransparency=1,Text=l,Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,ZIndex=16,Parent=rw})
-	local tb=B("TextBox",{Size=UDim2.fromOffset(72,18),Position=UDim2.new(1,-78,0.5,0),AnchorPoint=Vector2.new(0,0.5),BackgroundColor3=C.off,Text=tostring(dv),PlaceholderText=ph or "数字",PlaceholderColor3=C.dim,Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=W,ClearTextOnFocus=false,ZIndex=16,Parent=rw}) R(tb,5)
+	local tb=B("TextBox",{Size=UDim2.fromOffset(72,18),Position=UDim2.new(1,-78,0.5,0),AnchorPoint=Vector2.new(0,0.5),BackgroundColor3=C.off,Text=tostring(dv),PlaceholderText=ph or "数字",PlaceholderColor3=C.dim,Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.txt,ClearTextOnFocus=false,ZIndex=16,Parent=rw}) R(tb,5)
 	tb:GetPropertyChangedSignal("Text"):Connect(function()
 		local v=tonumber(tb.Text)
 		if v then
@@ -1375,7 +1375,7 @@ local function selrow(par,l,opts,key,cb)
 		Text=tostring(S[key]),
 		Font=Enum.Font.GothamMedium,
 		TextSize=9,
-		TextColor3=W,
+		TextColor3=C.txt,
 		TextXAlignment=Enum.TextXAlignment.Right,
 		TextTruncate=Enum.TextTruncate.AtEnd,
 		ZIndex=16,
