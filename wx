@@ -2050,10 +2050,14 @@ LP.CharacterAdded:Connect(function()
 	pcall(function() walk() jump() if S.NcOn then clip() end end)
 end)
 print("[wx] 加载完成")
---====== LLL 启动动画：动画跑完才显示 wx 的图标和面板（整段粘在 wx 文件最后）======
-if _G.WX_BOOTING then return end
-_G.WX_BOOTING=true
-if _G.LLLBOOT then pcall(function() _G.LLLBOOT:Destroy() end) _G.LLLBOOT=nil end
+--====== LLL 启动动画：动画跑完才显示 wx 的图标和面板 ======
+local env=(getgenv and getgenv()) or _G
+if env.WX_BOOTING then
+	pcall(function() if env.LLLBOOT then env.LLLBOOT:Destroy() end end)
+	env.LLLBOOT=nil
+end
+env.WX_BOOTING=true
+print("[LLL] 动画启动")
 
 local TS=game:GetService("TweenService")
 local plr=game:GetService("Players").LocalPlayer
