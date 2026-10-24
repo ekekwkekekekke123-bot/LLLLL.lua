@@ -252,7 +252,7 @@ local function fly()
 		if phys then
 			if RT.bv and RT.bg then
 				RT.bv.Velocity=dir
-				RT.bg.CFrame=CFrame.lookAt(r.Position,r.Position+face)
+				RT.bg.CFrame=CFrame.lookAt(r.Position,r.Position+Look)
 			end
 		else
 			local np=r.Position+dir*dt
