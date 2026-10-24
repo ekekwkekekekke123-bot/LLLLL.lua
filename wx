@@ -89,7 +89,14 @@ local function B(c,p) local o=Instance.new(c) for k,v in pairs(p) do if k~="Pare
 local function R(o,r) local u=Instance.new("UICorner") u.CornerRadius=(r>1) and UDim.new(0,r) or UDim.new(r,0) u.Parent=o end
 local function SK(o,c,t) local s=Instance.new("UIStroke") s.Color=c s.Thickness=1 s.Transparency=t or 0 s.Parent=o return s end
 local W=Color3.new(1,1,1) local YEL=Color3.fromRGB(255,220,40) local dead=false local hue=0
-local C={bg=Color3.fromRGB(12,12,14),row=Color3.fromRGB(28,28,32),off=Color3.fromRGB(58,58,66),accent=Color3.fromRGB(0,200,255),txt=Color3.fromRGB(235,235,235),dim=Color3.fromRGB(140,140,145)}
+local C={
+ bg=Color3.fromRGB(238,233,223),
+ row=Color3.fromRGB(246,241,232),
+ off=Color3.fromRGB(212,204,191),
+ accent=Color3.fromRGB(190,74,64),
+ txt=Color3.fromRGB(38,38,38),
+ dim=Color3.fromRGB(108,103,95)
+}
 local S={SpOn=false,SpV=50,JpOn=false,JpInf=false,JpH=50,FlOn=false,FlV=35,FlMd="物理",NcOn=false,ESMax=5000,TrPos="顶部",AiOn=false,AiTeam=true,AiVis=true,AiWall=false,AiMiss=false,AiAcc=100,AiType="玩家",AiPart="Head",AiPrio="准星最近",AiMax=500,SilentMode="Raycast",AiSilent=true,FovOn=true,FovR=55,FovFixed=true,ShowT=true,TgtC={Col=Color3.fromRGB(60,90,255),Rain=false},RainOn=false,RainSpd=1,InfoStyle="独立面板",ShowName=true,ShowHp=true,ShowDist=true,ShowType=true,AiHl=false,ArR=0,BoxMd="2D",HlC={Col=W,Rain=false},HlRain=false,DmgOn=false,HitSnd="关闭",TLine=false,TrC={Col=YEL,Rain=false},Lock="无",NameHunt=false,NameInput="",SecOn=false,AutoOn=false,IRange=false,IVal=20,NpcOn=false,NpcHl=false,NpcBx=false,NpcNm=false,NpcHp=false,NpcDs=false,NV=false,LPlOn=false,NoFog=false,NoShake=false,FC=false,FCSpd=1,ESPInt=false,GravOn=false,GravV=196.2,InvisOn=false}
 -- [反检测伪装层参数]
 S.SafeOn   = false   -- 伪装总开关（关闭）
