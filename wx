@@ -415,7 +415,7 @@ local function drawP(p,cam,vp)
 	else d.a.Visible=false end
 	local isTgt=(S.Lock~="无" and p.Name==S.Lock) or (aimPart~=nil and aimPart.Parent==ch)
 	if S.AiHl and isTgt then
-		local hc=(S.HlRain and Color3.fromHSV(hue,1,1)) or S.HlC.Col
+		local hc=S.HlC.Col
 		d.hl.Enabled=true d.hl.FillColor=hc d.hl.OutlineColor=hc
 	elseif ES.Hl.On then
 		local hc=(ES.Hl.Rain and Color3.fromHSV(hue,1,1)) or ES.Hl.Col
@@ -1160,10 +1160,10 @@ local function closeSel(instant)
 	end
 	local us=p:FindFirstChildOfClass("UIScale")
 	if us then
-		TS:Create(us,TweenInfo.new(0.16,Enum.EasingStyle.Quart,Enum.EasingDirection.In),{Scale=0.92}):Play()
+		TS:Create(us,TweenInfo.new(0.12,Enum.EasingStyle.Quart,Enum.EasingDirection.In),{Scale=0.92}):Play()
 	end
-	TS:Create(p,TweenInfo.new(0.16,Enum.EasingStyle.Quart,Enum.EasingDirection.In),{BackgroundTransparency=1}):Play()
-	task.delay(0.18,function()
+	TS:Create(p,TweenInfo.new(0.12,Enum.EasingStyle.Quart,Enum.EasingDirection.In),{BackgroundTransparency=1}):Play()
+	task.delay(0.14,function()
 		if p then p:Destroy() end
 		if b then b:Destroy() end
 	end)
@@ -1228,7 +1228,7 @@ local function openSel(title,opts,cur,cb,anchor)
 			TextColor3=isOn and C.accent or C.txt,
 			Font=Enum.Font.GothamMedium,
 			TextSize=9,
-			TextXAlignment=Enum.TextXAlignment.Left,
+			TextXAlignment=Enum.TextXAlignment.Center,
 			AutoButtonColor=false,
 			ZIndex=952,
 			Parent=pop
@@ -1242,8 +1242,8 @@ local function openSel(title,opts,cur,cb,anchor)
 
 	selPop=pop
 	selBlock=block
-	TS:Create(pop,TweenInfo.new(0.2,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{BackgroundTransparency=0.03}):Play()
-	TS:Create(us,TweenInfo.new(0.2,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{Scale=1}):Play()
+	TS:Create(pop,TweenInfo.new(0.14,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{BackgroundTransparency=0.03}):Play()
+	TS:Create(us,TweenInfo.new(0.14,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{Scale=1}):Play()
 end
 
 pn:GetPropertyChangedSignal("Visible"):Connect(function()
@@ -1295,7 +1295,7 @@ local function sg(par,t,opts,dv,cb)
 		Size=UDim2.fromOffset(14,28),
 		Position=UDim2.new(1,-18,0,0),
 		BackgroundTransparency=1,
-		Text="▾",
+		Text="V",
 		Font=Enum.Font.GothamMedium,
 		TextSize=10,
 		TextColor3=C.dim,
@@ -1459,14 +1459,15 @@ local function spinSet()
 	if h then pcall(function() h.AutoRotate=true end) end
 	if not S.SpinOn or not h or not r then return end
 	h.AutoRotate=false
-	local bg=Instance.new("BodyGyro")
-	bg.MaxTorque=Vector3.new(0,1e7,0) bg.P=3e4 bg.D=1000 bg.CFrame=r.CFrame bg.Parent=r
-	RT.spG=bg RT.spA=0
-	RT.spC=RS.RenderStepped:Connect(function(dt)
+		local av=Instance.new("BodyAngularVelocity")
+	av.MaxTorque=Vector3.new(0,1e7,0)
+	av.AngularVelocity=Vector3.new(0,math.rad((tonumber(S.SpinV) or 60)*30),0)
+	av.Parent=r
+	RT.spG=av
+	RT.spC=RS.RenderStepped:Connect(function()
 		local _,h2,r2=chr()
 		if not r2 or not r2.Parent or r2~=r then spinSet() return end
-		RT.spA=(RT.spA+(tonumber(S.SpinV) or 60)*30*dt)%360
-		bg.CFrame=CFrame.new(r.Position)*CFrame.Angles(0,math.rad(RT.spA),0)
+		av.AngularVelocity=Vector3.new(0,math.rad((tonumber(S.SpinV) or 60)*30),0)
 	end)
 end
 local function twSet()
@@ -1542,7 +1543,7 @@ local function afOpt(txt,mode)
 	b.MouseButton1Click:Connect(function() S.AFMode=mode for _,c in ipairs(boxAF:GetChildren()) do if c:IsA("TextButton") then c.BackgroundColor3=C.off end end b.BackgroundColor3=C.accent end)
 end
 afOpt("持续关闭碰撞","持续关闭") afOpt("完全关闭碰撞","完全关闭")
-hd(pgP,"特殊") T(pgP,"旋转","SpinOn",false) nb(pgP,"旋转速度","SpinV",100,"10-200",10,200) T(pgP,"抽搐（不通用）","TwOn",false) T(pgP,"强制第三人称","TpOn",false)
+hd(pgP,"特殊") T(pgP,"自转","SpinOn",false) nb(pgP,"自转速度","SpinV",100,"10-200",10,200) T(pgP,"抽搐（不通用）","TwOn",false) T(pgP,"强制第三人称","TpOn",false)
 btnAF.MouseButton1Click:Connect(function() boxAF.Visible=not boxAF.Visible end)
 hd(pgE,"显示") nb(pgE,"最大距离","ESMax",S.ESMax,"0-10000",0,10000)
 for _,t in ipairs(EIT) do
@@ -1567,7 +1568,7 @@ hd(pgA,"基础") T(pgA,"启用","AiOn",false) T(pgA,"队伍检查","AiTeam",true
 hd(pgA,"目标") selrow(pgA,"目标种类",{"玩家","NPC","全部"},"AiType") selrow(pgA,"目标部位",{"Head","HumanoidRootPart","Torso"},"AiPart") selrow(pgA,"优先模式",{"准星最近","距离最近","血量最少"},"AiPrio") N(pgA,"最大距离","AiMax",50,2000) selrow(pgA,"静默瞄准方式",{"Raycast","FireServer","双通道"},"SilentMode")
 hd(pgA,"准星") T(pgA,"显示FOV圈","FovOn",true) cr(pgA,"FOV圈颜色",S.TgtC) N(pgA,"FOV圈半径","FovR",20,200) T(pgA,"固定FOV","FovFixed",true) T(pgA,"启用彩虹色","RainOn",false) N(pgA,"颜色变换速度","RainSpd",1,10)
 hd(pgA,"信息") selrow(pgA,"信息显示样式",{"名称头顶","独立面板"},"InfoStyle") T(pgA,"显示目标名字","ShowName",true) T(pgA,"显示目标血量","ShowHp",true) T(pgA,"显示目标距离","ShowDist",true) T(pgA,"显示目标类别","ShowType",true)
-hd(pgA,"高亮") T(pgA,"启用高亮","AiHl",false) cr(pgA,"高亮颜色",S.HlC) T(pgA,"高亮彩虹色","HlRain",false) T(pgA,"显示目标追踪线","TLine",false) cr(pgA,"追踪线颜色",S.TrC)
+hd(pgA,"高亮") T(pgA,"启用高亮","AiHl",false) cr(pgA,"高亮颜色",S.HlC) T(pgA,"显示目标追踪线","TLine",false) cr(pgA,"追踪线颜色",S.TrC)
 hd(pgA,"锁定")
 local lkStatus=B("TextLabel",{Size=UDim2.new(1,0,0,22),BackgroundColor3=C.row,BackgroundTransparency=0.35,Text="锁定状态: 无",Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.accent,TextXAlignment=Enum.TextXAlignment.Left,LayoutOrder=nxt(),ZIndex=15,Parent=pgA}) R(lkStatus,7)
 local nameBtns={}
