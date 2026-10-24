@@ -718,16 +718,27 @@ local function ipRefresh()
 	local ok,list=pcall(function() return workspace:GetDescendants() end)
 	if not ok or not list then return end
 	local seen={}
-	for i=1,#list do
-		local d=list[i]
-		if d:IsA("ProximityPrompt") or d:IsA("ClickDetector") then
-			local par=d.Parent
-			if par and par:IsA("BasePart") and not seen[par] then
-				seen[par]=true
-				ipAdd(par,par.Name)
+	local function spinSet()
+	if S.spinC then pcall(function() S.spinC:Disconnect() end) S.spinC=nil end
+	if not S.SpinOn then
+		local c=LP.Character
+		local r=c and c:FindFirstChild("HumanoidRootPart")
+		if r then
+			for _,v in ipairs(r:GetChildren()) do
+				if v:IsA("BodyAngularVelocity") then v:Destroy() end
 			end
 		end
+		return
 	end
+	S.spinC=RS.RenderStepped:Connect(function(dt)
+		if not S.SpinOn then return end
+		local c=LP.Character
+		local r=c and c:FindFirstChild("HumanoidRootPart")
+		if r then
+			r.CFrame=r.CFrame*CFrame.Angles(0,math.rad((tonumber(S.SpinV) or 100)*10)*dt,0)
+		end
+	end)
+end
 end
 workspace.DescendantAdded:Connect(function(d)
 	if not S.ESPInt then return end
@@ -1496,21 +1507,24 @@ end)
 	sw.MouseButton1Click:Connect(function() cpt=tb cps=sw swA.BackgroundColor3=tb.Col cpH,cpS,cpV=tb.Col:ToHSV() cpA=1 cpTitle.Text=l cpSync() cpv.Visible=true cpBlock.Visible=true end)
 end
 local function spinSet()
-	if RT.spC then RT.spC:Disconnect() RT.spC=nil end
-	if RT.spG then pcall(function() RT.spG:Destroy() end) RT.spG=nil end
-	local ch,h,r=chr()
-	if h then pcall(function() h.AutoRotate=true end) end
-	if not S.SpinOn or not h or not r then return end
-	h.AutoRotate=false
-		local av=Instance.new("BodyAngularVelocity")
-	av.MaxTorque=Vector3.new(0,1e7,0)
-	av.AngularVelocity=Vector3.new(0,math.rad((tonumber(S.SpinV) or 60)*30),0)
-	av.Parent=r
-	RT.spG=av
-	RT.spC=RS.RenderStepped:Connect(function()
-		local _,h2,r2=chr()
-		if not r2 or not r2.Parent or r2~=r then spinSet() return end
-		av.AngularVelocity=Vector3.new(0,math.rad((tonumber(S.SpinV) or 60)*30),0)
+	if S.spinC then pcall(function() S.spinC:Disconnect() end) S.spinC=nil end
+	if not S.SpinOn then
+		local c=LP.Character
+		local r=c and c:FindFirstChild("HumanoidRootPart")
+		if r then
+			for _,v in ipairs(r:GetChildren()) do
+				if v:IsA("BodyAngularVelocity") then v:Destroy() end
+			end
+		end
+		return
+	end
+	S.spinC=RS.RenderStepped:Connect(function(dt)
+		if not S.SpinOn then return end
+		local c=LP.Character
+		local r=c and c:FindFirstChild("HumanoidRootPart")
+		if r then
+			r.CFrame=r.CFrame*CFrame.Angles(0,math.rad((tonumber(S.SpinV) or 100)*10)*dt,0)
+		end
 	end)
 end
 local function twSet()
@@ -1573,34 +1587,35 @@ hd(pgP,"跳跃") T(pgP,"自动跳跃","AutoJp",false) T(pgP,"无限跳跃","JpIn
 hd(pgP,"重力") T(pgP,"重力修改","GravOn",false) nb(pgP,"自定义重力","GravV",S.GravV,"重力越低跳的越高",0,500)
 hd(pgP,"穿墙") T(pgP,"启用穿墙","NcOn",false)
 hd(pgP,"其他") T(pgP,"隐身","InvisOn",false)
-hd(pgP,"特殊") T(pgP,"自转","SpinOn",false) nb(pgP,"自转速度","SpinV",100,"10-200",10,200) T(pgP,"抽搐（不通用）","TwOn",false) T(pgP,"强制第三人称","TpOn",false)
-local _revBg,_revCon
+hd(pgP,"特殊") T(pgP,"自转","SpinOn",false) nb(pgP,"自转速度","SpinV",100,"10-200",10,200) T(pgP,"抽搐（不通用）","TwOn",false) T(pgP,"强制第三人称","TpOn",false) T(pgP,"反着来","RevOn",false)
+local _revCon
 function wxRev()
 	if _revCon then pcall(function() _revCon:Disconnect() end) _revCon=nil end
-	if _revBg then pcall(function() _revBg:Destroy() end) _revBg=nil end
 	local ch=LP.Character
 	local h=ch and ch:FindFirstChildOfClass("Humanoid")
 	if h then pcall(function() h.AutoRotate=true end) end
 	if not S.RevOn then return end
-	local hrp=ch and ch:FindFirstChild("HumanoidRootPart")
-	if not (hrp and h) then return end
-	h.AutoRotate=false
-	local bg=Instance.new("BodyGyro")
-	bg.MaxTorque=Vector3.new(0,1e6,0) bg.P=3000 bg.D=200
-	bg.CFrame=hrp.CFrame bg.Parent=hrp
-	_revBg=bg
-	_revCon=RS.Heartbeat:Connect(function()
-		if not S.RevOn or not bg.Parent then return end
+	if h then h.AutoRotate=false end
+	_revCon=RS.RenderStepped:Connect(function()
+		if not S.RevOn then return end
 		local c=LP.Character
 		local r=c and c:FindFirstChild("HumanoidRootPart")
 		if not r then return end
 		local v=r.AssemblyLinearVelocity
 		local f=Vector3.new(v.X,0,v.Z)
-		if f.Magnitude>2 then bg.CFrame=CFrame.lookAt(r.Position,r.Position-f.Unit) end
+		if f.Magnitude>1 then
+			r.CFrame=CFrame.lookAt(r.Position,r.Position-f.Unit)
+		end
 	end)
 end
-hd(pgP,"彩蛋") T(pgP,"反着来","RevOn",false)
+	if _revCon then pcall(function() _revCon:Disconnect() end) _revCon=nil end
+	if _revBg then pcall(function() _revBg:Destroy() end) _revBg=nil end
+	local ch=LP.Character
+	local h=ch and ch:FindFirstChildOfClass("Humanoid")
+	if h then pcall(function() h.AutoRotate=true end)
 local _ajCon
+function wxAutoJump()
+	local _ajCon
 function wxAutoJump()
 	if _ajCon then pcall(function() _ajCon:Disconnect() end) _ajCon=nil end
 	if not S.AutoJp then return end
@@ -1609,10 +1624,13 @@ function wxAutoJump()
 		local c=LP.Character
 		local h=c and c:FindFirstChildOfClass("Humanoid")
 		if not h or h.Health<=0 then return end
-		if h.FloorMaterial~=Enum.Material.Air then h.Jump=true end
+		if h.FloorMaterial~=Enum.Material.Air and h:GetState()~=Enum.HumanoidStateType.Jumping then
+			h:ChangeState(Enum.HumanoidStateType.Jumping)
+		end
 	end)
 end
-nb(pgE,"互动距离","IPD",2500,"0-2500",0,2500)
+end
+nb(pgE,"互动距离","IPD",25,"0-10000",0,10000)
 hd(pgE,"显示") nb(pgE,"最大距离","ESMax",S.ESMax,"0-10000",0,10000)
 for _,t in ipairs(EIT) do
 	local k,nm=t[1],t[2] local c=ES[k]
@@ -1661,7 +1679,7 @@ local lt=B("TextLabel",{Size=UDim2.new(1,0,0,22),BackgroundColor3=C.row,Backgrou
 bt(pgA,"添加到列表",function() local n=S.NameInput if n and n~="" then table.insert(NL,n) lt.Text="名称列表: "..table.concat(NL," / ") end end)
 bt(pgA,"从列表中删除",function() if #NL>0 then table.remove(NL) end lt.Text="名称列表: "..(#NL>0 and table.concat(NL," / ") or "--") end)
 hd(pgI,"互动") T(pgI,"ESP互动","ESPInt",false) T(pgI,"秒互动","SecOn",false) T(pgI,"自动互动","AutoOn",false)
-hd(pgI,"范围") T(pgI,"互动范围修改","IRange",false) nb(pgI,"互动距离（格）","IVal",S.IVal,"1-500",1,500)
+hd(pgI,"范围") T(pgI,"互动范围修改","IRange",false) nb(pgI,"互动距离（格）","IVal",S.IVal,"0-10000",0,10000)
 bt(pgI,"一键互动全部",function()
 	local _,_,r=chr() if not r then return end
 	local c=r.Position local rad=S.IVal
@@ -2353,3 +2371,34 @@ end
 setTheme("dark")
 run(S.s1)
 end)()
+task.delay(2,function()
+	pcall(function()
+		for _,d in ipairs(safeParent():GetDescendants()) do
+			if d:IsA("TextButton") and string.find(d.Text or "","一键互动") then
+				d.MouseButton1Click:Connect(function()
+					local c=LP.Character
+					local hrp=c and c:FindFirstChild("HumanoidRootPart")
+					if not hrp then return end
+					local rad=tonumber(S.IVal) or 20
+					local n=0
+					for _,p in ipairs(workspace:GetDescendants()) do
+						local par=nil
+						if p:IsA("ProximityPrompt") and p.Enabled then
+							par=p.Parent
+							if par and par:IsA("Attachment") then par=par.Parent end
+							if par and par:IsA("BasePart") and (par.Position-hrp.Position).Magnitude<=rad then
+								pcall(fireP,p) n=n+1
+							end
+						elseif p:IsA("ClickDetector") then
+							par=p.Parent
+							if par and par:IsA("BasePart") and (par.Position-hrp.Position).Magnitude<=rad then
+								pcall(function() fireclickdetector(p) end) n=n+1
+							end
+						end
+					end
+				end)
+				break
+			end
+		end
+	end)
+end)
