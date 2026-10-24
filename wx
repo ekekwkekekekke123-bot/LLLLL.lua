@@ -2051,6 +2051,7 @@ LP.CharacterAdded:Connect(function()
 end)
 print("[wx] 加载完成")
 --====== LLL 启动动画：动画跑完才显示 wx 的图标和面板 ======
+;(function()
 local env=(getgenv and getgenv()) or _G
 if env.WX_BOOTING then
 	pcall(function() if env.LLLBOOT then env.LLLBOOT:Destroy() end end)
@@ -2280,3 +2281,4 @@ end
 
 setTheme("dark")
 run(S.s1)
+end)()
