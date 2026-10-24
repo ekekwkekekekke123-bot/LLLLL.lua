@@ -760,7 +760,7 @@ RS.Heartbeat:Connect(function(dt)
 	if dead or not S.AutoOn then return end
 		ensurePR() at=at+dt if at<0.12 then return end at=0
 	local _,hh,rr=chr() if not rr then return end
-	local rad=S.IRange and S.IVal or 10
+	local rad=S.IRange and S.IVal or 40
 	local best,bd=nil,rad
 	for _,d in ipairs(PR) do
 		if d.Parent and d.Enabled then
@@ -769,6 +769,11 @@ RS.Heartbeat:Connect(function(dt)
 		end
 	end
 	if best then fireP(best) end
+end)
+pcall(function()
+	game:GetService("ProximityPromptService").PromptButtonHoldBegan:Connect(function(pr)
+		if S.SecOn then task.defer(pcall,fireP,pr) end
+	end)
 end)
 local LGT=game:GetService("Lighting")
 local function nvSet()
