@@ -1562,9 +1562,9 @@ function apK(k)
 		elseif k=="FC" then fcSet()
 	elseif k=="SpinOn" or k=="SpinV" then spinSet()
 	elseif k=="TwOn" then twSet()
-	elseif k=="TpOn" then tpSet() end
+		elseif k=="TpOn" then tpSet() elseif k=="RevOn" then wxRev() elseif k=="AutoJp" then wxAutoJump() end
 end
-local function T(par,l,k,dv) TGS=TGS or {} local rw,pl,kn,set2=tg(par,l,dv,function(v) S[k]=v apK(k) end) TGS[k]=set2 end elseif k=="TpOn" then tpSet() elseif k=="RevOn" then wxRev() elseif k=="AutoJp" then wxAutoJump() end
+local function T(par,l,k,dv) TGS=TGS or {} local rw,pl,kn,set2=tg(par,l,dv,function(v) S[k]=v apK(k) end) TGS[k]=set2 end
 local function N(par,l,k,mn,mx) nb(par,l,k,S[k],tostring(mn).."-"..tostring(mx),mn,mx) end
 local function G(par,l,k,opts) sg(par,l,opts,S[k],function(v) S[k]=v apK(k) end) end
 hd(pgP,"飞行") T(pgP,"开启飞行","FlOn",false) nb(pgP,"飞行速度","FlV",S.FlV,"10-300",10,300) G(pgP,"飞行模式","FlMd",{"物理","传送"})
@@ -1574,6 +1574,32 @@ hd(pgP,"重力") T(pgP,"重力修改","GravOn",false) nb(pgP,"自定义重力","
 hd(pgP,"穿墙") T(pgP,"启用穿墙","NcOn",false)
 hd(pgP,"其他") T(pgP,"隐身","InvisOn",false)
 hd(pgP,"特殊") T(pgP,"自转","SpinOn",false) nb(pgP,"自转速度","SpinV",100,"10-200",10,200) T(pgP,"抽搐（不通用）","TwOn",false) T(pgP,"强制第三人称","TpOn",false)
+local _revBg,_revCon
+function wxRev()
+	if _revCon then pcall(function() _revCon:Disconnect() end) _revCon=nil end
+	if _revBg then pcall(function() _revBg:Destroy() end) _revBg=nil end
+	local ch=LP.Character
+	local h=ch and ch:FindFirstChildOfClass("Humanoid")
+	if h then pcall(function() h.AutoRotate=true end) end
+	if not S.RevOn then return end
+	local hrp=ch and ch:FindFirstChild("HumanoidRootPart")
+	if not (hrp and h) then return end
+	h.AutoRotate=false
+	local bg=Instance.new("BodyGyro")
+	bg.MaxTorque=Vector3.new(0,1e6,0) bg.P=3000 bg.D=200
+	bg.CFrame=hrp.CFrame bg.Parent=hrp
+	_revBg=bg
+	_revCon=RS.Heartbeat:Connect(function()
+		if not S.RevOn or not bg.Parent then return end
+		local c=LP.Character
+		local r=c and c:FindFirstChild("HumanoidRootPart")
+		if not r then return end
+		local v=r.AssemblyLinearVelocity
+		local f=Vector3.new(v.X,0,v.Z)
+		if f.Magnitude>2 then bg.CFrame=CFrame.lookAt(r.Position,r.Position-f.Unit) end
+	end)
+end
+hd(pgP,"彩蛋") T(pgP,"反着来","RevOn",false)
 local _ajCon
 function wxAutoJump()
 	if _ajCon then pcall(function() _ajCon:Disconnect() end) _ajCon=nil end
@@ -1586,6 +1612,7 @@ function wxAutoJump()
 		if h.FloorMaterial~=Enum.Material.Air then h.Jump=true end
 	end)
 end
+nb(pgE,"互动距离","IPD",2500,"0-2500",0,2500)
 hd(pgE,"显示") nb(pgE,"最大距离","ESMax",S.ESMax,"0-10000",0,10000)
 for _,t in ipairs(EIT) do
 	local k,nm=t[1],t[2] local c=ES[k]
