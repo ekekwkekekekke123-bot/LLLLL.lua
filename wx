@@ -718,27 +718,22 @@ local function ipRefresh()
 	local ok,list=pcall(function() return workspace:GetDescendants() end)
 	if not ok or not list then return end
 	local seen={}
-	local function spinSet()
-	if S.spinC then pcall(function() S.spinC:Disconnect() end) S.spinC=nil end
-	if not S.SpinOn then
-		local c=LP.Character
-		local r=c and c:FindFirstChild("HumanoidRootPart")
-		if r then
-			for _,v in ipairs(r:GetChildren()) do
-				if v:IsA("BodyAngularVelocity") then v:Destroy() end
+		for i=1,#list do
+		local d=list[i]
+		if d:IsA("ProximityPrompt") or d:IsA("ClickDetector") then
+			local par=d.Parent
+			if par and par:IsA("Attachment") then par=par.Parent end
+			if par and par:IsA("Model") then par=par.PrimaryPart or par:FindFirstChildWhichIsA("BasePart") end
+			if par and par:IsA("BasePart") and not seen[par] then
+				seen[par]=true
+				local nm=par.Name
+				if d:IsA("ProximityPrompt") then
+					if d.ObjectText~="" then nm=d.ObjectText elseif d.ActionText~="" then nm=d.ActionText end
+				end
+				ipAdd(par,nm)
 			end
 		end
-		return
 	end
-	S.spinC=RS.RenderStepped:Connect(function(dt)
-		if not S.SpinOn then return end
-		local c=LP.Character
-		local r=c and c:FindFirstChild("HumanoidRootPart")
-		if r then
-			r.CFrame=r.CFrame*CFrame.Angles(0,math.rad((tonumber(S.SpinV) or 100)*10)*dt,0)
-		end
-	end)
-end
 end
 workspace.DescendantAdded:Connect(function(d)
 	if not S.ESPInt then return end
@@ -1608,14 +1603,6 @@ function wxRev()
 		end
 	end)
 end
-	if _revCon then pcall(function() _revCon:Disconnect() end) _revCon=nil end
-	if _revBg then pcall(function() _revBg:Destroy() end) _revBg=nil end
-	local ch=LP.Character
-	local h=ch and ch:FindFirstChildOfClass("Humanoid")
-	if h then pcall(function() h.AutoRotate=true end)
-local _ajCon
-function wxAutoJump()
-	local _ajCon
 function wxAutoJump()
 	if _ajCon then pcall(function() _ajCon:Disconnect() end) _ajCon=nil end
 	if not S.AutoJp then return end
@@ -1681,14 +1668,19 @@ bt(pgA,"从列表中删除",function() if #NL>0 then table.remove(NL) end lt.Tex
 hd(pgI,"互动") T(pgI,"ESP互动","ESPInt",false) T(pgI,"秒互动","SecOn",false) T(pgI,"自动互动","AutoOn",false)
 hd(pgI,"范围") T(pgI,"互动范围修改","IRange",false) nb(pgI,"互动距离（格）","IVal",S.IVal,"0-10000",0,10000)
 bt(pgI,"一键互动全部",function()
-	local _,_,r=chr() if not r then return end
-	local c=r.Position local rad=S.IVal
-	ensurePR()
-	for i=1,#PR do
-		local d=PR[i]
-		if d and d.Parent and d.Enabled then
-			local pp=d.Parent
-			if pp:IsA("BasePart") and (pp.Position-c).Magnitude<=rad then fireP(d) end
+	local c=LP.Character
+	local hrp=c and c:FindFirstChild("HumanoidRootPart")
+	if not hrp then return end
+	local rad=tonumber(S.IVal) or 20
+	for _,p in ipairs(workspace:GetDescendants()) do
+		local par=nil
+		if p:IsA("ProximityPrompt") and p.Enabled then
+			par=p.Parent
+			if par and par:IsA("Attachment") then par=par.Parent end
+			if par and par:IsA("BasePart") and (par.Position-hrp.Position).Magnitude<=rad then pcall(fireP,p) end
+		elseif p:IsA("ClickDetector") then
+			par=p.Parent
+			if par and par:IsA("BasePart") and (par.Position-hrp.Position).Magnitude<=rad then pcall(function() fireclickdetector(p) end) end
 		end
 	end
 end)
