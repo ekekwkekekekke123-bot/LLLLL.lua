@@ -1541,21 +1541,7 @@ hd(pgP,"跳跃") T(pgP,"无限跳跃","JpInf",false) T(pgP,"跳跃增强","JpOn"
 hd(pgP,"重力") T(pgP,"重力修改","GravOn",false) nb(pgP,"自定义重力","GravV",S.GravV,"重力越低跳的越高",0,500)
 hd(pgP,"穿墙") T(pgP,"启用穿墙","NcOn",false)
 hd(pgP,"其他") T(pgP,"隐身","InvisOn",false)
-local contAF=B("Frame",{Size=UDim2.new(1,0,0,30),AutomaticSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,Parent=pgP})
-B("UIListLayout",{Padding=UDim.new(0,2),SortOrder=Enum.SortOrder.LayoutOrder,Parent=contAF})
-local rwAF,plAF=tg(contAF,"防甩飞",false,function(v) S.AntiFling=v apK("AntiFling") end)
-local lbAF=rwAF:FindFirstChildOfClass("TextLabel") if lbAF then lbAF.Size=UDim2.new(1,-122,1,0) end
-local btnAF=B("TextButton",{Size=UDim2.fromOffset(26,16),Position=UDim2.new(1,-94,0.5,0),AnchorPoint=Vector2.new(0,0.5),BackgroundColor3=C.off,Text="···",Font=Enum.Font.GothamBold,TextSize=10,TextColor3=C.txt,AutoButtonColor=false,ZIndex=16,Parent=rwAF}) R(btnAF,8)
-local boxAF=B("Frame",{Size=UDim2.new(1,0,0,0),AutomaticSize=Enum.AutomaticSize.Y,BackgroundColor3=C.row,BackgroundTransparency=0.5,Visible=false,Parent=contAF}) R(boxAF,6)
-B("UIListLayout",{Padding=UDim.new(0,2),SortOrder=Enum.SortOrder.LayoutOrder,Parent=boxAF})
-B("UIPadding",{PaddingTop=UDim.new(0,4),PaddingBottom=UDim.new(0,4),PaddingLeft=UDim.new(0,6),PaddingRight=UDim.new(0,6),Parent=boxAF})
-local function afOpt(txt,mode)
-	local b=B("TextButton",{Size=UDim2.new(1,0,0,24),BackgroundColor3=(S.AFMode==mode and C.accent or C.off),Text=txt,Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=C.txt,AutoButtonColor=false,ZIndex=16,Parent=boxAF}) R(b,5)
-	b.MouseButton1Click:Connect(function() S.AFMode=mode for _,c in ipairs(boxAF:GetChildren()) do if c:IsA("TextButton") then c.BackgroundColor3=C.off end end b.BackgroundColor3=C.accent end)
-end
-afOpt("持续关闭碰撞","持续关闭") afOpt("完全关闭碰撞","完全关闭")
 hd(pgP,"特殊") T(pgP,"自转","SpinOn",false) nb(pgP,"自转速度","SpinV",100,"10-200",10,200) T(pgP,"抽搐（不通用）","TwOn",false) T(pgP,"强制第三人称","TpOn",false)
-btnAF.MouseButton1Click:Connect(function() boxAF.Visible=not boxAF.Visible end)
 hd(pgE,"显示") nb(pgE,"最大距离","ESMax",S.ESMax,"0-10000",0,10000)
 for _,t in ipairs(EIT) do
 	local k,nm=t[1],t[2] local c=ES[k]
