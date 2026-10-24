@@ -1616,7 +1616,6 @@ function wxAutoJump()
 		end
 	end)
 end
-end
 nb(pgE,"互动距离","IPD",25,"0-10000",0,10000)
 hd(pgE,"显示") nb(pgE,"最大距离","ESMax",S.ESMax,"0-10000",0,10000)
 for _,t in ipairs(EIT) do
