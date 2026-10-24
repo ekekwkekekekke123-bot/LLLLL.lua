@@ -905,7 +905,11 @@ function wxInitGlass()
 	end)
 end
 wxInitGlass()
-local pn=B("Frame",{Size=UDim2.fromOffset(PW,PH),Position=UDim2.fromOffset(math.floor((vp0.X-PW)/2),math.floor((vp0.Y-PH)/2)),BackgroundColor3=C.bg,BackgroundTransparency=0.2,Visible=false,ClipsDescendants=true,ZIndex=10,Parent=gui}) R(pn,12) SK(pn,Color3.fromRGB(90,90,105),0.35)
+local pn=B("Frame",{Size=UDim2.fromOffset(PW,PH),Position=UDim2.fromOffset(math.floor((vp0.X-PW)/2),math.floor((vp0.Y-PH)/2)),BackgroundColor3=C.bg,BackgroundTransparency=0.05,Visible=false,ClipsDescendants=true,ZIndex=10,Parent=gui}) R(pn,12) SK(pn,Color3.fromRGB(120,110,98),0.55)
+local pg=Instance.new("UIGradient")
+pg.Color=ColorSequence.new(Color3.fromRGB(248,244,236),Color3.fromRGB(229,222,210))
+pg.Rotation=90
+pg.Parent=pn
 if BGID~="" then
 	local bg=B("ImageLabel",{Size=UDim2.new(1,0,1,0),BackgroundTransparency=1,Image="rbxassetid://"..BGID,ScaleType=Enum.ScaleType.Crop,ZIndex=0,Parent=pn})
 	bg.ImageRectOffset=Vector2.new(0,0) bg.ImageRectSize=Vector2.new(1440,610)
@@ -968,7 +972,7 @@ function wxInitRain()
 		end
 	end)
 end
-wxInitRain()
+
 local bar=B("Frame",{Size=UDim2.new(1,0,0,32),BackgroundTransparency=1,Active=true,ZIndex=20,Parent=pn})
 local ttl=B("TextLabel",{Size=UDim2.new(0,86,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text="WX-LLL",Font=Enum.Font.GothamBold,TextSize=12,TextColor3=W,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=22,Parent=bar})
 local dvl=B("Frame",{Size=UDim2.new(0,86,0,1),Position=UDim2.fromOffset(10,26),BackgroundColor3=W,BorderSizePixel=0,ZIndex=22,Parent=bar})
