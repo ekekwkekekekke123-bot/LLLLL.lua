@@ -2549,11 +2549,14 @@ end)
 ;(function()
 hd(pgM,"自瞄")
 T(pgM,"自瞄总开关","AimOn",false)
+G(pgM,"锁定部位","AiPart",{"Head","Chest","Legs"})
+T(pgM,"快捷自瞄","QuickOn",false)
 T(pgM,"预判自瞄","PredOn",false)
 nb(pgM,"预判强度","PredVal",16,"0-100",0,100)
 G(pgM,"自瞄类型","AiType",{"玩家","NPC","所有"})
 local qg=B("ScreenGui",{IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=5000,Parent=safeParent()})
 local qb=B("TextButton",{Size=UDim2.fromOffset(104,26),Position=UDim2.new(0.5,-52,0.64,0),BackgroundColor3=C.row,TextColor3=C.txt,Font=Enum.Font.GothamMedium,TextSize=10,AutoButtonColor=false,Text="开启状态：X",Parent=qg})
+qb.Visible=false
 R(qb,6)
 local qs=Instance.new("UIStroke") qs.Color=Color3.fromRGB(25,25,25) qs.Thickness=1 qs.Parent=qb
 local qdrag=false
@@ -2575,7 +2578,8 @@ qb.Activated:Connect(function()
 	if TGS and TGS.AimOn then pcall(TGS.AimOn,S.AimOn) end
 end)
 RS.Heartbeat:Connect(function()
-	qb.Text="开启状态："..(S.AimOn and "✓" or "X")
+		qb.Visible=S.QuickOn
+qb.Text="开启状态："..(S.AimOn and "✓" or "X")
 	qb.TextColor3=S.AimOn and Color3.fromRGB(30,140,60) or C.txt
 end)
 end)()
