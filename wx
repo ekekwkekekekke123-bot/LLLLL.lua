@@ -2587,4 +2587,70 @@ qb.Text="开启状态："..(S.AimOn and "✓" or "X")
 	qb.TextColor3=S.AimOn and Color3.fromRGB(30,140,60) or C.txt
 end)
 end)()
+S.aimBP=function(ch)
+	local a=S.AimPart
+	if a=="Chest" then return ch:FindFirstChild("UpperTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("Head") end
+	if a=="Legs" then return ch:FindFirstChild("LowerTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("Head") end
+	return ch:FindFirstChild("Head") or ch:FindFirstChild("Torso")
+end
+RS:BindToRenderStep("wxAim",Enum.RenderPriority.Camera.Value+1,function()
+	if not S.AimOn or dead then return end
+	pcall(function()
+		local cam=workspace.CurrentCamera
+		local me=LP.Character
+		local mh=me and me:FindFirstChild("HumanoidRootPart")
+		if not (cam and mh) then return end
+		local vp=cam.ViewportSize
+		local cx,cy=vp.X/2,vp.Y/2
+		local r=math.max(tonumber(S.FovR) or 55,25)
+		local best,bd=nil,r
+		local wantNpc=(S.AiType=="NPC" or S.AiType=="所有" or S.AiType=="全部")
+		local wantPlr=(S.AiType=="玩家" or S.AiType=="所有" or S.AiType=="全部")
+		if wantPlr then
+			for _,p in ipairs(P:GetPlayers()) do
+				if p~=LP then
+					local c=p.Character
+					local hr=c and c:FindFirstChild("HumanoidRootPart")
+					local hu=c and c:FindFirstChildOfClass("Humanoid")
+					if hr and hu and hu.Health>0 then
+						local s,on=cam:WorldToViewportPoint(hr.Position)
+						if on then
+							local d=math.sqrt((s.X-cx)^2+(s.Y-cy)^2)
+							if d<bd then best=c bd=d end
+						end
+					end
+				end
+			end
+		end
+		if wantNpc then
+			for _,m in ipairs(workspace:GetChildren()) do
+				if m:IsA("Model") and not P:GetPlayerFromCharacter(m) then
+					local hu=m:FindFirstChildOfClass("Humanoid")
+					local hr=m:FindFirstChild("HumanoidRootPart") or m.PrimaryPart
+					if hu and hu.Health>0 and hr then
+						local s,on=cam:WorldToViewportPoint(hr.Position)
+						if on then
+							local d=math.sqrt((s.X-cx)^2+(s.Y-cy)^2)
+							if d<bd then best=m bd=d end
+						end
+					end
+				end
+			end
+		end
+		if best and best~=LP.Character then
+			local part=S.aimBP(best)
+			if part then
+				local pos=part.Position
+				local pv=tonumber(S.PredVal) or 0
+				if S.PredOn and pv>0 then
+					local v=part.AssemblyLinearVelocity
+					local dd=(pos-cam.CFrame.Position).Magnitude
+					pos=pos+v*(dd/1200)*(pv/100)
+				end
+				local cur=cam.CFrame
+				cam.CFrame=cur:Lerp(CFrame.lookAt(cur.Position,pos),0.35)
+			end
+		end
+	end)
+end)
 end _main()
