@@ -1505,28 +1505,36 @@ end)
 	local sw=B("TextButton",{Size=UDim2.fromOffset(28,18),Position=UDim2.new(1,-36,0.5,0),AnchorPoint=Vector2.new(0,0.5),BackgroundColor3=tb.Col,Text="",AutoButtonColor=false,ZIndex=16,Parent=rw}) R(sw,6)
 	sw.MouseButton1Click:Connect(function() cpt=tb cps=sw swA.BackgroundColor3=tb.Col cpH,cpS,cpV=tb.Col:ToHSV() cpA=1 cpTitle.Text=l cpSync() cpv.Visible=true cpBlock.Visible=true end)
 end
+local spinAng=0
 local function spinSet()
 	if S.spinC then pcall(function() S.spinC:Disconnect() end) S.spinC=nil end
 	local c=LP.Character
 	local h=c and c:FindFirstChildOfClass("Humanoid")
 	local r=c and c:FindFirstChild("HumanoidRootPart")
-	if not S.SpinOn then
-		if h then h.AutoRotate=true end
-		if r then
-			for _,v in ipairs(r:GetChildren()) do
-				if v:IsA("BodyAngularVelocity") then v:Destroy() end
-			end
+	if r then
+		for _,v in ipairs(r:GetChildren()) do
+			if v:IsA("BodyAngularVelocity") or v.Name=="wxSpinAO" or v.Name=="wxSpinAtt" then v:Destroy() end
 		end
-		return
 	end
-	if h then h.AutoRotate=false end
+	if h then h.AutoRotate=true end
+	if not S.SpinOn then return end
+	if not (r and h) then return end
+	h.AutoRotate=false
+	local att=Instance.new("Attachment")
+	att.Name="wxSpinAtt"
+	att.Parent=r
+	local ao=Instance.new("AlignOrientation")
+	ao.Name="wxSpinAO"
+	ao.Mode=Enum.OrientationAlignmentMode.OneAttachment
+	ao.Attachment0=att
+	ao.MaxTorque=20000
+	ao.Responsiveness=200
+	ao.CFrame=CFrame.Angles(0,spinAng,0)
+	ao.Parent=r
 	S.spinC=RS.RenderStepped:Connect(function(dt)
-		if not S.SpinOn then return end
-		local cc=LP.Character
-		local rr=cc and cc:FindFirstChild("HumanoidRootPart")
-		if rr then
-			rr.CFrame=rr.CFrame*CFrame.Angles(0,math.rad((tonumber(S.SpinV) or 100)*10)*dt,0)
-		end
+		if not S.SpinOn or not ao.Parent then return end
+		spinAng=spinAng+math.rad((tonumber(S.SpinV) or 100)*10)*dt
+		ao.CFrame=CFrame.Angles(0,spinAng,0)
 	end)
 end
 local function twSet()
