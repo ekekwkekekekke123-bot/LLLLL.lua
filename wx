@@ -748,7 +748,7 @@ RS.Heartbeat:Connect(function(dt)
 	local c=LP.Character
 	local hrp=c and c:FindFirstChild("HumanoidRootPart")
 	if not hrp then return end
-	local lim=math.clamp(tonumber(S.IPD) or 2500,0,2500)
+	local lim=math.clamp(tonumber(S.IPD) or 1000,0,2500)
 	for i=#IPG,1,-1 do
 		local o=IPG[i]
 		if not o.obj or not o.obj.Parent then
