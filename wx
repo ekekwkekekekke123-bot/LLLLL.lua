@@ -1060,10 +1060,10 @@ local side=B("ScrollingFrame",{Size=UDim2.new(0,74,1,-33),Position=UDim2.fromOff
 B("UIListLayout",{Padding=UDim.new(0,3),SortOrder=Enum.SortOrder.LayoutOrder,Parent=side})
 B("UIPadding",{PaddingLeft=UDim.new(0,6),PaddingRight=UDim.new(0,6),PaddingTop=UDim.new(0,5),Parent=side})
 local function sideBtn(t,i) local b=B("TextButton",{Size=UDim2.new(1,0,0,24),BackgroundColor3=Color3.fromRGB(246,241,232),Text=t,Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=Color3.fromRGB(255,255,230),AutoButtonColor=false,LayoutOrder=i,ZIndex=16,Parent=side}) R(b,7) return b end
-local s1b=sideBtn("玩家功能",1) local s2b=sideBtn("透视功能",2) local s3b=sideBtn("子弹追踪",3) local s4b=sideBtn("互动功能",4) local s5b=sideBtn("NPC",5) local s6b=sideBtn("画面功能",6) local s7b=sideBtn("危险",7) local s8b=sideBtn("配置",8)
+local s1b=sideBtn("玩家功能",1) local s2b=sideBtn("透视功能",2) local s3b=sideBtn("自瞄",3) local s3b=sideBtn("子弹追踪",3) local s4b=sideBtn("互动功能",4) local s5b=sideBtn("NPC",5) local s6b=sideBtn("画面功能",6) local s7b=sideBtn("危险",7) local s8b=sideBtn("配置",8)
 local function spage(v) local f=B("ScrollingFrame",{Size=UDim2.new(1,-80,1,-37),Position=UDim2.fromOffset(76,35),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=2,ScrollBarImageColor3=C.off,AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollingDirection=Enum.ScrollingDirection.Y,Visible=v,ZIndex=14,Parent=pn}) B("UIListLayout",{Padding=UDim.new(0,4),SortOrder=Enum.SortOrder.LayoutOrder,Parent=f}) B("UIPadding",{PaddingBottom=UDim.new(0,8),PaddingRight=UDim.new(0,4),Parent=f}) return f end
 local pgP=spage(true) local pgE=spage(false) local pgA=spage(false) local pgI=spage(false) local pgN=spage(false) local pgV=spage(false) local pgW=spage(false) local pgS=spage(false)
-            local tabs={s1b,s2b,s3b,s4b,s5b,s6b,s7b,s8b} local pages={pgP,pgE,pgA,pgI,pgN,pgV,pgW,pgS}
+            local tabs={s1b,s2b,s3b,s4b,s5b,s6b,s7b,s8b} local pages={pgP,pgE,pgM,pgA,pgI,pgN,pgV,pgW,pgS}
 local function selp(i) for k=1,#tabs do pages[k].Visible=(k==i) tabs[k].BackgroundColor3=(k==i) and C.accent or Color3.fromRGB(246,241,231) tabs[k].TextColor3=(k==i) and Color3.new(0,0,0) or C.txt end end
 for k=1,#tabs do tabs[k].MouseButton1Click:Connect(function() selp(k) end) end
 function wxInitFX()
@@ -1592,7 +1592,7 @@ function apK(k)
 		elseif k=="FC" then fcSet()
 	elseif k=="SpinOn" or k=="SpinV" then spinSet()
 	elseif k=="TwOn" then twSet()
-		elseif k=="TpOn" then tpSet() elseif k=="RevOn" then wxRev() elseif k=="AutoJp" then wxAutoJump() end
+		elseif k=="TpOn" then tpSet() elseif k=="RevOn" then wxRev() elseif k=="AutoJp" then wxAutoJump() end elseif k=="AimOn" then S.AiOn=S.AimOn if S.AimOn then S.FovOn=true S.FovR=55 end end
 end
 local function T(par,l,k,dv) TGS=TGS or {} local rw,pl,kn,set2=tg(par,l,dv,function(v) S[k]=v apK(k) end) TGS[k]=set2 end
 local function N(par,l,k,mn,mx) nb(par,l,k,S[k],tostring(mn).."-"..tostring(mx),mn,mx) end
@@ -2543,4 +2543,35 @@ bt(pgS,"摧毁保存配置",function()
 		if delfile then delfile("wx_cfg.json") end
 	end)
 	wxToast(ok and "已清除保存" or "清除失败")
+end)
+hd(pgM,"自瞄")
+T(pgM,"自瞄总开关","AimOn",false)
+T(pgM,"预判自瞄","PredOn",false)
+nb(pgM,"预判强度","PredVal",16,"0-100",0,100)
+G(pgM,"自瞄类型","AiType",{"玩家","NPC","所有"})
+local qg=B("ScreenGui",{IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=5000,Parent=safeParent()})
+local qb=B("TextButton",{Size=UDim2.fromOffset(104,26),Position=UDim2.new(0.5,-52,0.64,0),BackgroundColor3=C.row,TextColor3=C.txt,Font=Enum.Font.GothamMedium,TextSize=10,AutoButtonColor=false,Text="开启状态：X",Parent=qg})
+R(qb,6)
+local qs=Instance.new("UIStroke") qs.Color=Color3.fromRGB(25,25,25) qs.Thickness=1 qs.Parent=qb
+local qdrag=false
+qb.InputBegan:Connect(function(i)
+	if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseButton1 then
+		qdrag=true
+		task.delay(0.18,function() qdrag=false end)
+	end
+end)
+qb.InputChanged:Connect(function(i)
+	if qdrag and (i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseMovement) then
+		qb.Position=UDim2.new(0.5,qb.Position.X.Offset+i.Delta.X,0.64,qb.Position.Y.Offset+i.Delta.Y)
+	end
+end)
+qb.Activated:Connect(function()
+	S.AimOn=not S.AimOn
+	S.AiOn=S.AimOn
+	if S.AimOn then S.FovOn=true S.FovR=55 end
+	if TGS and TGS.AimOn then pcall(TGS.AimOn,S.AimOn) end
+end)
+RS.Heartbeat:Connect(function()
+	qb.Text="开启状态："..(S.AimOn and "✓" or "X")
+	qb.TextColor3=S.AimOn and Color3.fromRGB(30,140,60) or C.txt
 end)
