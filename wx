@@ -2091,7 +2091,7 @@ end
 task.delay(0.35,function() pcall(function() powerState(true) end) end)
             RS.RenderStepped:Connect(function(dt)
 	if dead then return end
-	pcall(function()
+		pcall(function() as(dt) esp() hookSilent()
 		local st=math.min(dt,0.05)
 		hue=(hue+st*0.06*((S.RainOn and S.RainSpd or 1)))%1
 		ttl.TextColor3=Color3.fromHSV(hue,1,1)
@@ -2103,7 +2103,6 @@ task.delay(0.35,function() pcall(function() powerState(true) end) end)
 		end
 		sand(st)
 		for p,ch in pairs(Q) do Q[p]=nil if p.Character==ch then mk(p) end break end
-		as(dt) esp() hookSilent()
 		if ES.Bx.On and S.BoxMd=="3D" and ES.Bx.Rain then
 			RT.bxT=(RT.bxT or 0)+st
 			if RT.bxT>0.1 then RT.bxT=0 nespApply() end
