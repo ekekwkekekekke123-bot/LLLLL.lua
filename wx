@@ -459,8 +459,8 @@ local function pick(cam,cx,cy)
 	local best,bv=nil,nil
 	local hunt=(S.NameHunt and #NL>0)
 	local ts={}
-	if S.AiType=="玩家" or S.AiType=="全部" then for _,p in ipairs(P:GetPlayers()) do if p~=LP then ts[#ts+1]={ch=p.Character,name=p.Name,team=p.Team,plr=p} end end end
-	if S.AiType=="NPC" or S.AiType=="全部" then for _,m in ipairs(workspace:GetChildren()) do if m:IsA("Model") and m:FindFirstChildOfClass("Humanoid") and not P:GetPlayerFromCharacter(m) then ts[#ts+1]={ch=m,name=m.Name} end end end
+		if S.AiType=="玩家" or S.AiType=="全部" or S.AiType=="所有" then
+		if S.AiType=="NPC" or S.AiType=="全部" or S.AiType=="所有" then
 	for _,t in ipairs(ts) do
 		local ch=t.ch
 		if ch then
@@ -574,7 +574,7 @@ local function hookSilent()
 			local m=getnamecallmethod()
 							if not (S.AiOn and S.AiWall) then return old(self,...) end
 if aimPart and aimPart.Parent then
-				local cp=workspace.CurrentCamera.CFrame.Position local tg=(aimPart.Position-cp).Unit*1000
+								local cp=workspace.CurrentCamera.CFrame.Position local ap=aimPart.Position if S.PredOn and S.PredVal>0 then local v=aimPart.AssemblyLinearVelocity local d=(ap-cp).Magnitude ap=ap+v*(d/1200)*(S.PredVal/100) end local tg=(ap-cp).Unit*1000
 				if (S.SilentMode=="Raycast" or S.SilentMode=="双通道") and m=="Raycast" then
 					local a={...} local n=#a local pi=nil
 					for i=1,n do if typeof(a[i])=="RaycastParams" then pi=i end end
