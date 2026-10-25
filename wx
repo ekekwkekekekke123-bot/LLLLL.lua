@@ -2415,11 +2415,3 @@ RS.RenderStepped:Connect(function()
 		end
 	end
 end)
-						f.Visible=false
-					end
-				end
-			end)
-		end
-	end
-end)
-						
