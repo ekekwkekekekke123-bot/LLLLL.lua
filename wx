@@ -252,7 +252,7 @@ local function fly()
 		if phys then
 			if RT.bv and RT.bg then
 				RT.bv.Velocity=dir
-				RT.bg.CFrame=CFrame.lookAt(r.Position,r.Position+Look)
+				RT.bg.CFrame=CFrame.lookAt(r.Position,r.Position+look)
 			end
 		else
 			local np=r.Position+dir*dt
@@ -1616,7 +1616,6 @@ function wxAutoJump()
 		end
 	end)
 end
-nb(pgE,"互动距离","IPD",25,"0-10000",0,10000)
 hd(pgE,"显示") nb(pgE,"最大距离","ESMax",S.ESMax,"0-10000",0,10000)
 for _,t in ipairs(EIT) do
 	local k,nm=t[1],t[2] local c=ES[k]
@@ -1665,6 +1664,7 @@ local lt=B("TextLabel",{Size=UDim2.new(1,0,0,22),BackgroundColor3=C.row,Backgrou
 bt(pgA,"添加到列表",function() local n=S.NameInput if n and n~="" then table.insert(NL,n) lt.Text="名称列表: "..table.concat(NL," / ") end end)
 bt(pgA,"从列表中删除",function() if #NL>0 then table.remove(NL) end lt.Text="名称列表: "..(#NL>0 and table.concat(NL," / ") or "--") end)
 hd(pgI,"互动") T(pgI,"ESP互动","ESPInt",false) T(pgI,"秒互动","SecOn",false) T(pgI,"自动互动","AutoOn",false)
+nb(pgI,"互动距离","IPD",1000,"0-2500",0,2500)
 hd(pgI,"范围") T(pgI,"互动范围修改","IRange",false) nb(pgI,"互动距离（格）","IVal",S.IVal,"0-10000",0,10000)
 bt(pgI,"一键互动全部",function()
 	local c=LP.Character
