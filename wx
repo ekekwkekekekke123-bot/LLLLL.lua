@@ -849,8 +849,8 @@ end
 	local function fArrow(pos,up)
 		local b=B("TextButton",{AnchorPoint=Vector2.new(1,0.5),Position=pos,Size=UDim2.fromOffset(50,50),BackgroundColor3=Color3.fromRGB(14,14,18),BackgroundTransparency=0.5,Text="",AutoButtonColor=false,BorderSizePixel=0,ZIndex=22,Parent=FCG}) R(b,0.5) SK(b,Color3.fromRGB(210,235,255),0.55)
 		local d=up and -1 or 1
-		local a1=B("Frame",{Size=UDim2.fromOffset(16,3),AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromOffset(20,25+6*d),Rotation=-45*d,BackgroundColor3=W,BorderSizePixel=0,ZIndex=23,Parent=b}) R(a1,0.5)
-		local a2=B("Frame",{Size=UDim2.fromOffset(16,3),AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromOffset(30,25+6*d),Rotation=45*d,BackgroundColor3=W,BorderSizePixel=0,ZIndex=23,Parent=b}) R(a2,0.5)
+				local a1=B("Frame",{Size=UDim2.fromOffset(14,2.5),AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromOffset(21,25+6*d),Rotation=-45*d,BackgroundColor3=W,BorderSizePixel=0,ZIndex=23,Parent=b}) R(a1,0.5)
+				local a2=B("Frame",{Size=UDim2.fromOffset(14,2.5),AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromOffset(29,25+6*d),Rotation=45*d,BackgroundColor3=W,BorderSizePixel=0,ZIndex=23,Parent=b}) R(a2,0.5)
 		return b
 	end
 	local fup=fArrow(UDim2.new(1,-24,1,-182),true)
