@@ -662,7 +662,7 @@ local function npcTick(cam,vp)
 						local fd=math.floor(dist) if fd~=d.last then d.last=fd d.d.Text=fd.."m" end
 						d.h.Visible=S.NpcHp
 						if S.NpcHp then local v=math.floor(hu.Health+0.5) if v~=d.hpv then d.hpv=v d.h.Text="【HP"..v.."】" end end
-												if S.NpcHl then
+												if S.NpcBx then
 							local pt=cam:WorldToViewportPoint(hd.Position+Vector3.new(0,0.6,0)) local pb=cam:WorldToViewportPoint(hrp.Position-Vector3.new(0,2.6,0))
 							if pt.Z>0 and pb.Z>0 then
 								local rvb=cam.CFrame.RightVector local a1=cam:WorldToViewportPoint(hrp.Position+rvb*2.2) local a2=cam:WorldToViewportPoint(hrp.Position-rvb*2.2)
@@ -2365,56 +2365,59 @@ local IG=Instance.new("ScreenGui")
 IG.Name="wx_int" IG.IgnoreGuiInset=true IG.ResetOnSpawn=false IG.DisplayOrder=3
 IG.Parent=safeParent()
 local IPF={}
-local HLP={}
-for i=1,30 do
-	local h=Instance.new("Highlight")
-	h.FillTransparency=1
-	h.OutlineColor=Color3.fromRGB(255,225,130)
-	h.OutlineTransparency=0
-	h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
-	h.Enabled=false
-	h.Parent=workspace.CurrentCamera
-	HLP[i]=h
+local env=(getgenv and getgenv()) or _G
+if env.WXDR then
+	for _,v in ipairs(env.WXDR) do
+		for _,o in pairs(v) do pcall(function() o:Remove() end) end
+	end
+	env.WXDR=nil
 end
+local okD,DRAW=pcall(function() return Drawing end)
+if not okD or not DRAW then return end
+local DW={}
+local function mk()
+	local t={}
+	t.box=DRAW.new("Square") t.box.Thickness=1.5 t.box.Filled=false t.box.Color=Color3.fromRGB(255,225,130) t.box.Transparency=1 t.box.Visible=false
+	t.nm=DRAW.new("Text") t.nm.Size=9 t.nm.Color=Color3.fromRGB(255,232,150) t.nm.Center=true t.nm.Outline=true t.nm.OutlineColor=Color3.new(0,0,0) t.nm.Visible=false
+	t.ds=DRAW.new("Text") t.ds.Size=8 t.ds.Color=Color3.fromRGB(255,232,150) t.ds.Center=true t.ds.Outline=true t.ds.OutlineColor=Color3.new(0,0,0) t.ds.Visible=false
+	return t
+end
+env.WXDR=DW
 RS.RenderStepped:Connect(function()
+	local cam=workspace.CurrentCamera
 	local ch=LP.Character
 	local hrp=ch and ch:FindFirstChild("HumanoidRootPart")
-	if not hrp then
-		for i=1,30 do HLP[i].Enabled=false HLP[i].Adornee=nil end
-		return
-	end
-	local list={}
-	if S.ESPInt then
-		local lim=math.clamp(tonumber(S.IPD) or 1000,0,2500)
+	local on=S.ESPInt and cam and hrp
+	local lim=math.clamp(tonumber(S.IPD) or 1000,0,2500)
+	if on then
 		for i=1,#IPG do
 			local o=IPG[i]
-			if o.obj and o.obj.Parent then
-				local d=(o.obj.Position-hrp.Position).Magnitude
-				if d<=lim then list[#list+1]={o.obj,d,1} end
+			if not DW[i] then DW[i]=mk() end
+			local d=DW[i]
+			local obj=o.obj
+			local dd=1e9
+			if obj and obj.Parent then
+				if o.bb then o.bb.Enabled=false end
+				dd=(obj.Position-hrp.Position).Magnitude
 			end
-		end
-	end
-	if S.NpcHl then
-		for m in pairs(ND) do
-			if m.Parent then
-				local p=m:FindFirstChild("HumanoidRootPart") or m.PrimaryPart
-				if p and (p.Position-hrp.Position).Magnitude<=250 then
-					list[#list+1]={m,(p.Position-hrp.Position).Magnitude,2}
+			if dd<=lim then
+				local vp,vis=cam:WorldToViewportPoint(obj.Position)
+				if vis then
+					local sz=math.clamp(1400/dd,10,200)
+					d.box.Size=Vector2.new(sz,sz)
+					d.box.Position=vp-Vector2.new(sz/2,sz/2)
+					d.box.Visible=true
+					d.nm.Text=o.nm d.nm.Position=vp-Vector2.new(0,sz/2+10) d.nm.Visible=true
+					d.ds.Text=math.floor(dd).."m" d.ds.Position=vp+Vector2.new(0,sz/2+10) d.ds.Visible=true
+				else
+					d.box.Visible=false d.nm.Visible=false d.ds.Visible=false
 				end
+			else
+				d.box.Visible=false d.nm.Visible=false d.ds.Visible=false
 			end
 		end
-	end
-	table.sort(list,function(a,b) return a[2]<b[2] end)
-	for i=1,30 do
-		local h=HLP[i]
-		local it=list[i]
-		if it then
-			h.Adornee=it[1]
-			h.OutlineColor=(it[3]==2) and Color3.fromRGB(0,255,180) or Color3.fromRGB(255,225,130)
-			h.Enabled=true
-		else
-			h.Enabled=false
-			h.Adornee=nil
-		end
+		for i=#IPG+1,#DW do DW[i].box.Visible=false DW[i].nm.Visible=false DW[i].ds.Visible=false end
+	else
+		for i=1,#DW do DW[i].box.Visible=false DW[i].nm.Visible=false DW[i].ds.Visible=false end
 	end
 end)
