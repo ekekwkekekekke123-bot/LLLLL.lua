@@ -489,7 +489,7 @@ local function as(dt)
 	if not S.AiOn then fov.Visible=false inf.Visible=false tline.Visible=false aimPart=nil if aimBB then aimBB.Enabled=false end if hdB then hdB.Enabled=false end if RT.aimHL then pcall(function() RT.aimHL:Destroy() end) RT.aimHL=nil end return end
 	fov.Visible=S.FovOn fov.Position=UDim2.fromOffset(cx,cy) fov.Size=UDim2.fromOffset(S.FovR*2,S.FovR*2) fs.Color=(S.RainOn and Color3.fromHSV(hue,1,1)) or S.TgtC.Col
 	local best=pick(cam,cx,cy)
-	if best and S.AiVis and not S.AiWall then
+	if best and S.AiVis then
 		local part=best.ch:FindFirstChild(S.AiPart) or best.ch:FindFirstChild("HumanoidRootPart")
 		if part and not see(cam,part,best.ch) then best=nil end
 	end
@@ -662,7 +662,7 @@ local function npcTick(cam,vp)
 						local fd=math.floor(dist) if fd~=d.last then d.last=fd d.d.Text=fd.."m" end
 						d.h.Visible=S.NpcHp
 						if S.NpcHp then local v=math.floor(hu.Health+0.5) if v~=d.hpv then d.hpv=v d.h.Text="【HP"..v.."】" end end
-												if S.NpcBx or S.NpcHl then
+												if S.NpcHl then
 							local pt=cam:WorldToViewportPoint(hd.Position+Vector3.new(0,0.6,0)) local pb=cam:WorldToViewportPoint(hrp.Position-Vector3.new(0,2.6,0))
 							if pt.Z>0 and pb.Z>0 then
 								local rvb=cam.CFrame.RightVector local a1=cam:WorldToViewportPoint(hrp.Position+rvb*2.2) local a2=cam:WorldToViewportPoint(hrp.Position-rvb*2.2)
@@ -2102,7 +2102,7 @@ task.delay(0.35,function() pcall(function() powerState(true) end) end)
 			if RT.bxT>0.1 then RT.bxT=0 nespApply() end
 		end
 		if S.LPlOn then lpTick() end
-		nt=nt+st if nt>0.12 then nt=0 npcTick(workspace.CurrentCamera,workspace.CurrentCamera.ViewportSize) end
+		nt=nt+st if nt>0.016 then nt=0 npcTick(workspace.CurrentCamera,workspace.CurrentCamera.ViewportSize) end
 		if dmgT>0 then dmgT=dmgT-st if dmgT<=0 then dmgLbl.Visible=false end end
 		fsm=fsm+((1/math.max(st,0.001))-fsm)*0.12
 		hudT=hudT+st
