@@ -2575,3 +2575,4 @@ RS.Heartbeat:Connect(function()
 	qb.Text="开启状态："..(S.AimOn and "✓" or "X")
 	qb.TextColor3=S.AimOn and Color3.fromRGB(30,140,60) or C.txt
 end)
+end)()
