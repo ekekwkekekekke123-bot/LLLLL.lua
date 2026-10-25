@@ -511,7 +511,11 @@ local function as(dt)
 			local part=(S.AimOn and S.aimPartOf(best.ch)) or S.aiPart(best.ch) or best.ch:FindFirstChild("HumanoidRootPart")
 	if not hu or not part then aimPart=nil return end
 	aimPart=part
-	local sp,on=cam:WorldToViewportPoint(part.Position)
+		if S.AimOn and part then
+		local cur=cam.CFrame
+		cam.CFrame=cur:Lerp(CFrame.lookAt(cur.Position,part.Position),0.35)
+	end
+local sp,on=cam:WorldToViewportPoint(part.Position)
 	local lh=HL[hu] HL[hu]=hu.Health
 	if S.DmgOn and lh and hu.Health<lh then
 		dmgLbl.Text="-"..math.floor(lh-hu.Health) dmgLbl.Visible=true dmgLbl.Position=UDim2.fromOffset(sp.X+14,sp.Y-42) dmgT=0.8
