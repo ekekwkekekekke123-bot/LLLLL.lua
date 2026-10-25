@@ -507,7 +507,7 @@ local function as(dt)
 	if best and math.random()*100>S.AiAcc then best=nil end
 	if not best then inf.Visible=false tline.Visible=false aimPart=nil if aimBB then aimBB.Enabled=false end if hdB then hdB.Enabled=false end if RT.aimHL then pcall(function() RT.aimHL:Destroy() end) RT.aimHL=nil end return end
 	local hu=best.ch:FindFirstChildOfClass("Humanoid")
-	local part=best.ch:FindFirstChild(S.AiPart) or best.ch:FindFirstChild("HumanoidRootPart")
+		local part=S.aiPart(best.ch) or best.ch:FindFirstChild("HumanoidRootPart")
 	if not hu or not part then aimPart=nil return end
 	aimPart=part
 	local sp,on=cam:WorldToViewportPoint(part.Position)
