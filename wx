@@ -2551,6 +2551,20 @@ end)
 hd(pgM,"自瞄")
 T(pgM,"自瞄总开关","AimOn",false)
 nb(pgM,"FOV半径","AimFov",55,"0-250",0,250)
+S.fcProxy={Col=Color3.new(1,1,1)}
+local fcRow=B("TextButton",{Size=UDim2.new(1,0,0,26),BackgroundColor3=C.row,Text="",AutoButtonColor=false,Parent=pgM})
+R(fcRow,7)
+local fcTxt=B("TextLabel",{Size=UDim2.new(0.6,0,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text="FOV颜色",Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,Parent=fcRow})
+local fcSw=B("TextButton",{Size=UDim2.fromOffset(34,16),Position=UDim2.new(1,-44,0.5,0),AnchorPoint=Vector2.new(0,0.5),BackgroundColor3=S.fcProxy.Col,Text="",AutoButtonColor=false,Parent=fcRow})
+R(fcSw,4)
+SK(fcSw,Color3.fromRGB(120,120,120),0.3)
+fcSw.MouseButton1Click:Connect(function()
+	S.fcProxy.Col=Color3.new(1,1,1)
+	cpt=S.fcProxy cps=fcSw swA.BackgroundColor3=S.fcProxy.Col
+	cpH,cpS,cpV=S.fcProxy.Col:ToHSV() cpA=1
+	cpTitle.Text="自瞄 · FOV"
+	cpSync() cpv.Visible=true
+end)
 G(pgM,"锁定部位","AimPart",{"Head","Chest","Legs"})
 T(pgM,"快捷自瞄","QuickOn",false)
 T(pgM,"墙壁检察","WallOn",false)
@@ -2585,6 +2599,10 @@ qb.Text="开启状态："..(S.AimOn and "✓" or "X")
 	qb.TextColor3=S.AimOn and Color3.fromRGB(30,140,60) or C.txt
 end)
 end)()
+S.fcmap={白=Color3.new(1,1,1),红=Color3.fromRGB(255,70,70),青=Color3.fromRGB(0,220,255),黄=Color3.fromRGB(255,220,60),绿=Color3.fromRGB(60,255,120),紫=Color3.fromRGB(190,120,255)}
+S.afov=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),Size=UDim2.fromOffset(110,110),BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=45,Parent=AG})
+R(S.afov,1)
+S.afovStroke=SK(S.afov,Color3.new(1,1,1),0.25)
 S.wallClear=function(cam,part,ch)
 	local rp=RaycastParams.new()
 	rp.FilterType=Enum.RaycastFilterType.Exclude
@@ -2600,16 +2618,16 @@ S.aimBP=function(ch)
 	return ch:FindFirstChild("Head") or ch:FindFirstChild("Torso")
 end
 RS:BindToRenderStep("wxAim",Enum.RenderPriority.Camera.Value+1,function()
-	if not S.AimOn or dead then return end
+		if not S.AimOn or dead then if S.afov then S.afov.Visible=false end return end
 	pcall(function()
 		local cam=workspace.CurrentCamera
 		local me=LP.Character
 		local mh=me and me:FindFirstChild("HumanoidRootPart")
 		if not (cam and mh) then return end
 		local fr=math.clamp(tonumber(S.AimFov) or 55,0,250)
-		fov.Visible=true
-		fov.Size=UDim2.fromOffset(fr*2,fr*2)
-		fov.Position=UDim2.new(0.5,0,0.5,0)
+				S.afovStroke.Color=S.fcmap[S.AimFovC or "白"] or Color3.new(1,1,1)
+		S.afov.Visible=true
+		S.afov.Size=UDim2.fromOffset(fr*2,fr*2)
 		local vp=cam.ViewportSize
 		local cx,cy=vp.X/2,vp.Y/2
 		local best,bd=nil,fr
