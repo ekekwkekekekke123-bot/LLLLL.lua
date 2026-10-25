@@ -447,7 +447,7 @@ local iN=Instance.new("TextLabel") iN.Size=UDim2.new(1,-6,0,12) iN.Position=UDim
 local iH=Instance.new("TextLabel") iH.Size=UDim2.new(1,-6,0,11) iH.Position=UDim2.fromOffset(3,15) iH.BackgroundTransparency=1 iH.Font=Enum.Font.GothamMedium iH.TextSize=8 iH.TextColor3=YEL iH.TextXAlignment=Enum.TextXAlignment.Left iH.Parent=inf
 local dmgLbl=B("TextLabel",{Size=UDim2.fromOffset(90,20),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=14,TextColor3=Color3.fromRGB(255,80,80),TextStrokeTransparency=0.3,Visible=false,ZIndex=6,Parent=AG})
 local aimBB,aimTG=nil,nil local hdB,hdT1,hdT2=nil,nil,nil local silentOn=false
-local function see(cam,part,ch) local rp=RaycastParams.new() rp.FilterType=Enum.RaycastFilterType.Exclude rp.FilterDescendantsInstances={LP.Character,ch} return workspace:Raycast(cam.CFrame.Position,part.Position-cam.CFrame.Position,rp)==nil end
+local function see(cam,part,ch) local rp=RaycastParams.new() rp.FilterType=Enum.RaycastFilterType.Exclude rp.FilterDescendantsInstances={LP.Character,ch} local hd=LP.Character and LP.Character:FindFirstChild("Head") local o=hd and hd.Position or cam.CFrame.Position if (o-part.Position).Magnitude<2 then return true end return workspace:Raycast(o,part.Position-o,rp)==nil end
 local function pick(cam,cx,cy)
 	local best,bv=nil,nil
 	local hunt=(S.NameHunt and #NL>0)
