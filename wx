@@ -663,13 +663,17 @@ local function npcTick(cam,vp)
 						d.h.Visible=S.NpcHp
 						if S.NpcHp then local v=math.floor(hu.Health+0.5) if v~=d.hpv then d.hpv=v d.h.Text="【HP"..v.."】" end end
 												if S.NpcBx then
-							local pt=cam:WorldToViewportPoint(hd.Position+Vector3.new(0,0.6,0)) local pb=cam:WorldToViewportPoint(hrp.Position-Vector3.new(0,2.6,0))
+														local pt=cam:WorldToViewportPoint(hd.Position+Vector3.new(0,0.5,0))
+							local pb=cam:WorldToViewportPoint(hrp.Position-Vector3.new(0,2.6,0))
 							if pt.Z>0 and pb.Z>0 then
-								local rvb=cam.CFrame.RightVector local a1=cam:WorldToViewportPoint(hrp.Position+rvb*2.2) local a2=cam:WorldToViewportPoint(hrp.Position-rvb*2.2)
-								local x1=math.min(a1.X,a2.X) local x2=math.max(a1.X,a2.X) local y1=math.min(pt.Y,pb.Y) local y2=math.max(pt.Y,pb.Y)
+								local hx=math.max(hrp.Size.X,1)*0.55
+								local a1=cam:WorldToViewportPoint(hrp.Position+cam.CFrame.RightVector*hx)
+								local a2=cam:WorldToViewportPoint(hrp.Position-cam.CFrame.RightVector*hx)
+								local x1=math.min(a1.X,a2.X) local x2=math.max(a1.X,a2.X)
+								local y1=math.min(pt.Y,pb.Y) local y2=math.max(pt.Y,pb.Y)
 								d.b.Position=UDim2.fromOffset(x1,y1) d.b.Size=UDim2.fromOffset(math.max(x2-x1,1),math.max(y2-y1,1)) d.b.Visible=true
 							else d.b.Visible=false end
-						else d.b.Visible=false end
+							else d.b.Visible=false end
 					end
 				end
 			end
