@@ -2368,60 +2368,91 @@ local IG=Instance.new("ScreenGui")
 IG.Name="wx_int" IG.IgnoreGuiInset=true IG.ResetOnSpawn=false IG.DisplayOrder=3
 IG.Parent=safeParent()
 local IPF={}
-local env=(getgenv and getgenv()) or _G
-if env.WXDR then
-	for _,v in ipairs(env.WXDR) do
-		for _,o in pairs(v) do pcall(function() o:Remove() end) end
-	end
-	env.WXDR=nil
+for _,v in ipairs(safeParent():GetChildren()) do
+	if v.Name=="wx_esp2d" then v:Destroy() end
 end
-local okD,DRAW=pcall(function() return Drawing end)
-if not okD or not DRAW then return end
-local DW={}
-local function mk()
-	local t={}
-	t.box=DRAW.new("Square") t.box.Thickness=1.5 t.box.Filled=false t.box.Color=Color3.fromRGB(255,225,130) t.box.Transparency=1 t.box.Visible=false
-	t.nm=DRAW.new("Text") t.nm.Size=9 t.nm.Color=Color3.fromRGB(255,232,150) t.nm.Center=true t.nm.Outline=true t.nm.OutlineColor=Color3.new(0,0,0) t.nm.Visible=false
-	t.ds=DRAW.new("Text") t.ds.Size=8 t.ds.Color=Color3.fromRGB(255,232,150) t.ds.Center=true t.ds.Outline=true t.ds.OutlineColor=Color3.new(0,0,0) t.ds.Visible=false
-	return t
+local UG=Instance.new("ScreenGui")
+UG.Name="wx_esp2d" UG.IgnoreGuiInset=true UG.ResetOnSpawn=false UG.DisplayOrder=5
+UG.Parent=safeParent()
+local POOL={}
+local function mk2()
+	local n=Instance.new("TextLabel")
+	n.BackgroundTransparency=1 n.Font=Enum.Font.GothamMedium n.TextSize=9
+	n.TextColor3=Color3.fromRGB(255,232,150) n.TextStrokeTransparency=0.35
+	n.Size=UDim2.fromOffset(150,12) n.AnchorPoint=Vector2.new(0.5,1) n.Visible=false n.Parent=UG
+	local d=Instance.new("TextLabel")
+	d.BackgroundTransparency=1 d.Font=Enum.Font.GothamMedium d.TextSize=8
+	d.TextColor3=Color3.fromRGB(255,232,150) d.TextStrokeTransparency=0.35
+	d.Size=UDim2.fromOffset(80,12) d.AnchorPoint=Vector2.new(0.5,0) d.Visible=false d.Parent=UG
+	return {n=n,d=d}
 end
-env.WXDR=DW
+local HLP={}
+for i=1,30 do
+	local h=Instance.new("Highlight")
+	h.FillTransparency=1
+	h.OutlineTransparency=0
+	h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
+	h.Enabled=false
+	h.Parent=workspace.CurrentCamera
+	HLP[i]=h
+end
 RS.RenderStepped:Connect(function()
 	local cam=workspace.CurrentCamera
 	local ch=LP.Character
 	local hrp=ch and ch:FindFirstChild("HumanoidRootPart")
-	local on=S.ESPInt and cam and hrp
-	local lim=math.clamp(tonumber(S.IPD) or 1000,0,2500)
-	if on then
-		for i=1,#IPG do
-			local o=IPG[i]
-			if not DW[i] then DW[i]=mk() end
-			local d=DW[i]
-			local obj=o.obj
-			local dd=1e9
-			if obj and obj.Parent then
-				if o.bb then o.bb.Enabled=false end
-				dd=(obj.Position-hrp.Position).Magnitude
-			end
-			if dd<=lim then
-				local vp,vis=cam:WorldToViewportPoint(obj.Position)
-				if vis then
-					local sz=math.clamp(1400/dd,10,200)
-					d.box.Size=Vector2.new(sz,sz)
-					d.box.Position=vp-Vector2.new(sz/2,sz/2)
-					d.box.Visible=true
-					d.nm.Text=o.nm d.nm.Position=vp-Vector2.new(0,sz/2+10) d.nm.Visible=true
-					d.ds.Text=math.floor(dd).."m" d.ds.Position=vp+Vector2.new(0,sz/2+10) d.ds.Visible=true
-				else
-					d.box.Visible=false d.nm.Visible=false d.ds.Visible=false
+	local list={}
+	if cam and hrp then
+		if S.ESPInt then
+			local lim=math.clamp(tonumber(S.IPD) or 1000,0,2500)
+			for i=1,#IPG do
+				local o=IPG[i]
+				if o.obj and o.obj.Parent then
+					if o.bb then o.bb.Enabled=false end
+					local dd=(o.obj.Position-hrp.Position).Magnitude
+					if dd<=lim then list[#list+1]={o.obj,dd,o.nm,0} end
 				end
-			else
-				d.box.Visible=false d.nm.Visible=false d.ds.Visible=false
 			end
 		end
-		for i=#IPG+1,#DW do DW[i].box.Visible=false DW[i].nm.Visible=false DW[i].ds.Visible=false end
-	else
-		for i=1,#DW do DW[i].box.Visible=false DW[i].nm.Visible=false DW[i].ds.Visible=false end
+		if S.NpcHl then
+			for m in pairs(ND) do
+				if m.Parent then
+					local p=m:FindFirstChild("HumanoidRootPart") or m.PrimaryPart
+					if p then
+						local dd=(p.Position-hrp.Position).Magnitude
+						if dd<=250 then list[#list+1]={m,dd,m.Name,1} end
+					end
+				end
+			end
+		end
+		table.sort(list,function(a,b) return a[2]<b[2] end)
+	end
+	for i=1,30 do
+		local h=HLP[i]
+		local it=list[i]
+		if it then
+			h.Adornee=it[1]
+			h.OutlineColor=(it[4]==1) and Color3.fromRGB(0,255,180) or Color3.fromRGB(255,225,130)
+			h.Enabled=true
+		else
+			h.Enabled=false
+			h.Adornee=nil
+		end
+	end
+	for i=1,50 do
+		local it=list[i]
+		if not POOL[i] then POOL[i]=mk2() end
+		local u=POOL[i]
+		if it then
+			local vp,vis=cam:WorldToViewportPoint(it[1].Position)
+			if vis then
+				u.n.Text=it[3] u.n.Position=UDim2.fromOffset(vp.X,vp.Y-24) u.n.Visible=true
+				u.d.Text=math.floor(it[2]).."m" u.d.Position=UDim2.fromOffset(vp.X,vp.Y-12) u.d.Visible=true
+			else
+				u.n.Visible=false u.d.Visible=false
+			end
+		else
+			u.n.Visible=false u.d.Visible=false
+		end
 	end
 end)
 RS.RenderStepped:Connect(function()
