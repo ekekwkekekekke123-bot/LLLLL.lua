@@ -111,117 +111,305 @@ pcall(function() PC=require(LP.PlayerScripts:WaitForChild("PlayerModule",3)):Get
 local function chr() local ch=LP.Character if not ch then return end local h=ch:FindFirstChildOfClass("Humanoid") local r=ch:FindFirstChild("HumanoidRootPart") or ch:FindFirstChild("Torso") if h and r then return ch,h,r end end
 local function mv() if PC then local ok,v=pcall(function() return PC:GetMoveVector() end) if ok and typeof(v)=="Vector3" then return v end end local v=Vector3.zero if UI:IsKeyDown(Enum.KeyCode.W) then v=v+Vector3.new(0,0,-1) end if UI:IsKeyDown(Enum.KeyCode.S) then v=v+Vector3.new(0,0,1) end if UI:IsKeyDown(Enum.KeyCode.A) then v=v+Vector3.new(-1,0,0) end if UI:IsKeyDown(Enum.KeyCode.D) then v=v+Vector3.new(1,0,0) end return v end
 local function vv() if UI:IsKeyDown(Enum.KeyCode.Space) then return 1 end if UI:IsKeyDown(Enum.KeyCode.LeftControl) or UI:IsKeyDown(Enum.KeyCode.LeftShift) then return -1 end return 0 end
-local function walk()
-	if RT.wc then RT.wc:Disconnect() RT.wc=nil end
-	if RT.spd then RT.spd:Disconnect() RT.spd=nil end
-	if RT.satt then pcall(function() RT.satt:Destroy() end) RT.satt=nil end
-	local _,h=chr()
-	if not h then return end
-	if RT.wc0==nil then RT.wc0=h.WalkSpeed end
-	local base=RT.wc0 or 16
-	if S.SpOn then
-		if S.SafeOn then
-			-- [反检测伪装] WalkSpeed 钉死合法值，实际移动用帧步进
-			h.WalkSpeed=base
-			RT.spd=RS.RenderStepped:Connect(function()
-				local _,hh,rr=chr()
-				if not hh or not rr then return end
-				hh.WalkSpeed=base
-				local want=math.min(tonumber(S.SpV) or 50,S.SafeSpd)
-				local dir=Vector3.new(hh.MoveDirection.X,0,hh.MoveDirection.Z)
-				if dir.Magnitude<0.05 then local m=mv() dir=Vector3.new(m.X,0,m.Z) end
-				if dir.Magnitude>0.05 then
-				
-					dir=dir.Unit
-					rr.CFrame=rr.CFrame+dir*(want/60)
-					local v=rr.AssemblyLinearVelocity
-					rr.AssemblyLinearVelocity=Vector3.new(0,v.Y,0)
+--
+==================================================
+================
+-- [反检测移动核心] walk / jump / clip / nofly / fly
+-- 原则：1.不写 replicated 属性 2.不挂服务器可见实例
+--       3.速度分帧平滑 4.跳跃走合法状态机
+--       5.飞行用跳跃链伪装
+--
+==================================================
+================
+local SAFE = {
+MaxSpeed    = 22,     -- 移速硬上限 (SpV 超过会被钳到 22)
+MaxFly      = 24,     -- 飞行水平速度硬上限
+MaxFlyV     = 18,     -- 飞行垂直速度硬上限
+MaxJumpV    = 68,     -- 跳跃垂直初速硬上限 (约 11.8 studs 高)
+GAccel      = 55,     -- 地面加速度
+FAccel      = 45,     -- 飞行水平加速度
+VAccel      = 85,     -- 垂直加速度
+JumpAccel   = 150,    -- 跳跃补速加速度
+HoverNoise  = 3,      -- 悬停垂直噪声
+ChainInt    = 0.6,    -- 跳跃链间隔 (≈落地即跳，最自然)
+JumpCd      = 0.12,   -- 跳跃节流
+MaxH        = 220,    -- 飞行高度软上限(相对起飞点)
+FlyChain    = true,   -- 飞行=跳跃链模式(强烈建议 true)
+}
+local function smooth(a, b, acc, dt)
+local d = b - a
+if math.abs(d) <= acc * dt then return b
 end
-			end)
-		else
-			local v=tonumber(S.SpV) or 16
-			h.WalkSpeed=v
-			RT.wc=h:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-				local nv=tonumber(S.SpV) or 16
-				if math.abs(h.WalkSpeed-nv)>0.1 then h.WalkSpeed=nv end
-			end)
-		end
-	else
-		h.WalkSpeed=base
-	end
+return a + (d > 0 and 1 or -1) * acc * dt
+end
+local lastJumpT = 0
+local function doJump(h, r, jv)
+local now = os.clock()
+if now - lastJumpT < SAFE.JumpCd then
+return end
+local st = h:GetState()
+if st == Enum.HumanoidStateType.Climbing
+or st == Enum.HumanoidStateType.Swimming
+or st == Enum.HumanoidStateType.Seated or
+st == Enum.HumanoidStateType.Dead then
+return end
+lastJumpT = now
+h:ChangeState(Enum.HumanoidStateType.Jumping) -- 合法状态机跳跃
+if jv then
+-- 增强：平滑把垂直速度抬到目标，无突变
+task.spawn(function()
+local t0 = os.clock()
+while r and r.Parent and os.clock() - t0
+< 1.5 do
+local v2 = r.AssemblyLinearVelocity
+local nv = smooth(v2.Y, jv,
+SAFE.JumpAccel, 1 / 60)
+r.AssemblyLinearVelocity =
+Vector3.new(v2.X, nv, v2.Z)
+if nv >= jv - 0.5 then break end
+task.wait()
+end
+end)
+end
+end
+local function walk()
+if RT.wc then RT.wc:Disconnect() RT.wc =
+nil end
+if RT.spd then RT.spd:Disconnect() RT.spd
+= nil end
+if RT.satt then pcall(function()
+RT.satt:Destroy() end) RT.satt = nil end
+local _, h = chr()
+if not h then return end
+if RT.wc0 == nil then RT.wc0 =
+h.WalkSpeed end
+local base = RT.wc0 or 16
+h.WalkSpeed = base -- 立即恢复合法值
+if not S.SpOn then return end
+local want = math.min(tonumber(S.SpV) or
+50, SAFE.MaxSpeed)
+RT.spd =
+RS.RenderStepped:Connect(function(dt)
+if S.FlOn then return end
+local _, hh, rr = chr()
+if not hh or not rr then return end
+hh.WalkSpeed = base -- 钉死默认值(值合法，不触发检测)
+local d = Vector3.new(hh.MoveDirection.X,
+0, hh.MoveDirection.Z)
+if d.Magnitude < 0.05 then
+local m = mv()
+d = Vector3.new(m.X, 0, m.Z)
+end
+if d.Magnitude > 0.05 then d = d.Unit end
+local v = rr.AssemblyLinearVelocity
+rr.AssemblyLinearVelocity = Vector3.new(
+smooth(v.X, d.X * want, SAFE.GAccel, dt),
+v.Y,
+smooth(v.Z, d.Z * want, SAFE.GAccel, dt)
+)
+end)
 end
 local function jump()
-	local _,h=chr()
-	if RT.jc then RT.jc:Disconnect() RT.jc=nil end
-	if RT.jl then RT.jl:Disconnect() RT.jl=nil end
-	if not h then return end
-	if RT.jp0==nil then RT.jp0=h.JumpPower RT.jh0=h.JumpHeight RT.ujp=h.UseJumpPower end
-	if S.JpOn then
-		if S.SafeOn then
-			-- [反检测伪装] JumpPower 保持默认值，不暴露属性改动
-			h.UseJumpPower=RT.ujp h.JumpPower=RT.jp0
-			pcall(function() h.JumpHeight=RT.jh0 or 7.2 end)
-		else
-			h.UseJumpPower=true h.JumpPower=S.JpH
-			pcall(function() h.JumpHeight=S.JpH*0.5 end)
-		end
-	else
-		h.UseJumpPower=RT.ujp h.JumpPower=RT.jp0
-		pcall(function() h.JumpHeight=RT.jh0 or 7.2 end)
-	end
-	if S.JpInf then
-		RT.jc=UI.JumpRequest:Connect(function() RT.jf=os.clock() end)
-		RT.jl=RS.Heartbeat:Connect(function(dt)
-			local _,hh,rr=chr()
-			if not hh or not rr then return end
-			local held=UI:IsKeyDown(Enum.KeyCode.Space) or hh.Jump or (RT.jf and (os.clock()-RT.jf)<0.15)
-			if not held then return end
-			local v=rr.AssemblyLinearVelocity
-			if v.Y>1 then return end
-			local jv=(S.JpOn and S.JpH or (RT.jp0 or 50))
-			if S.SafeOn then jv=math.min(jv,S.SafeJump) end -- [反检测伪装] 垂直初速限幅
-			rr.AssemblyLinearVelocity=Vector3.new(v.X,jv,v.Z)
-		end)
-	end
+if RT.jc then RT.jc:Disconnect() RT.jc =
+nil end
+if RT.jl then RT.jl:Disconnect() RT.jl =
+nil end
+local _, h = chr()
+if not h then return end
+if RT.jp0 == nil then RT.jp0 =
+h.JumpPower RT.jh0 = h.JumpHeight RT.ujp
+= h.UseJumpPower end
+-- 属性永远锁回默认
+h.UseJumpPower = RT.ujp
+h.JumpPower = RT.jp0
+pcall(function() h.JumpHeight = RT.jh0 or
+7.2 end)
+local jv = nil
+if S.JpOn then
+local hgt = math.min(tonumber(S.JpH) or
+50, 45)
+jv = math.min(math.sqrt(2 *
+workspace.Gravity * hgt), SAFE.MaxJumpV)
 end
-local function clip() for p,o in pairs(RT.cm) do if p and p.Parent then pcall(function() p.CanCollide=o end) end end RT.cm={} if RT.nc then RT.nc:Disconnect() end if not S.NcOn then return end local ch=LP.Character if not ch then return end local function gh(p) if p:IsA("BasePart") and RT.cm[p]==nil then RT.cm[p]=p.CanCollide p.CanCollide=false end end for _,d in ipairs(ch:GetDescendants()) do gh(d) end RT.nc=ch.DescendantAdded:Connect(function(d) task.wait(0.1) if S.NcOn then gh(d) end end) end
+if S.JpInf or S.JpOn then
+RT.jc =
+UI.JumpRequest:Connect(function()
+RT.jf = os.clock()
+if S.JpInf then return end -- 无限跳走Heartbeat 连跳循环
+local _, hh, rr = chr()
+if hh and rr and not S.FlOn then
+doJump(hh, rr, jv) end
+end)
+end
+if S.JpInf then
+RT.jl = RS.Heartbeat:Connect(function()
+local _, hh, rr = chr()
+if not hh or not rr or S.FlOn then
+return end
+local held =
+UI:IsKeyDown(Enum.KeyCode.Space) or
+hh.Jump
+or (RT.jf and (os.clock() - RT.jf) <
+0.25)
+if not held then return end
+local v = rr.AssemblyLinearVelocity
+if v.Y > 1 then return end
+doJump(hh, rr, jv)
+end)
+end
+end
+local function clip()
+for p, o in pairs(RT.cm) do if p and
+p.Parent then pcall(function()
+p.CanCollide = o end) end end
+RT.cm = {}
+if RT.nc then RT.nc:Disconnect() end
+if not S.NcOn then return end
+local ch = LP.Character
+if not ch then return end
+local function gh(p) if
+p:IsA("BasePart") and RT.cm[p] == nil
+then RT.cm[p] = p.CanCollide p.CanCollide
+= false end end
+for _, d in ipairs(ch:GetDescendants())
+do gh(d) end
+RT.nc =
+ch.DescendantAdded:Connect(function(d)
+task.wait(0.1) if S.NcOn then gh(d) end
+end)
+end
 local function nofly()
-	if RT.fc then RT.fc:Disconnect() RT.fc=nil end
-	if RT.dc then RT.dc:Disconnect() RT.dc=nil end
-	if RT.bv then pcall(function() RT.bv:Destroy() end) RT.bv=nil end
-	if RT.bg then pcall(function() RT.bg:Destroy() end) RT.bg=nil end
-	if RT.fatt then pcall(function() RT.fatt:Destroy() end) RT.fatt=nil end
-	local ch=RT.flyCh
-	if not ch or not ch.Parent then ch=LP.Character end
-	if ch and ch.Parent then
-		local h=ch:FindFirstChildOfClass("Humanoid")
-		if h then
-			local an=ch:FindFirstChild("Animate") if an then an.Disabled=false end
-			h.PlatformStand=false h.AutoRotate=true
-			pcall(function() h:ChangeState(Enum.HumanoidStateType.GettingUp) end)
-			if h.Health>0 then h.WalkSpeed=RT.wc0 or 16 end
-		end
-		local r=ch:FindFirstChild("HumanoidRootPart") or ch:FindFirstChild("Torso")
-		if r then r.AssemblyLinearVelocity=Vector3.zero r.AssemblyAngularVelocity=Vector3.zero end
-	end
-	RT.flyCh=nil
+if RT.fc then RT.fc:Disconnect() RT.fc =
+nil end
+if RT.dc then RT.dc:Disconnect() RT.dc =
+nil end
+if RT.bv then pcall(function()
+RT.bv:Destroy() end) RT.bv = nil end
+if RT.bg then pcall(function()
+RT.bg:Destroy() end) RT.bg = nil end
+if RT.fatt then pcall(function()
+RT.fatt:Destroy() end) RT.fatt = nil end
+local ch = RT.flyCh
+if not ch or not ch.Parent then ch =
+LP.Character end
+if ch and ch.Parent then
+local h =
+ch:FindFirstChildOfClass("Humanoid")
+if h then
+local an =
+ch:FindFirstChild("Animate") if an then
+an.Disabled = false end
+h.PlatformStand = false h.AutoRotate =
+true
+pcall(function()
+h:ChangeState(Enum.HumanoidStateType.GettingUp) end)
+if h.Health > 0 then h.WalkSpeed =
+RT.wc0 or 16 end
+end
+local r =
+ch:FindFirstChild("HumanoidRootPart") or
+ch:FindFirstChild("Torso")
+if r then r.AssemblyLinearVelocity =
+Vector3.zero r.AssemblyAngularVelocity =
+Vector3.zero end
+end
+RT.flyCh = nil
 end
 local function fly()
-	nofly()
-	if not S.FlOn then return end
-	local ch,h,r=chr() local cam=workspace.CurrentCamera
-	if not h or not r or not cam then return end
-	RT.flyCh=ch
-	RT.dc=h.Died:Connect(function() pcall(nofly) end)
-	local an=ch:FindFirstChild("Animate") if an then an.Disabled=true end
-	h.PlatformStand=true h.AutoRotate=false h.WalkSpeed=0
-	local phys=(S.FlMd=="物理")
-	if phys then
-		local bv=Instance.new("BodyVelocity")
-		bv.Name="wxFlyBV" bv.MaxForce=Vector3.new(1e6,1e6,1e6) bv.Velocity=Vector3.zero bv.Parent=r
-		local bg=Instance.new("BodyGyro")
-		bg.Name="wxFlyBG" bg.MaxTorque=Vector3.new(1e6,1e6,1e6) bg.P=3000 bg.D=300 bg.CFrame=r.CFrame bg.Parent=r
-		RT.bv=bv RT.bg=bg
+nofly()
+if not S.FlOn then return end
+local ch, h, r = chr()
+local cam = workspace.CurrentCamera
+if not h or not r or not cam then return
+end
+RT.flyCh = ch
+RT.dc = h.Died:Connect(function()
+pcall(nofly) end)
+local an = ch:FindFirstChild("Animate")
+if an then an.Disabled = true end
+-- 不设 PlatformStand，不挂 BodyVelocity/
+BodyGyro
+local phys = (S.FlMd == "物理")
+local baseY = r.Position.Y
+local lastChain = 0
+local flyT = 0
+RT.fc =
+RS.RenderStepped:Connect(function(dt)
+if LP.Character ~= RT.flyCh or not
+RT.flyCh or not RT.flyCh.Parent then
+nofly() return end
+local c = workspace.CurrentCamera
+if not c then return end
+local hh =
+RT.flyCh:FindFirstChildOfClass("Humanoid"
+)
+local rr =
+RT.flyCh:FindFirstChild("HumanoidRootPart
+") or RT.flyCh:FindFirstChild("Torso")
+if not hh or not rr then return end
+local spd = math.min(tonumber(S.FlV) or
+35, SAFE.MaxFly)
+local m = mv()
+local look = c.CFrame.LookVector
+local move = look * (-m.Z) +
+c.CFrame.RightVector * m.X
+local vy = vv()
+local v = rr.AssemblyLinearVelocity
+local hx = move.X * spd
+local hz = move.Z * spd
+local ty = v.Y
+if phys then
+-- 跳跃链：周期性触发合法跳跃，服务器看到的
+是"连续跳跃"
+if SAFE.FlyChain and (os.clock() -
+lastChain) >= SAFE.ChainInt then
+pcall(function()
+hh:ChangeState(Enum.HumanoidStateType.Jumping) end)
+lastChain = os.clock()
+ty = v.Y -- 本帧保留引擎跳跃速度
+else
+if vy > 0 then
+if (rr.Position.Y - baseY) <
+SAFE.MaxH then
+ty = smooth(v.Y, SAFE.MaxFlyV,
+SAFE.VAccel, dt)
+end
+elseif vy < 0 then
+ty = smooth(v.Y, -SAFE.MaxFlyV,
+SAFE.VAccel, dt)
+else
+flyT = flyT + dt
+ty = smooth(v.Y, math.sin(flyT *
+2.3) * SAFE.HoverNoise, SAFE.VAccel *
+0.5, dt)
+end
+end
+rr.AssemblyLinearVelocity =
+Vector3.new(
+smooth(v.X, hx, SAFE.FAccel, dt),
+ty,
+smooth(v.Z, hz, SAFE.FAccel, dt)
+)
+else
+-- 传送模式：CFrame 平滑步进，位置连续无突
+变
+local hd = Vector3.new(move.X, 0,
+move.Z)
+if hd.Magnitude > 0.05 then hd =
+hd.Unit else hd = Vector3.zero end
+local vstep = 0
+if vy > 0 then vstep = SAFE.MaxFlyV
+elseif vy < 0 then vstep = -SAFE.MaxFlyV
+end
+rr.CFrame = rr.CFrame + (hd * spd +
+Vector3.new(0, vstep, 0)) * dt
+rr.AssemblyLinearVelocity =
+Vector3.zero
+rr.AssemblyAngularVelocity =
+Vector3.zero
+end
+end)
+end
 	end
 	RT.fc=RS.RenderStepped:Connect(function(dt)
 		if LP.Character~=RT.flyCh or not RT.flyCh or not RT.flyCh.Parent then nofly() return end
