@@ -1500,9 +1500,11 @@ end)
 end
 local function spinSet()
 	if S.spinC then pcall(function() S.spinC:Disconnect() end) S.spinC=nil end
+	local c=LP.Character
+	local h=c and c:FindFirstChildOfClass("Humanoid")
+	local r=c and c:FindFirstChild("HumanoidRootPart")
 	if not S.SpinOn then
-		local c=LP.Character
-		local r=c and c:FindFirstChild("HumanoidRootPart")
+		if h then h.AutoRotate=true end
 		if r then
 			for _,v in ipairs(r:GetChildren()) do
 				if v:IsA("BodyAngularVelocity") then v:Destroy() end
@@ -1510,12 +1512,13 @@ local function spinSet()
 		end
 		return
 	end
+	if h then h.AutoRotate=false end
 	S.spinC=RS.RenderStepped:Connect(function(dt)
 		if not S.SpinOn then return end
-		local c=LP.Character
-		local r=c and c:FindFirstChild("HumanoidRootPart")
-		if r then
-			r.CFrame=r.CFrame*CFrame.Angles(0,math.rad((tonumber(S.SpinV) or 100)*10)*dt,0)
+		local cc=LP.Character
+		local rr=cc and cc:FindFirstChild("HumanoidRootPart")
+		if rr then
+			rr.CFrame=rr.CFrame*CFrame.Angles(0,math.rad((tonumber(S.SpinV) or 100)*10)*dt,0)
 		end
 	end)
 end
