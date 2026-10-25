@@ -2362,41 +2362,59 @@ local IG=Instance.new("ScreenGui")
 IG.Name="wx_int" IG.IgnoreGuiInset=true IG.ResetOnSpawn=false IG.DisplayOrder=3
 IG.Parent=safeParent()
 local IPF={}
-task.spawn(function()
-	while task.wait(0.1) do
-		if not S.ESPInt then
-			for i=1,#IPF do if IPF[i] then IPF[i].Visible=false end end
+local HLP={}
+for i=1,30 do
+	local h=Instance.new("Highlight")
+	h.FillTransparency=1
+	h.OutlineColor=Color3.fromRGB(255,225,130)
+	h.OutlineTransparency=0
+	h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
+	h.Enabled=false
+	h.Parent=workspace.CurrentCamera
+	HLP[i]=h
+end
+RS.RenderStepped:Connect(function()
+	local ch=LP.Character
+	local hrp=ch and ch:FindFirstChild("HumanoidRootPart")
+	if not hrp then
+		for i=1,30 do HLP[i].Enabled=false HLP[i].Adornee=nil end
+		return
+	end
+	local list={}
+	if S.ESPInt then
+		local lim=math.clamp(tonumber(S.IPD) or 1000,0,2500)
+		for i=1,#IPG do
+			local o=IPG[i]
+			if o.obj and o.obj.Parent then
+				local d=(o.obj.Position-hrp.Position).Magnitude
+				if d<=lim then list[#list+1]={o.obj,d,1} end
+			end
+		end
+	end
+	if S.NpcHl then
+		for m in pairs(ND) do
+			if m.Parent then
+				local p=m:FindFirstChild("HumanoidRootPart") or m.PrimaryPart
+				if p and (p.Position-hrp.Position).Magnitude<=250 then
+					list[#list+1]={m,(p.Position-hrp.Position).Magnitude,2}
+				end
+			end
+		end
+	end
+	table.sort(list,function(a,b) return a[2]<b[2] end)
+	for i=1,30 do
+		local h=HLP[i]
+		local it=list[i]
+		if it then
+			h.Adornee=it[1]
+			h.OutlineColor=(it[3]==2) and Color3.fromRGB(0,255,180) or Color3.fromRGB(255,225,130)
+			h.Enabled=true
 		else
-			pcall(function()
-				local cam=workspace.CurrentCamera
-				local ch=LP.Character
-				local hrp=ch and ch:FindFirstChild("HumanoidRootPart")
-				if not (cam and hrp) then return end
-				local lim=math.clamp(tonumber(S.IPD) or 1000,0,2500)
-				for i=1,#IPG do
-					local o=IPG[i]
-					if not IPF[i] then
-						local f=Instance.new("Frame")
-						f.BackgroundTransparency=1 f.BorderSizePixel=0 f.Visible=false f.Parent=IG
-						local s=Instance.new("UIStroke")
-						s.Color=Color3.fromRGB(255,225,130) s.Thickness=1.5 s.Transparency=0.1
-						s.Parent=f
-						IPF[i]=f
-					end
-					local f=IPF[i]
-					local obj=o.obj
-					if obj and obj.Parent and (obj.Position-hrp.Position).Magnitude<=lim then
-						local pos,on=cam:WorldToViewportPoint(obj.Position)
-						if on then
-							local dd=(obj.Position-cam.CFrame.Position).Magnitude
-							local sz=math.clamp(900/dd,14,220)
-							f.Size=UDim2.fromOffset(sz,sz)
-							f.Position=UDim2.fromOffset(pos.X-sz/2,pos.Y-sz/2)
-							f.Visible=true
-						else
-							f.Visible=false
-						end
-					else
+			h.Enabled=false
+			h.Adornee=nil
+		end
+	end
+end)
 						f.Visible=false
 					end
 				end
