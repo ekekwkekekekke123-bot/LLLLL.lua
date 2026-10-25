@@ -496,7 +496,7 @@ local function as(dt)
 	local cam=workspace.CurrentCamera if not cam then return end
 	local vp=cam.ViewportSize local cx,cy=vp.X/2,vp.Y/2
 	if not S.FovFixed and PT then cx,cy=PT.X,PT.Y end
-		if not (S.AiOn or S.AimOn) then fov.Visible=false inf.Visible=false tline.Visible=false aimPart=nil if aimBB then aimBB.Enabled=false end if hdB then hdB.Enabled=false end if RT.aimHL then pcall(function() RT.aimHL:Destroy() end) RT.aimHL=nil end return end
+		if not S.AiOn then fov.Visible=false inf.Visible=false tline.Visible=false aimPart=nil if aimBB then aimBB.Enabled=false end if hdB then hdB.Enabled=false end if RT.aimHL then pcall(function() RT.aimHL:Destroy() end) RT.aimHL=nil end return end
 	fov.Visible=S.FovOn fov.Position=UDim2.fromOffset(cx,cy) fov.Size=UDim2.fromOffset(S.FovR*2,S.FovR*2) fs.Color=(S.RainOn and Color3.fromHSV(hue,1,1)) or S.TgtC.Col
 	local best=pick(cam,cx,cy)
 		if best and S.AiVis and best.ch~=lastVisCh then
@@ -508,13 +508,9 @@ local function as(dt)
 	if best and math.random()*100>S.AiAcc then best=nil end
 	if not best then inf.Visible=false tline.Visible=false aimPart=nil if aimBB then aimBB.Enabled=false end if hdB then hdB.Enabled=false end if RT.aimHL then pcall(function() RT.aimHL:Destroy() end) RT.aimHL=nil end return end
 	local hu=best.ch:FindFirstChildOfClass("Humanoid")
-			local part=(S.AimOn and S.aimPartOf(best.ch)) or S.aiPart(best.ch) or best.ch:FindFirstChild("HumanoidRootPart")
+				local part=S.aiPart(best.ch) or best.ch:FindFirstChild("HumanoidRootPart")
 	if not hu or not part then aimPart=nil return end
 	aimPart=part
-		if S.AimOn and part then
-		local cur=cam.CFrame
-		cam.CFrame=cur:Lerp(CFrame.lookAt(cur.Position,part.Position),0.35)
-	end
 local sp,on=cam:WorldToViewportPoint(part.Position)
 	local lh=HL[hu] HL[hu]=hu.Health
 	if S.DmgOn and lh and hu.Health<lh then
@@ -579,7 +575,7 @@ local function hookSilent()
 		local old
 		old=hookmetamethod(game,"__namecall",function(self,...)
 			local m=getnamecallmethod()
-							if not (S.AiOn or S.AimOn) then return old(self,...) end
+														if not S.AiOn then return old(self,...) end
 if aimPart and aimPart.Parent then
 								local cp=workspace.CurrentCamera.CFrame.Position local ap=aimPart.Position if S.PredOn and S.PredVal>0 then local v=aimPart.AssemblyLinearVelocity local d=(ap-cp).Magnitude ap=ap+v*(d/1200)*(S.PredVal/100) end local tg=(ap-cp).Unit*1000
 				if (S.SilentMode=="Raycast" or S.SilentMode=="双通道") and m=="Raycast" then
