@@ -456,6 +456,7 @@ local dmgLbl=B("TextLabel",{Size=UDim2.fromOffset(90,20),BackgroundTransparency=
 local aimBB,aimTG=nil,nil local hdB,hdT1,hdT2=nil,nil,nil local silentOn=false
 local lastVisCh=nil
 local function see(cam,part,ch) local rp=RaycastParams.new() rp.FilterType=Enum.RaycastFilterType.Exclude rp.FilterDescendantsInstances={LP.Character,ch} local hd=LP.Character and LP.Character:FindFirstChild("Head") local o=hd and hd.Position or cam.CFrame.Position if (o-part.Position).Magnitude<2 then return true end return workspace:Raycast(o,part.Position-o,rp)==nil end
+S.aiPart=function(ch) local a=S.AiPart if a=="Chest" then return ch:FindFirstChild("UpperTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("Head") end if a=="Legs" then return ch:FindFirstChild("LowerTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("Head") end return ch:FindFirstChild("Head") or ch:FindFirstChild("Torso") end
 local function pick(cam,cx,cy)
 	local best,bv=nil,nil
 	local hunt=(S.NameHunt and #NL>0)
@@ -471,7 +472,7 @@ local function pick(cam,cx,cy)
 			if S.Lock~="无" and t.name~=S.Lock then ok=false end
 			if hunt then local f=false for _,n in ipairs(NL) do if t.name==n then f=true end end if not f then ok=false end end
 			if ok and hu and hu.Health>0 then
-				local part=ch:FindFirstChild(S.AiPart) or ch:FindFirstChild("HumanoidRootPart")
+				local part=S.aiPart(ch) or ch:FindFirstChild("HumanoidRootPart")
 				if part then
 					local d=(cam.CFrame.Position-part.Position).Magnitude
 					local sp,on=cam:WorldToViewportPoint(part.Position)
@@ -498,7 +499,7 @@ local function as(dt)
 	fov.Visible=S.FovOn fov.Position=UDim2.fromOffset(cx,cy) fov.Size=UDim2.fromOffset(S.FovR*2,S.FovR*2) fs.Color=(S.RainOn and Color3.fromHSV(hue,1,1)) or S.TgtC.Col
 	local best=pick(cam,cx,cy)
 		if best and S.AiVis and best.ch~=lastVisCh then
-		local part=best.ch:FindFirstChild(S.AiPart) or best.ch:FindFirstChild("HumanoidRootPart")
+		local part=S.aiPart(best.ch) or best.ch:FindFirstChild("HumanoidRootPart")
 		if part and not see(cam,part,best.ch) then best=nil end
 	end
 	if best then lastVisCh=best.ch end
