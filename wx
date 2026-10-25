@@ -2599,7 +2599,6 @@ qb.Text="开启状态："..(S.AimOn and "✓" or "X")
 	qb.TextColor3=S.AimOn and Color3.fromRGB(30,140,60) or C.txt
 end)
 end)()
-S.fcmap={白=Color3.new(1,1,1),红=Color3.fromRGB(255,70,70),青=Color3.fromRGB(0,220,255),黄=Color3.fromRGB(255,220,60),绿=Color3.fromRGB(60,255,120),紫=Color3.fromRGB(190,120,255)}
 S.afov=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),Size=UDim2.fromOffset(110,110),BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=45,Parent=AG})
 R(S.afov,1)
 S.afovStroke=SK(S.afov,Color3.new(1,1,1),0.25)
