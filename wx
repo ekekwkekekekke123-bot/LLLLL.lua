@@ -457,6 +457,7 @@ local aimBB,aimTG=nil,nil local hdB,hdT1,hdT2=nil,nil,nil local silentOn=false
 local lastVisCh=nil
 local function see(cam,part,ch) local rp=RaycastParams.new() rp.FilterType=Enum.RaycastFilterType.Exclude rp.FilterDescendantsInstances={LP.Character,ch} local hd=LP.Character and LP.Character:FindFirstChild("Head") local o=hd and hd.Position or cam.CFrame.Position if (o-part.Position).Magnitude<2 then return true end return workspace:Raycast(o,part.Position-o,rp)==nil end
 S.aiPart=function(ch) local a=S.AiPart if a=="Chest" then return ch:FindFirstChild("UpperTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("Head") end if a=="Legs" then return ch:FindFirstChild("LowerTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("Head") end return ch:FindFirstChild("Head") or ch:FindFirstChild("Torso") end
+S.aimPartOf=function(ch) local a=S.AimPart if a=="Chest" then return ch:FindFirstChild("UpperTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("Head") end if a=="Legs" then return ch:FindFirstChild("LowerTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("Head") end return ch:FindFirstChild("Head") or ch:FindFirstChild("Torso") end
 local function pick(cam,cx,cy)
 	local best,bv=nil,nil
 	local hunt=(S.NameHunt and #NL>0)
