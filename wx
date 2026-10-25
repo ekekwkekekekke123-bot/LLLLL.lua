@@ -459,8 +459,8 @@ local function pick(cam,cx,cy)
 	local best,bv=nil,nil
 	local hunt=(S.NameHunt and #NL>0)
 	local ts={}
-		if S.AiType=="玩家" or S.AiType=="全部" or S.AiType=="所有" then
-		if S.AiType=="NPC" or S.AiType=="全部" or S.AiType=="所有" then
+				if S.AiType=="玩家" or S.AiType=="全部" or S.AiType=="所有" then for _,p in ipairs(P:GetPlayers()) do if p~=LP then ts[#ts+1]={ch=p.Character,name=p.Name,team=p.Team,plr=p} end end end
+				if S.AiType=="NPC" or S.AiType=="全部" or S.AiType=="所有" then for _,m in ipairs(workspace:GetChildren()) do if m:IsA("Model") and m:FindFirstChildOfClass("Humanoid") and not P:GetPlayerFromCharacter(m) then ts[#ts+1]={ch=m,name=m.Name} end end end
 	for _,t in ipairs(ts) do
 		local ch=t.ch
 		if ch then
