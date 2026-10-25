@@ -263,7 +263,7 @@ local function fly()
 	end)
 end
 local function endFly() nofly() end
-
+local wxToast
 function invisSet(v)
 	local ch,h,r=chr()
 	if not ch or not r then return end
@@ -285,7 +285,13 @@ function invisSet(v)
 		if cam and ph then cam.CameraSubject=ph end
 		r.Anchored=true
 		r.CFrame=CFrame.new(r.Position+Vector3.new(0,10000,0))
-		S.InvisOn=true
+				task.delay(0.8,function()
+			local c=LP.Character
+			local rr=c and c:FindFirstChild("HumanoidRootPart")
+			local okk=rr and (rr.Position.Y>RT.invCF.Y+5000)
+			if wxToast then wxToast(okk and "隐身已生效 · 本体无碰撞" or "隐身无效 · 服务器拉回本体") end
+		end)
+S.InvisOn=true
 	else
 		if not S.InvisOn then return end
 		S.InvisOn=false
@@ -2468,7 +2474,7 @@ end)
 RS.RenderStepped:Connect(function()
 	npcTick(workspace.CurrentCamera,workspace.CurrentCamera.ViewportSize)
 end)
-local function wxToast(msg)
+wxToast=function(msg)
 	local g=B("ScreenGui",{IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=6000,Parent=safeParent()})
 	local f=B("Frame",{Size=UDim2.fromOffset(196,34),Position=UDim2.new(1,-210,0.32,0),BackgroundColor3=Color3.fromRGB(238,233,223),BackgroundTransparency=1,Parent=g})
 	R(f,7)
