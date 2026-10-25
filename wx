@@ -495,7 +495,7 @@ local function as(dt)
 	local cam=workspace.CurrentCamera if not cam then return end
 	local vp=cam.ViewportSize local cx,cy=vp.X/2,vp.Y/2
 	if not S.FovFixed and PT then cx,cy=PT.X,PT.Y end
-	if not S.AiOn then fov.Visible=false inf.Visible=false tline.Visible=false aimPart=nil if aimBB then aimBB.Enabled=false end if hdB then hdB.Enabled=false end if RT.aimHL then pcall(function() RT.aimHL:Destroy() end) RT.aimHL=nil end return end
+		if not (S.AiOn or S.AimOn) then fov.Visible=false inf.Visible=false tline.Visible=false aimPart=nil if aimBB then aimBB.Enabled=false end if hdB then hdB.Enabled=false end if RT.aimHL then pcall(function() RT.aimHL:Destroy() end) RT.aimHL=nil end return end
 	fov.Visible=S.FovOn fov.Position=UDim2.fromOffset(cx,cy) fov.Size=UDim2.fromOffset(S.FovR*2,S.FovR*2) fs.Color=(S.RainOn and Color3.fromHSV(hue,1,1)) or S.TgtC.Col
 	local best=pick(cam,cx,cy)
 		if best and S.AiVis and best.ch~=lastVisCh then
@@ -507,7 +507,7 @@ local function as(dt)
 	if best and math.random()*100>S.AiAcc then best=nil end
 	if not best then inf.Visible=false tline.Visible=false aimPart=nil if aimBB then aimBB.Enabled=false end if hdB then hdB.Enabled=false end if RT.aimHL then pcall(function() RT.aimHL:Destroy() end) RT.aimHL=nil end return end
 	local hu=best.ch:FindFirstChildOfClass("Humanoid")
-		local part=S.aiPart(best.ch) or best.ch:FindFirstChild("HumanoidRootPart")
+			local part=(S.AimOn and S.aimPartOf(best.ch)) or S.aiPart(best.ch) or best.ch:FindFirstChild("HumanoidRootPart")
 	if not hu or not part then aimPart=nil return end
 	aimPart=part
 	local sp,on=cam:WorldToViewportPoint(part.Position)
@@ -574,7 +574,7 @@ local function hookSilent()
 		local old
 		old=hookmetamethod(game,"__namecall",function(self,...)
 			local m=getnamecallmethod()
-							if not (S.AiOn and S.AiWall) then return old(self,...) end
+							if not (S.AiOn or S.AimOn) then return old(self,...) end
 if aimPart and aimPart.Parent then
 								local cp=workspace.CurrentCamera.CFrame.Position local ap=aimPart.Position if S.PredOn and S.PredVal>0 then local v=aimPart.AssemblyLinearVelocity local d=(ap-cp).Magnitude ap=ap+v*(d/1200)*(S.PredVal/100) end local tg=(ap-cp).Unit*1000
 				if (S.SilentMode=="Raycast" or S.SilentMode=="双通道") and m=="Raycast" then
@@ -1594,7 +1594,7 @@ function apK(k)
 		elseif k=="FC" then fcSet()
 	elseif k=="SpinOn" or k=="SpinV" then spinSet()
 	elseif k=="TwOn" then twSet()
-		elseif k=="TpOn" then tpSet() elseif k=="RevOn" then wxRev() elseif k=="AutoJp" then wxAutoJump() elseif k=="AimOn" then S.AiOn=S.AimOn if S.AimOn then S.FovOn=true S.FovR=55 end end
+			elseif k=="TpOn" then tpSet() elseif k=="RevOn" then wxRev() elseif k=="AutoJp" then wxAutoJump() elseif k=="AimOn" then S.FovOn=S.AimOn or S.FovOn S.FovR=55 end
 end
 local function T(par,l,k,dv) TGS=TGS or {} local rw,pl,kn,set2=tg(par,l,dv,function(v) S[k]=v apK(k) end) TGS[k]=set2 end
 local function N(par,l,k,mn,mx) nb(par,l,k,S[k],tostring(mn).."-"..tostring(mx),mn,mx) end
@@ -2549,7 +2549,7 @@ end)
 ;(function()
 hd(pgM,"自瞄")
 T(pgM,"自瞄总开关","AimOn",false)
-G(pgM,"锁定部位","AiPart",{"Head","Chest","Legs"})
+G(pgM,"锁定部位","AimPart",{"Head","Chest","Legs"})
 T(pgM,"快捷自瞄","QuickOn",false)
 T(pgM,"预判自瞄","PredOn",false)
 nb(pgM,"预判强度","PredVal",16,"0-100",0,100)
@@ -2573,7 +2573,6 @@ qb.InputChanged:Connect(function(i)
 end)
 qb.Activated:Connect(function()
 	S.AimOn=not S.AimOn
-	S.AiOn=S.AimOn
 	if S.AimOn then S.FovOn=true S.FovR=55 end
 	if TGS and TGS.AimOn then pcall(TGS.AimOn,S.AimOn) end
 end)
