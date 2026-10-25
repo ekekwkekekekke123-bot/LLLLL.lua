@@ -447,6 +447,7 @@ local iN=Instance.new("TextLabel") iN.Size=UDim2.new(1,-6,0,12) iN.Position=UDim
 local iH=Instance.new("TextLabel") iH.Size=UDim2.new(1,-6,0,11) iH.Position=UDim2.fromOffset(3,15) iH.BackgroundTransparency=1 iH.Font=Enum.Font.GothamMedium iH.TextSize=8 iH.TextColor3=YEL iH.TextXAlignment=Enum.TextXAlignment.Left iH.Parent=inf
 local dmgLbl=B("TextLabel",{Size=UDim2.fromOffset(90,20),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=14,TextColor3=Color3.fromRGB(255,80,80),TextStrokeTransparency=0.3,Visible=false,ZIndex=6,Parent=AG})
 local aimBB,aimTG=nil,nil local hdB,hdT1,hdT2=nil,nil,nil local silentOn=false
+local lastVisCh=nil
 local function see(cam,part,ch) local rp=RaycastParams.new() rp.FilterType=Enum.RaycastFilterType.Exclude rp.FilterDescendantsInstances={LP.Character,ch} local hd=LP.Character and LP.Character:FindFirstChild("Head") local o=hd and hd.Position or cam.CFrame.Position if (o-part.Position).Magnitude<2 then return true end return workspace:Raycast(o,part.Position-o,rp)==nil end
 local function pick(cam,cx,cy)
 	local best,bv=nil,nil
@@ -489,10 +490,11 @@ local function as(dt)
 	if not S.AiOn then fov.Visible=false inf.Visible=false tline.Visible=false aimPart=nil if aimBB then aimBB.Enabled=false end if hdB then hdB.Enabled=false end if RT.aimHL then pcall(function() RT.aimHL:Destroy() end) RT.aimHL=nil end return end
 	fov.Visible=S.FovOn fov.Position=UDim2.fromOffset(cx,cy) fov.Size=UDim2.fromOffset(S.FovR*2,S.FovR*2) fs.Color=(S.RainOn and Color3.fromHSV(hue,1,1)) or S.TgtC.Col
 	local best=pick(cam,cx,cy)
-	if best and S.AiVis then
+		if best and S.AiVis and best.ch~=lastVisCh then
 		local part=best.ch:FindFirstChild(S.AiPart) or best.ch:FindFirstChild("HumanoidRootPart")
 		if part and not see(cam,part,best.ch) then best=nil end
 	end
+	if best then lastVisCh=best.ch end
 	if best and S.AiMiss and math.random()<0.15 then best=nil end
 	if best and math.random()*100>S.AiAcc then best=nil end
 	if not best then inf.Visible=false tline.Visible=false aimPart=nil if aimBB then aimBB.Enabled=false end if hdB then hdB.Enabled=false end if RT.aimHL then pcall(function() RT.aimHL:Destroy() end) RT.aimHL=nil end return end
@@ -564,7 +566,8 @@ local function hookSilent()
 		local old
 		old=hookmetamethod(game,"__namecall",function(self,...)
 			local m=getnamecallmethod()
-			if aimPart and aimPart.Parent then
+							if not (S.AiOn and S.AiWall) then return old(self,...) end
+if aimPart and aimPart.Parent then
 				local cp=workspace.CurrentCamera.CFrame.Position local tg=(aimPart.Position-cp).Unit*1000
 				if (S.SilentMode=="Raycast" or S.SilentMode=="双通道") and m=="Raycast" then
 					local a={...} local n=#a local pi=nil
