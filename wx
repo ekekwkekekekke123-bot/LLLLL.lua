@@ -2109,7 +2109,6 @@ task.delay(0.35,function() pcall(function() powerState(true) end) end)
 			if RT.bxT>0.1 then RT.bxT=0 nespApply() end
 		end
 		if S.LPlOn then lpTick() end
-		nt=nt+st if nt>0.016 then nt=0 npcTick(workspace.CurrentCamera,workspace.CurrentCamera.ViewportSize) end
 		if dmgT>0 then dmgT=dmgT-st if dmgT<=0 then dmgLbl.Visible=false end end
 		fsm=fsm+((1/math.max(st,0.001))-fsm)*0.12
 		hudT=hudT+st
@@ -2424,4 +2423,7 @@ RS.RenderStepped:Connect(function()
 	else
 		for i=1,#DW do DW[i].box.Visible=false DW[i].nm.Visible=false DW[i].ds.Visible=false end
 	end
+end)
+RS.RenderStepped:Connect(function()
+	npcTick(workspace.CurrentCamera,workspace.CurrentCamera.ViewportSize)
 end)
