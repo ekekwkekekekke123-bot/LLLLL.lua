@@ -642,12 +642,10 @@ local function npcMk(m)
 	d.d=lb(14,11) d.h=lb(26,11) d.h.TextColor3=YEL
 	d.b=rg(B("Frame",{BackgroundTransparency=1,BorderSizePixel=0,Visible=false,ZIndex=900,Parent=NG}))
 	d.bs=Instance.new("UIStroke") d.bs.Thickness=1.5 d.bs.Color=Color3.fromRGB(0,255,180) d.bs.Parent=d.b
-	d.hl=rg(B("Highlight",{Adornee=m,DepthMode=Enum.HighlightDepthMode.AlwaysOnTop,Enabled=false,Parent=m}))
-	d.hl.FillColor=Color3.fromRGB(0,255,180) d.hl.OutlineColor=Color3.fromRGB(0,255,180) d.hl.FillTransparency=0.6
 	ND[m]=d
 end
 local function npcTick(cam,vp)
-	if not S.NpcOn then for m,d in pairs(ND) do d.hl.Enabled=false d.b.Visible=false d.n.Visible=false d.d.Visible=false d.h.Visible=false end return end
+		if not S.NpcOn then for m,d in pairs(ND) do d.b.Visible=false d.n.Visible=false d.d.Visible=false d.h.Visible=false end return end
 	local seen={}
 	for _,m in ipairs(workspace:GetChildren()) do
 		if m:IsA("Model") and not P:GetPlayerFromCharacter(m) then
@@ -664,7 +662,7 @@ local function npcTick(cam,vp)
 						local fd=math.floor(dist) if fd~=d.last then d.last=fd d.d.Text=fd.."m" end
 						d.h.Visible=S.NpcHp
 						if S.NpcHp then local v=math.floor(hu.Health+0.5) if v~=d.hpv then d.hpv=v d.h.Text="【HP"..v.."】" end end
-						if S.NpcBx then
+												if S.NpcBx or S.NpcHl then
 							local pt=cam:WorldToViewportPoint(hd.Position+Vector3.new(0,0.6,0)) local pb=cam:WorldToViewportPoint(hrp.Position-Vector3.new(0,2.6,0))
 							if pt.Z>0 and pb.Z>0 then
 								local rvb=cam.CFrame.RightVector local a1=cam:WorldToViewportPoint(hrp.Position+rvb*2.2) local a2=cam:WorldToViewportPoint(hrp.Position-rvb*2.2)
@@ -672,7 +670,6 @@ local function npcTick(cam,vp)
 								d.b.Position=UDim2.fromOffset(x1,y1) d.b.Size=UDim2.fromOffset(math.max(x2-x1,1),math.max(y2-y1,1)) d.b.Visible=true
 							else d.b.Visible=false end
 						else d.b.Visible=false end
-						d.hl.Enabled=S.NpcHl
 					end
 				end
 			end
