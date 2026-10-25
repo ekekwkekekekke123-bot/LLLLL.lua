@@ -2380,10 +2380,8 @@ task.spawn(function()
 							hl.OutlineColor=Color3.fromRGB(255,225,130)
 							hl.OutlineTransparency=0.1
 							hl.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
-							local ad=o.obj
-							if ad.Parent and ad.Parent:IsA("Model") then ad=ad.Parent end
-							hl.Adornee=ad
-							hl.Parent=ad
+														hl.Adornee=o.obj
+							hl.Parent=o.obj
 							o.hl=hl
 						end
 						if dd<=lim and n<30 then
