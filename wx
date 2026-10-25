@@ -1667,7 +1667,7 @@ hd(pgA,"名称索敌") T(pgA,"启用名称索敌","NameHunt",false) trow(pgA,"�
 local lt=B("TextLabel",{Size=UDim2.new(1,0,0,22),BackgroundColor3=C.row,BackgroundTransparency=0.35,Text="名称列表: --",Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.accent,TextXAlignment=Enum.TextXAlignment.Left,LayoutOrder=nxt(),ZIndex=15,Parent=pgA}) R(lt,7)
 bt(pgA,"添加到列表",function() local n=S.NameInput if n and n~="" then table.insert(NL,n) lt.Text="名称列表: "..table.concat(NL," / ") end end)
 bt(pgA,"从列表中删除",function() if #NL>0 then table.remove(NL) end lt.Text="名称列表: "..(#NL>0 and table.concat(NL," / ") or "--") end)
-hd(pgI,"互动")nb (pgI,"互动距离","IPD",1000,"0-2500",0,2500) T(pgI,"ESP互动","ESPInt",false) T(pgI,"秒互动","SecOn",false) T(pgI,"自动互动","AutoOn",false)
+hd(pgI,"互动")nb (pgI,"ESP距离","IPD",1000,"0-2500",0,2500) T(pgI,"ESP互动","ESPInt",false) T(pgI,"秒互动","SecOn",false) T(pgI,"自动互动","AutoOn",false)
 hd(pgI,"范围") T(pgI,"互动范围修改","IRange",false) nb(pgI,"互动距离（格）","IVal",S.IVal,"0-10000",0,10000)
 bt(pgI,"一键互动全部",function()
 	local c=LP.Character
