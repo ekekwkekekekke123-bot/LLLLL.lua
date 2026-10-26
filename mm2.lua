@@ -50,7 +50,7 @@ local slay=Instance.new("UIListLayout") slay.Padding=UDim.new(0,4) slay.SortOrde
 local spad=Instance.new("UIPadding") spad.PaddingLeft=UDim.new(0,6) spad.PaddingRight=UDim.new(0,6) spad.PaddingTop=UDim.new(0,6) spad.Parent=side
 B("TextButton",{Size=UDim2.new(1,0,0,26),BackgroundColor3=C.accent,BorderSizePixel=0,Text="ESP",Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=Color3.new(1,1,1),AutoButtonColor=false,LayoutOrder=1,ZIndex=301,Parent=side})
 local body=B("Frame",{Size=UDim2.new(1,-84,1,-44),Position=UDim2.fromOffset(80,38),BackgroundTransparency=1,ZIndex=108,Parent=pn})
-local ES={Killer=false,Police=false,Civ=false,Trap=false,Gun=false,Time=false}
+local ES={Killer=false,Police=false,Civ=false,Trap=false,Gun=false,Time=false,Line=false}
 local CLR={Killer=Color3.fromRGB(255,60,60),Police=Color3.fromRGB(60,140,255),Civ=Color3.fromRGB(60,220,110),Trap=Color3.fromRGB(255,232,120),Gun=Color3.fromRGB(90,220,255)}
 local yv=0
 local function mkToggle(name,key)
@@ -74,6 +74,18 @@ mkToggle("陷阱ESP","Trap")
 mkToggle("枪ESP","Gun")
 mkToggle("时间ESP","Time")
 mkToggle("射线ESP","Line")
+local posV="顶部"
+B("TextLabel",{Size=UDim2.new(1,0,0,14),Position=UDim2.fromOffset(10,yv),BackgroundTransparency=1,Text="射线的颜色取决于ESP颜色",Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.dim,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=131,Parent=body})
+yv=yv+18
+local pRow=B("TextButton",{Size=UDim2.new(1,0,0,28),Position=UDim2.fromOffset(0,yv),BackgroundColor3=C.row,BorderSizePixel=0,Text="",AutoButtonColor=false,ZIndex=130,Parent=body})
+B("UIStroke",{Color=Color3.fromRGB(150,140,128),Transparency=0.4,Parent=pRow})
+B("TextLabel",{Size=UDim2.new(1,-56,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text="射线位置",Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=131,Parent=pRow})
+local pVal=B("TextLabel",{Size=UDim2.new(0,52,1,0),Position=UDim2.new(1,-58,0,0),BackgroundTransparency=1,Text=posV,Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=C.accent,TextXAlignment=Enum.TextXAlignment.Right,ZIndex=131,Parent=pRow})
+yv=yv+32
+pRow.MouseButton1Click:Connect(function()
+	posV=(posV=="顶部") and "底部" or "顶部"
+	pVal.Text=posV
+end)
 local function mmToast(msg)
 	local g=B("ScreenGui",{IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=7000,Parent=SP()})
 	local f=B("Frame",{Size=UDim2.fromOffset(168,28),Position=UDim2.new(1,-180,0,58),BackgroundColor3=C.bg,BackgroundTransparency=1,ZIndex=10,Parent=g})
@@ -627,7 +639,8 @@ task.spawn(function()
 			local cam=workspace.CurrentCamera
 			local vps=cam.ViewportSize
 			local center=Vector2.new(vps.X/2,vps.Y/2)
-			local early=(os.clock()-roundT)<10
+						local fromP=(posV=="顶部") and Vector2.new(vps.X/2,0) or Vector2.new(vps.X/2,vps.Y)
+				local early=(os.clock()-roundT)<10
 			local li=0
 			for _,pl in ipairs(P:GetPlayers()) do
 				local c=pl.Character
@@ -655,9 +668,9 @@ task.spawn(function()
 						local hr=c:FindFirstChild("HumanoidRootPart")
 						if hr and ES.Line then
 							local sp,onv=cam:WorldToViewportPoint(hr.Position)
-							drawLine(li,center,Vector2.new(sp.X,sp.Y),col,onv)
+							drawLine(li,fromP,Vector2.new(sp.X,sp.Y),col,onv)
 						else
-							drawLine(li,center,center,col,false)
+							drawLine(li,fromP,fromP,col,false)
 						end
 					end
 				end
