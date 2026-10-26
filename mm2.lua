@@ -385,8 +385,6 @@ local function killNearest()
 	stabOne(best)
 	mmToast("已击杀最近 " .. best.Name)
 end
-
-local function flingSheriff()
 	if not isMurderer() then mmToast("你不是杀手") return end
 	local pl = findSheriff()
 	if not pl then mmToast("没找到警长") return end
