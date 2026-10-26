@@ -676,8 +676,6 @@ task.spawn(function()
 				end
 			end
 			for i=li+1,#LN do if LN[i] then LN[i].Visible=false end end
-				end
-			end
 			for _,o in ipairs(workspace:GetChildren()) do
 				local nm=string.lower(o.Name)
 				if o:IsA("Tool") and string.find(nm,"gun") then
