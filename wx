@@ -2553,11 +2553,11 @@ T(pgM,"自瞄总开关","AimOn",false)
 nb(pgM,"FOV半径","AimFov",55,"0-250",0,250)
 S.AimPart=S.AimPart or "Head"
 S.fcProxy={Col=Color3.new(1,1,1)}
-local fcRow=B("TextButton",{Size=UDim2.new(1,0,0,26),BackgroundColor3=C.row,Text="",AutoButtonColor=false,Parent=pgM})
+local fcRow=B("TextButton",{Size=UDim2.new(1,0,0,26),BackgroundColor3=C.row,Text="",AutoButtonColor=false,Active=true,ZIndex=200,Parent=pgM})
 R(fcRow,7)
 fcRow.LayoutOrder=nxt()
 local fcTxt=B("TextLabel",{Size=UDim2.new(0.6,0,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text="FOV颜色",Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,Parent=fcRow})
-local fcSw=B("TextButton",{Size=UDim2.fromOffset(34,16),Position=UDim2.new(1,-44,0.5,0),AnchorPoint=Vector2.new(0,0.5),BackgroundColor3=S.fcProxy.Col,Text="",AutoButtonColor=false,Parent=fcRow})
+local fcSw=B("TextButton",{Size=UDim2.fromOffset(34,16),Position=UDim2.new(1,-44,0.5,0),AnchorPoint=Vector2.new(0,0.5),BackgroundColor3=S.fcProxy.Col,Text="",AutoButtonColor=false,ZIndex=201 Parent=fcRow})
 R(fcSw,4)
 SK(fcSw,Color3.fromRGB(120,120,120),0.3)
 fcSw.MouseButton1Click:Connect(function()
