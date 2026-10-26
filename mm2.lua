@@ -640,20 +640,6 @@ local function drawLine(idx,from,to,col,on)
 	f.BackgroundColor3=col
 	f.Visible=true
 end
-	local f=LN[idx]
-	if not f then
-		f=B("Frame",{Size=UDim2.fromOffset(1,1),BackgroundColor3=col,BorderSizePixel=0,ZIndex=90,Parent=gui})
-		LN[idx]=f
-	end
-	if not on then f.Visible=false return end
-	local d=to-from
-	f.Size=UDim2.fromOffset(math.max(d.Magnitude,1),1)
-	f.Position=UDim2.fromOffset(from.X,from.Y)
-	f.Rotation=math.deg(math.atan2(d.Y,d.X))
-	f.BackgroundColor3=col
-	f.BackgroundTransparency=0.15
-	f.Visible=true
-end
 task.spawn(function()
 	while task.wait(0.6) do
 		pcall(function()
