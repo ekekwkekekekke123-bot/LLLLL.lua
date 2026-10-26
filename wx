@@ -2689,7 +2689,7 @@ bt(pgSv,"MM2",function()
 	TS:Create(pn,TweenInfo.new(0.22,Enum.EasingStyle.Quart,Enum.EasingDirection.In),{BackgroundTransparency=1}):Play()
 	task.wait(0.26)
 	local ok=pcall(function()
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/ekekwkekekekke123-bot/LLLLL.lua/main/mm2.lua?v="..os.time()))()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/ekekwkekekekke123-bot/LLLLL.lua/main/mm2v2.lua?v="..os.time()))()
 	end)
 	if not ok then
 		wxToast("MM2 加载失败")
