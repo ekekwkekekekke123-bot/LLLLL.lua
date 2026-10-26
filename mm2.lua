@@ -45,8 +45,10 @@ B("TextLabel",{Size=UDim2.new(1,-80,1,0),Position=UDim2.fromOffset(14,0),Backgro
 local minBtn=B("TextButton",{Size=UDim2.fromOffset(34,32),Position=UDim2.new(1,-68,0.5,0),AnchorPoint=Vector2.new(0,0.5),BackgroundTransparency=1,Text="－",Font=Enum.Font.GothamBold,TextSize=16,TextColor3=C.dim,ZIndex=125,Parent=bar})
 local close=B("TextButton",{Size=UDim2.fromOffset(34,32),Position=UDim2.new(1,-34,0.5,0),AnchorPoint=Vector2.new(0,0.5),BackgroundTransparency=1,Text="×",Font=Enum.Font.GothamBold,TextSize=18,TextColor3=C.dim,ZIndex=125,Parent=bar})
 B("Frame",{Size=UDim2.new(1,0,0,1),Position=UDim2.fromOffset(0,32),BackgroundColor3=C.off,BackgroundTransparency=0.1,BorderSizePixel=0,ZIndex=118,Parent=pn})
-local side=B("Frame",{Size=UDim2.new(0,74,1,-33),Position=UDim2.fromOffset(0,33),BackgroundColor3=C.row,BackgroundTransparency=0.05,BorderSizePixel=0,ZIndex=110,Parent=pn})
-B("TextButton",{Size=UDim2.new(1,-12,0,26),Position=UDim2.fromOffset(6,6),BackgroundColor3=C.accent,BorderSizePixel=0,Text="ESP",Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=Color3.new(1,1,1),AutoButtonColor=false,ZIndex=112,Parent=side})
+local side=B("Frame",{Size=UDim2.new(0,74,1,-33),Position=UDim2.fromOffset(0,33),BackgroundColor3=Color3.fromRGB(230,222,210),BorderSizePixel=0,ZIndex=300,Parent=pn})
+local slay=Instance.new("UIListLayout") slay.Padding=UDim.new(0,4) slay.SortOrder=Enum.SortOrder.LayoutOrder slay.Parent=side
+local spad=Instance.new("UIPadding") spad.PaddingLeft=UDim.new(0,6) spad.PaddingRight=UDim.new(0,6) spad.PaddingTop=UDim.new(0,6) spad.Parent=side
+B("TextButton",{Size=UDim2.new(1,0,0,26),BackgroundColor3=C.accent,BorderSizePixel=0,Text="ESP",Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=Color3.new(1,1,1),AutoButtonColor=false,LayoutOrder=1,ZIndex=301,Parent=side})
 local body=B("Frame",{Size=UDim2.new(1,-84,1,-44),Position=UDim2.fromOffset(80,38),BackgroundTransparency=1,ZIndex=108,Parent=pn})
 local ES={Killer=false,Police=false,Civ=false,Trap=false,Gun=false,Time=false}
 local CLR={Killer=Color3.fromRGB(255,60,60),Police=Color3.fromRGB(60,140,255),Civ=Color3.fromRGB(60,220,110),Trap=Color3.fromRGB(255,232,120),Gun=Color3.fromRGB(90,220,255)}
@@ -88,36 +90,45 @@ local function mmToast(msg)
 end
 minBtn.MouseButton1Click:Connect(function()
 	pn.Visible=false
-	if gui:FindFirstChild("wxIcon") then return end
-	local ig=B("ScreenGui",{Name="mm2_icon",IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=70,Parent=SP()})
-	local hit=B("TextButton",{Name="wxIcon",Size=UDim2.fromOffset(60,60),Position=UDim2.fromOffset(12,12),BackgroundTransparency=1,Text="",AutoButtonColor=false,ZIndex=10,Parent=ig})
-	local ib=B("TextButton",{Size=UDim2.fromOffset(34,34),Position=UDim2.fromScale(0.5,0.5),AnchorPoint=Vector2.new(0.5,0.5),BackgroundColor3=Color3.fromRGB(255,255,255),BackgroundTransparency=0.45,Text="wx",Font=Enum.Font.GothamBold,TextSize=12,TextColor3=Color3.fromRGB(70,70,70),AutoButtonColor=false,ZIndex=11,Parent=hit})
+	if gui:FindFirstChild("iconHolder") then return end
+	local holder=B("Frame",{Name="iconHolder",Size=UDim2.fromOffset(60,60),Position=UDim2.fromOffset(12,12),BackgroundTransparency=1,ZIndex=400,Parent=gui})
+	local hit=B("TextButton",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="",AutoButtonColor=false,ZIndex=401,Parent=holder})
+	local ib=B("TextButton",{Size=UDim2.fromOffset(34,34),Position=UDim2.fromScale(0.5,0.5),AnchorPoint=Vector2.new(0.5,0.5),BackgroundColor3=Color3.fromRGB(255,255,255),BackgroundTransparency=1,Text="wx",Font=Enum.Font.GothamBold,TextSize=12,TextColor3=Color3.fromRGB(70,70,70),AutoButtonColor=false,ZIndex=402,Parent=holder})
 	B("UICorner",{CornerRadius=UDim.new(1,0),Parent=ib})
-	B("UIStroke",{Color=Color3.fromRGB(255,255,255),Transparency=0.25,Thickness=1.2,Parent=ib})
+	local isk=B("UIStroke",{Color=Color3.fromRGB(255,255,255),Transparency=1,Thickness=1.2,Parent=ib})
 	B("UIGradient",{Rotation=120,Color=ColorSequence.new(Color3.fromRGB(255,255,255),Color3.fromRGB(200,212,228)),Parent=ib})
+	local sc=Instance.new("UIScale") sc.Scale=0.5 sc.Parent=holder
+	TS:Create(sc,TweenInfo.new(0.2,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play()
+	TS:Create(ib,TweenInfo.new(0.2),{BackgroundTransparency=0.45}):Play()
+	TS:Create(isk,TweenInfo.new(0.2),{Transparency=0.25}):Play()
 	local drag=false
 	local off=Vector2.zero
 	local moved=0
 	hit.InputBegan:Connect(function(i)
 		if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseButton1 then
 			drag=true moved=0
-			off=hit.AbsolutePosition-Vector2.new(i.Position.X,i.Position.Y)
+			off=holder.AbsolutePosition-Vector2.new(i.Position.X,i.Position.Y)
 		end
 	end)
 	hit.InputChanged:Connect(function(i)
 		if drag and (i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseMovement) then
 			moved=moved+math.abs(i.Delta.X)+math.abs(i.Delta.Y)
-			hit.Position=UDim2.fromOffset(i.Position.X+off.X,i.Position.Y+off.Y)
+			holder.Position=UDim2.fromOffset(i.Position.X+off.X,i.Position.Y+off.Y)
 		end
 	end)
-	hit.InputEnded:Connect(function()
-		if not drag then return end
-		drag=false
-		if moved<8 then
-			pn.Visible=true
-			pn.BackgroundTransparency=1
-			TS:Create(pn,TweenInfo.new(0.22,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{BackgroundTransparency=0.03}):Play()
-		end
+	hit.InputEnded:Connect(function() drag=false end)
+	ib.MouseButton1Click:Connect(function()
+		if moved>=8 then return end
+		local s2=holder:FindFirstChildOfClass("UIScale")
+		if s2 then TS:Create(s2,TweenInfo.new(0.12,Enum.EasingStyle.Quart,Enum.EasingDirection.In),{Scale=0.3}):Play() end
+		TS:Create(ib,TweenInfo.new(0.12),{BackgroundTransparency=1}):Play()
+		TS:Create(isk,TweenInfo.new(0.12),{Transparency=1}):Play()
+		task.delay(0.12,function() pcall(function() holder:Destroy() end) end)
+		pn.Visible=true
+		pn.Size=UDim2.fromOffset(math.floor(PW*0.92),math.floor(PH*0.92))
+		pn.Position=UDim2.fromOffset(x0+math.floor(PW*0.04),y0+math.floor(PH*0.04))
+		pn.BackgroundTransparency=1
+		TS:Create(pn,TweenInfo.new(0.22,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.fromOffset(PW,PH),Position=UDim2.fromOffset(x0,y0),BackgroundTransparency=0.03}):Play()
 	end)
 end)
 close.MouseButton1Click:Connect(function()
