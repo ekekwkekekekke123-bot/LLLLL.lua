@@ -73,3 +73,112 @@ close.MouseButton1Click:Connect(function()
 	pcall(function() gui:Destroy() end)
 end)
 -- ↓↓↓ 功能往这里加（body 是滚动容器）↓↓↓
+--==== MM2 · ESP 一栏 ====
+local ES={Killer=false,Police=false,Civ=false,Trap=false,Gun=false,Time=false}
+local CLR={Killer=Color3.fromRGB(255,60,60),Police=Color3.fromRGB(60,140,255),Civ=Color3.fromRGB(60,220,110),Trap=Color3.fromRGB(255,232,120),Gun=Color3.fromRGB(90,220,255)}
+local function mkToggle(name,key)
+	local row=B("Frame",{Size=UDim2.new(1,0,0,28),BackgroundColor3=C.row,Parent=body})
+	B("TextLabel",{Size=UDim2.new(1,-50,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text=name,Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,Parent=row})
+	local sw=B("Frame",{Size=UDim2.fromOffset(30,16),Position=UDim2.new(1,-40,0.5,-8),BackgroundColor3=C.off,Parent=row})
+	local kn=B("Frame",{Size=UDim2.fromOffset(12,12),Position=UDim2.fromOffset(2,2),BackgroundColor3=Color3.new(1,1,1),Parent=sw})
+	local btn=B("TextButton",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="",Parent=sw})
+	btn.MouseButton1Click:Connect(function()
+		ES[key]=not ES[key]
+		sw.BackgroundColor3=ES[key] and C.accent or C.off
+		local ti=TweenInfo.new(0.18,Enum.EasingStyle.Quad,Enum.EasingDirection.Out)
+		TS:Create(kn,ti,{Position=UDim2.fromOffset(ES[key] and 16 or 2,2)}):Play()
+	end)
+end
+mkToggle("杀手ESP","Killer")
+mkToggle("警察ESP","Police")
+mkToggle("平民ESP","Civ")
+mkToggle("陷阱ESP","Trap")
+mkToggle("枪ESP","Gun")
+mkToggle("时间ESP","Time")
+local function mmToast(msg)
+	local g=B("ScreenGui",{IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=7000,Parent=safeParent()})
+	local f=B("Frame",{Size=UDim2.fromOffset(168,28),Position=UDim2.new(1,-180,0,58),BackgroundColor3=C.bg,BackgroundTransparency=1,Parent=g})
+	local s=Instance.new("UIStroke") s.Color=Color3.fromRGB(25,25,25) s.Transparency=1 s.Parent=f
+	local t=B("TextLabel",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text=msg,Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=Color3.fromRGB(190,150,60),TextTransparency=1,Parent=f})
+	TS:Create(f,TweenInfo.new(0.22),{BackgroundTransparency=0.05}):Play()
+	TS:Create(s,TweenInfo.new(0.22),{Transparency=0}):Play()
+	TS:Create(t,TweenInfo.new(0.22),{TextTransparency=0}):Play()
+	task.delay(1.3,function()
+		TS:Create(f,TweenInfo.new(0.22),{BackgroundTransparency=1}):Play()
+		TS:Create(s,TweenInfo.new(0.22),{Transparency=1}):Play()
+		TS:Create(t,TweenInfo.new(0.22),{TextTransparency=1}):Play()
+	end)
+	task.delay(1.65,function() pcall(function() g:Destroy() end) end)
+end
+local HL={}
+local function hl(obj,col,on)
+	if not obj then return end
+	local h=HL[obj]
+	if not h then
+		h=Instance.new("Highlight")
+		h.FillTransparency=1
+		h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
+		h.Parent=obj
+		HL[obj]=h
+	end
+	h.OutlineColor=col
+	h.Enabled=on
+end
+local timeGui=B("ScreenGui",{IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=65,Parent=safeParent()})
+local timeLbl=B("TextLabel",{Size=UDim2.fromOffset(180,22),Position=UDim2.new(0.5,-90,0,4),BackgroundTransparency=1,Text="",Font=Enum.Font.GothamBold,TextSize=16,TextColor3=C.txt,TextStrokeTransparency=0.5,Visible=false,Parent=timeGui})
+local roundEnd=0
+local lastGun=false
+task.spawn(function()
+	local lastState=0
+	while task.wait(0.6) do
+		pcall(function()
+			local sawRole=false
+			for _,pl in ipairs(P:GetPlayers()) do
+				local c=pl.Character
+				if c and c:FindFirstChildOfClass("Humanoid") then
+					local hasKnife=(c:FindFirstChild("Knife")~=nil) or (pl.Backpack and pl.Backpack:FindFirstChild("Knife"))
+					local hasGun=(c:FindFirstChild("Gun")~=nil) or (pl.Backpack and pl.Backpack:FindFirstChild("Gun"))
+					if hasKnife then
+						sawRole=true
+						hl(c,CLR.Killer,ES.Killer)
+						if pl~=LP then hl(c,CLR.Killer,ES.Killer) end
+					elseif hasGun then
+						sawRole=true
+						hl(c,CLR.Police,ES.Police)
+					elseif sawRole and pl~=LP then
+						hl(c,CLR.Civ,ES.Civ)
+					else
+						hl(c,CLR.Civ,false)
+					end
+				end
+			end
+			for _,o in ipairs(workspace:GetChildren()) do
+				local nm=string.lower(o.Name)
+				if o:IsA("Tool") and string.find(nm,"gun") then
+					hl(o,CLR.Gun,ES.Gun)
+					if ES.Gun and not lastGun then mmToast("枪械已掉落") end
+					lastGun=true
+				elseif string.find(nm,"trap") or string.find(nm,"beartrap") then
+					hl(o,CLR.Trap,ES.Trap)
+				end
+			end
+			if lastGun and not ES.Gun then lastGun=false end
+			if not workspace:FindFirstChildWhichIsA("Tool") then
+				if lastGun then
+					lastGun=false
+					mmToast("枪械已被拾取")
+				end
+			end
+			if ES.Time then
+				if roundEnd==0 or (LP.Character and LP.Character:FindFirstChildOfClass("Humanoid") and LP.Character:FindFirstChildOfClass("Humanoid").Health>0 and roundEnd-os.clock()<-5) then
+					roundEnd=os.clock()+180
+				end
+				local left=math.max(0,math.floor(roundEnd-os.clock()))
+				timeLbl.Text=string.format("%d:%02d",math.floor(left/60),left%60)
+				timeLbl.Visible=true
+			else
+				timeLbl.Visible=false
+			end
+		end)
+	end
+end)
