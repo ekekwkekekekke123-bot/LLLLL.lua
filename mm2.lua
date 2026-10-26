@@ -63,8 +63,9 @@ local function mkToggle(name,key)
 	local kn=B("Frame",{Size=UDim2.fromOffset(14,14),Position=UDim2.fromOffset(2,2),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=132,Parent=sw})
 	row.MouseButton1Click:Connect(function()
 		ES[key]=not ES[key]
-		sw.BackgroundColor3=ES[key] and C.accent or C.off
-		TS:Create(kn,TweenInfo.new(0.18,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Position=UDim2.fromOffset(ES[key] and 16 or 2,2)}):Play()
+				local ti=TweenInfo.new(0.22,Enum.EasingStyle.Back,Enum.EasingDirection.Out)
+		TS:Create(kn,ti,{Position=UDim2.fromOffset(ES[key] and 16 or 2,2)}):Play()
+		TS:Create(sw,TweenInfo.new(0.22,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundColor3=ES[key] and C.accent or C.off}):Play()
 	end)
 end
 mkToggle("杀手ESP","Killer")
@@ -548,25 +549,51 @@ rowButton(bodyMu, yMu, "击杀最近的人", killNearest)
 rowButton(bodyMu, yMu, "甩飞警长", flingSheriff)
 rowToggle(bodyMu, yMu, "修改飞刀范围", "KnOn", function() knifeRangeSet() end)
 rowNum(bodyMu, yMu, "飞刀范围", "KnR", "10-60", 10, 60, function() knifeRangeSet() end)
+local iconPos=Vector2.new(12,12)
 minBtn.MouseButton1Click:Connect(function()
 	pn.Visible=false
 	if gui:FindFirstChild("iconHolder") then return end
-	local holder=B("Frame",{Name="iconHolder",Size=UDim2.fromOffset(64,64),Position=UDim2.fromOffset(14,14),BackgroundTransparency=1,ZIndex=900,Parent=gui})
+	local holder=B("Frame",{Name="iconHolder",Size=UDim2.fromOffset(64,64),Position=UDim2.fromOffset(iconPos.X,iconPos.Y),BackgroundTransparency=1,ZIndex=900,Parent=gui})
 	local hit=B("TextButton",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="",AutoButtonColor=false,Active=true,Selectable=true,ZIndex=901,Parent=holder})
-	local ib=B("TextButton",{Size=UDim2.fromOffset(36,36),Position=UDim2.fromScale(0.5,0.5),AnchorPoint=Vector2.new(0.5,0.5),BackgroundColor3=Color3.fromRGB(255,255,255),BackgroundTransparency=0.55,Text="wx",Font=Enum.Font.GothamBold,TextSize=12,TextColor3=Color3.fromRGB(60,60,60),AutoButtonColor=false,Active=false,ZIndex=902,Parent=holder})
+	local ib=B("TextButton",{Size=UDim2.fromOffset(36,36),Position=UDim2.fromScale(0.5,0.5),AnchorPoint=Vector2.new(0.5,0.5),BackgroundColor3=Color3.fromRGB(255,255,255),BackgroundTransparency=1,Text="wx",Font=Enum.Font.GothamBold,TextSize=12,TextColor3=Color3.fromRGB(60,60,60),AutoButtonColor=false,Active=false,ZIndex=902,Parent=holder})
 	B("UICorner",{CornerRadius=UDim.new(1,0),Parent=ib})
-	local isk=B("UIStroke",{Color=Color3.fromRGB(255,255,255),Transparency=0.2,Thickness=1.5,Parent=ib})
+	local isk=B("UIStroke",{Color=Color3.fromRGB(255,255,255),Transparency=1,Thickness=1.5,Parent=ib})
 	B("UIGradient",{Rotation=125,Color=ColorSequence.new(Color3.fromRGB(255,255,255),Color3.fromRGB(190,205,225)),Parent=ib})
 	local sc=Instance.new("UIScale") sc.Scale=0.4 sc.Parent=holder
-	TS:Create(sc,TweenInfo.new(0.22,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play()
+	TS:Create(sc,TweenInfo.new(0.24,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play()
+	TS:Create(ib,TweenInfo.new(0.24),{BackgroundTransparency=0.45}):Play()
+	TS:Create(isk,TweenInfo.new(0.24),{Transparency=0.25}):Play()
 	local drag=false
-	local off=Vector2.zero
 	local moved=0
 	hit.InputBegan:Connect(function(i)
 		if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseButton1 then
 			drag=true moved=0
-			off=holder.AbsolutePosition-Vector2.new(i.Position.X,i.Position.Y)
 		end
+	end)
+	hit.InputChanged:Connect(function(i)
+		if drag and (i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseMovement) then
+			moved=moved+math.abs(i.Delta.X)+math.abs(i.Delta.Y)
+			local p=holder.Position
+			holder.Position=UDim2.fromOffset(p.X.Offset+i.Delta.X,p.Y.Offset+i.Delta.Y)
+			iconPos=Vector2.new(holder.Position.X.Offset,holder.Position.Y.Offset)
+		end
+	end)
+	hit.InputEnded:Connect(function()
+		if not drag then return end
+		drag=false
+		if moved>=8 then return end
+		local s2=holder:FindFirstChildOfClass("UIScale")
+		if s2 then TS:Create(s2,TweenInfo.new(0.14,Enum.EasingStyle.Quart,Enum.EasingDirection.In),{Scale=0.3}):Play() end
+		TS:Create(ib,TweenInfo.new(0.14),{BackgroundTransparency=1}):Play()
+		TS:Create(isk,TweenInfo.new(0.14),{Transparency=1}):Play()
+		task.delay(0.14,function() pcall(function() holder:Destroy() end) end)
+		pn.Visible=true
+		pn.Size=UDim2.fromOffset(math.floor(PW*0.92),math.floor(PH*0.92))
+		pn.Position=UDim2.fromOffset(x0+math.floor(PW*0.04),y0+math.floor(PH*0.04))
+		pn.BackgroundTransparency=1
+		TS:Create(pn,TweenInfo.new(0.24,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.fromOffset(PW,PH),Position=UDim2.fromOffset(x0,y0),BackgroundTransparency=0.03}):Play()
+	end)
+end)
 	end)
 	hit.InputChanged:Connect(function(i)
 		if drag and (i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseMovement) then
