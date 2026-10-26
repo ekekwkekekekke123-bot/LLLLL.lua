@@ -535,16 +535,14 @@ rowNum(bodyMu, yMu, "飞刀范围", "KnR", "10-60", 10, 60, function() knifeRang
 minBtn.MouseButton1Click:Connect(function()
 	pn.Visible=false
 	if gui:FindFirstChild("iconHolder") then return end
-	local holder=B("Frame",{Name="iconHolder",Size=UDim2.fromOffset(60,60),Position=UDim2.fromOffset(12,12),BackgroundTransparency=1,ZIndex=400,Parent=gui})
-	local hit=B("TextButton",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="",AutoButtonColor=false,ZIndex=401,Parent=holder})
-	local ib=B("TextButton",{Size=UDim2.fromOffset(34,34),Position=UDim2.fromScale(0.5,0.5),AnchorPoint=Vector2.new(0.5,0.5),BackgroundColor3=Color3.fromRGB(255,255,255),BackgroundTransparency=1,Text="wx",Font=Enum.Font.GothamBold,TextSize=12,TextColor3=Color3.fromRGB(70,70,70),AutoButtonColor=false,ZIndex=402,Parent=holder})
+	local holder=B("Frame",{Name="iconHolder",Size=UDim2.fromOffset(64,64),Position=UDim2.fromOffset(14,14),BackgroundTransparency=1,ZIndex=900,Parent=gui})
+	local hit=B("TextButton",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="",AutoButtonColor=false,Active=true,Selectable=true,ZIndex=901,Parent=holder})
+	local ib=B("TextButton",{Size=UDim2.fromOffset(36,36),Position=UDim2.fromScale(0.5,0.5),AnchorPoint=Vector2.new(0.5,0.5),BackgroundColor3=Color3.fromRGB(255,255,255),BackgroundTransparency=0.55,Text="wx",Font=Enum.Font.GothamBold,TextSize=12,TextColor3=Color3.fromRGB(60,60,60),AutoButtonColor=false,Active=false,ZIndex=902,Parent=holder})
 	B("UICorner",{CornerRadius=UDim.new(1,0),Parent=ib})
-	local isk=B("UIStroke",{Color=Color3.fromRGB(255,255,255),Transparency=1,Thickness=1.2,Parent=ib})
-	B("UIGradient",{Rotation=120,Color=ColorSequence.new(Color3.fromRGB(255,255,255),Color3.fromRGB(200,212,228)),Parent=ib})
-	local sc=Instance.new("UIScale") sc.Scale=0.5 sc.Parent=holder
-	TS:Create(sc,TweenInfo.new(0.2,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play()
-	TS:Create(ib,TweenInfo.new(0.2),{BackgroundTransparency=0.45}):Play()
-	TS:Create(isk,TweenInfo.new(0.2),{Transparency=0.25}):Play()
+	local isk=B("UIStroke",{Color=Color3.fromRGB(255,255,255),Transparency=0.2,Thickness=1.5,Parent=ib})
+	B("UIGradient",{Rotation=125,Color=ColorSequence.new(Color3.fromRGB(255,255,255),Color3.fromRGB(190,205,225)),Parent=ib})
+	local sc=Instance.new("UIScale") sc.Scale=0.4 sc.Parent=holder
+	TS:Create(sc,TweenInfo.new(0.22,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play()
 	local drag=false
 	local off=Vector2.zero
 	local moved=0
@@ -560,13 +558,12 @@ minBtn.MouseButton1Click:Connect(function()
 			holder.Position=UDim2.fromOffset(i.Position.X+off.X,i.Position.Y+off.Y)
 		end
 	end)
-	hit.InputEnded:Connect(function() drag=false end)
-	ib.MouseButton1Click:Connect(function()
+	hit.InputEnded:Connect(function()
+		if not drag then return end
+		drag=false
 		if moved>=8 then return end
 		local s2=holder:FindFirstChildOfClass("UIScale")
 		if s2 then TS:Create(s2,TweenInfo.new(0.12,Enum.EasingStyle.Quart,Enum.EasingDirection.In),{Scale=0.3}):Play() end
-		TS:Create(ib,TweenInfo.new(0.12),{BackgroundTransparency=1}):Play()
-		TS:Create(isk,TweenInfo.new(0.12),{Transparency=1}):Play()
 		task.delay(0.12,function() pcall(function() holder:Destroy() end) end)
 		pn.Visible=true
 		pn.Size=UDim2.fromOffset(math.floor(PW*0.92),math.floor(PH*0.92))
