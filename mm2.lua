@@ -746,21 +746,12 @@ task.spawn(function()
 				local hr=ch and ch:FindFirstChild("HumanoidRootPart")
 				if not hr then return end
 				local best,bd=nil,1e9
-				for _,o in ipairs(workspace:GetChildren()) do
-					local nm=string.lower(o.Name)
-									for _,o in ipairs(workspace:GetDescendants()) do
+								for _,o in ipairs(workspace:GetDescendants()) do
 					if o:IsA("BasePart") and o.Parent then
 						local nm=string.lower(o.Name)
 						if string.find(nm,"coin") or string.find(nm,"cash") or string.find(nm,"money") then
 							local d=(o.Position-hr.Position).Magnitude
 							if d<bd then best=o bd=d end
-						end
-					end
-				end
-						local p=o:IsA("BasePart") and o or o.PrimaryPart
-						if p and p.Parent then
-							local d=(p.Position-hr.Position).Magnitude
-							if d<bd then best=p bd=d end
 						end
 					end
 				end
