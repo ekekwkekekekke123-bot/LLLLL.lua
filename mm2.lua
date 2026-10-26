@@ -56,18 +56,39 @@ local st=Instance.new("UIStroke") st.Color=Color3.fromRGB(120,110,98) st.Transpa
 local bar=B("Frame",{Size=UDim2.new(1,0,0,32),BackgroundTransparency=1,ZIndex=11,Parent=pn})
 B("TextLabel",{Size=UDim2.new(1,-80,1,0),Position=UDim2.fromOffset(14,0),BackgroundTransparency=1,Text="MM2 · LLL",Font=Enum.Font.GothamBold,TextSize=13,TextColor3=C.accent,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=12,Parent=bar})
 local minBtn=B("TextButton",{Size=UDim2.fromOffset(30,30),Position=UDim2.new(1,-64,0.5,0),AnchorPoint=Vector2.new(0,0.5),BackgroundTransparency=1,Text="－",Font=Enum.Font.GothamBold,TextSize=16,TextColor3=C.dim,ZIndex=12,Parent=bar})
+local miniMade=false
 minBtn.MouseButton1Click:Connect(function()
 	TS:Create(pn,TweenInfo.new(0.16,Enum.EasingStyle.Quart,Enum.EasingDirection.In),{Size=UDim2.fromOffset(math.floor(PW*0.92),math.floor(PH*0.92)),BackgroundTransparency=1}):Play()
 	task.wait(0.18)
-	pcall(function() gui:Destroy() end)
+	pn.Visible=false
+	if miniMade then return end
+	miniMade=true
 	local ig=B("ScreenGui",{IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=70,Parent=safeParent()})
-	local ib=B("TextButton",{Size=UDim2.fromOffset(58,58),Position=UDim2.fromOffset(20,20),BackgroundColor3=Color3.fromRGB(20,20,24),BackgroundTransparency=0.15,Text="wx",Font=Enum.Font.GothamBold,TextSize=16,TextColor3=Color3.fromRGB(200,220,255),Parent=ig})
+	local ib=B("TextButton",{Size=UDim2.fromOffset(34,34),Position=UDim2.fromOffset(18,18),BackgroundColor3=Color3.fromRGB(255,255,255),BackgroundTransparency=0.5,Text="M",Font=Enum.Font.GothamBold,TextSize=12,TextColor3=Color3.fromRGB(70,70,70),AutoButtonColor=false,Parent=ig})
 	local ir=Instance.new("UICorner") ir.CornerRadius=UDim.new(1,0) ir.Parent=ib
-	ib.MouseButton1Click:Connect(function()
-		ib:Destroy()
-		pcall(function()
-			loadstring(game:HttpGet("https://raw.githubusercontent.com/ekekwkekekekke123-bot/LLLLL.lua/main/wx?v="..os.time()))()
-		end)
+	local is=Instance.new("UIStroke") is.Color=Color3.fromRGB(255,255,255) is.Transparency=0.3 is.Thickness=1 is.Parent=ib
+	local gr=Instance.new("UIGradient") gr.Rotation=120 gr.Color=ColorSequence.new(Color3.fromRGB(255,255,255),Color3.fromRGB(198,208,224)) gr.Parent=ib
+	local drag=false
+	local moved=0
+	ib.InputBegan:Connect(function(i)
+		if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseButton1 then
+			drag=true moved=0
+		end
+	end)
+	ib.InputChanged:Connect(function(i)
+		if drag and (i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseMovement) then
+			moved=moved+math.abs(i.Delta.X)+math.abs(i.Delta.Y)
+			ib.Position=UDim2.new(0,ib.Position.X.Offset+i.Delta.X,0,ib.Position.Y.Offset+i.Delta.Y)
+		end
+	end)
+	ib.InputEnded:Connect(function()
+		if not drag then return end
+		drag=false
+		if moved<6 then
+			pn.Visible=true
+			pn.BackgroundTransparency=1
+			TS:Create(pn,TweenInfo.new(0.22,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.fromOffset(PW,PH),Position=UDim2.fromOffset(x0,y0),BackgroundTransparency=0.05}):Play()
+		end
 	end)
 end)
 local close=B("TextButton",{Size=UDim2.fromOffset(30,30),Position=UDim2.new(1,-34,0.5,0),AnchorPoint=Vector2.new(0,0.5),BackgroundTransparency=1,Text="×",Font=Enum.Font.GothamBold,TextSize=18,TextColor3=C.dim,ZIndex=12,Parent=bar})
@@ -96,16 +117,15 @@ end)
 local ES={Killer=false,Police=false,Civ=false,Trap=false,Gun=false,Time=false}
 local CLR={Killer=Color3.fromRGB(255,60,60),Police=Color3.fromRGB(60,140,255),Civ=Color3.fromRGB(60,220,110),Trap=Color3.fromRGB(255,232,120),Gun=Color3.fromRGB(90,220,255)}
 local function mkToggle(name,key)
-	local row=B("Frame",{Size=UDim2.new(1,0,0,30),BackgroundColor3=Color3.fromRGB(212,204,191),BackgroundTransparency=0.25,Parent=body})
-	local rs=Instance.new("UIStroke") rs.Color=Color3.fromRGB(140,130,118) rs.Transparency=0.55 rs.Parent=row
+	local row=B("TextButton",{Size=UDim2.new(1,0,0,30),BackgroundColor3=Color3.fromRGB(236,230,220),BorderSizePixel=0,Text="",AutoButtonColor=false,Parent=body})
+	local rs=Instance.new("UIStroke") rs.Color=Color3.fromRGB(150,140,128) rs.Transparency=0.45 rs.Parent=row
 	B("TextLabel",{Size=UDim2.new(1,-56,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text=name,Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=Color3.fromRGB(38,38,38),TextXAlignment=Enum.TextXAlignment.Left,Parent=row})
-	local sw=B("Frame",{Size=UDim2.fromOffset(32,18),Position=UDim2.new(1,-42,0.5,-9),BackgroundColor3=Color3.fromRGB(160,152,140),Parent=row})
-	local ss=Instance.new("UIStroke") ss.Color=Color3.fromRGB(90,84,76) ss.Transparency=0.3 ss.Parent=sw
-	local kn=B("Frame",{Size=UDim2.fromOffset(14,14),Position=UDim2.fromOffset(2,2),BackgroundColor3=Color3.new(1,1,1),Parent=sw})
-	local btn=B("TextButton",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="",Parent=sw})
-	btn.MouseButton1Click:Connect(function()
+	local sw=B("Frame",{Size=UDim2.fromOffset(32,18),Position=UDim2.new(1,-42,0.5,-9),BackgroundColor3=Color3.fromRGB(168,160,148),BorderSizePixel=0,Parent=row})
+	local ss=Instance.new("UIStroke") ss.Color=Color3.fromRGB(95,88,80) ss.Transparency=0.3 ss.Parent=sw
+	local kn=B("Frame",{Size=UDim2.fromOffset(14,14),Position=UDim2.fromOffset(2,2),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,Parent=sw})
+	row.MouseButton1Click:Connect(function()
 		ES[key]=not ES[key]
-		sw.BackgroundColor3=ES[key] and C.accent or Color3.fromRGB(160,152,140)
+		sw.BackgroundColor3=ES[key] and C.accent or Color3.fromRGB(168,160,148)
 		local ti=TweenInfo.new(0.18,Enum.EasingStyle.Quad,Enum.EasingDirection.Out)
 		TS:Create(kn,ti,{Position=UDim2.fromOffset(ES[key] and 16 or 2,2)}):Play()
 	end)
