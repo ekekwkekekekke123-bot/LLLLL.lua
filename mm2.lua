@@ -517,7 +517,6 @@ local yMu = {v = 0}
 
 rowToggle(bodySh, ySh, "子弹追踪（杀手）", "ShAim")
 rowButton(bodySh, ySh, "甩飞杀手", function()
-	if not isSheriff() then mmToast("你不是警长") return end
 	local pl = findKiller()
 	if not pl then mmToast("没找到杀手") return end
 	flingOne(pl, "杀手")
