@@ -569,7 +569,7 @@ minBtn.MouseButton1Click:Connect(function()
 	hit.InputChanged:Connect(function(i)
 		if drag and (i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseMovement) then
 			moved=moved+math.abs(i.Delta.X)+math.abs(i.Delta.Y)
-			holder.Position=UDim2.fromOffset(i.Position.X+off.X,i.Position.Y+off.Y)
+						holder.Position=UDim2.fromOffset(holder.Position.X.Offset+i.Delta.X,holder.Position.Y.Offset+i.Delta.Y)
 		end
 	end)
 	hit.InputEnded:Connect(function()
