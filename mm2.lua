@@ -594,26 +594,6 @@ minBtn.MouseButton1Click:Connect(function()
 		TS:Create(pn,TweenInfo.new(0.24,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.fromOffset(PW,PH),Position=UDim2.fromOffset(x0,y0),BackgroundTransparency=0.03}):Play()
 	end)
 end)
-	hit.InputChanged:Connect(function(i)
-		if drag and (i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseMovement) then
-			moved=moved+math.abs(i.Delta.X)+math.abs(i.Delta.Y)
-						holder.Position=UDim2.fromOffset(holder.Position.X.Offset+i.Delta.X,holder.Position.Y.Offset+i.Delta.Y)
-		end
-	end)
-	hit.InputEnded:Connect(function()
-		if not drag then return end
-		drag=false
-		if moved>=8 then return end
-		local s2=holder:FindFirstChildOfClass("UIScale")
-		if s2 then TS:Create(s2,TweenInfo.new(0.12,Enum.EasingStyle.Quart,Enum.EasingDirection.In),{Scale=0.3}):Play() end
-		task.delay(0.12,function() pcall(function() holder:Destroy() end) end)
-		pn.Visible=true
-		pn.Size=UDim2.fromOffset(math.floor(PW*0.92),math.floor(PH*0.92))
-		pn.Position=UDim2.fromOffset(x0+math.floor(PW*0.04),y0+math.floor(PH*0.04))
-		pn.BackgroundTransparency=1
-		TS:Create(pn,TweenInfo.new(0.22,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.fromOffset(PW,PH),Position=UDim2.fromOffset(x0,y0),BackgroundTransparency=0.03}):Play()
-	end)
-end)
 close.MouseButton1Click:Connect(function()
 	for _,d in ipairs(workspace:GetDescendants()) do
 		if d.Name=="mm2hl" then pcall(function() d:Destroy() end) end
