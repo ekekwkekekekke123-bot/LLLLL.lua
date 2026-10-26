@@ -73,6 +73,7 @@ mkToggle("平民ESP","Civ")
 mkToggle("陷阱ESP","Trap")
 mkToggle("枪ESP","Gun")
 mkToggle("时间ESP","Time")
+mkToggle("射线ESP","Line")
 local function mmToast(msg)
 	local g=B("ScreenGui",{IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=7000,Parent=SP()})
 	local f=B("Frame",{Size=UDim2.fromOffset(168,28),Position=UDim2.new(1,-180,0,58),BackgroundColor3=C.bg,BackgroundTransparency=1,ZIndex=10,Parent=g})
@@ -601,26 +602,67 @@ local timeGui=B("ScreenGui",{IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder
 local timeLbl=B("TextLabel",{Size=UDim2.fromOffset(180,22),Position=UDim2.new(0.5,-90,0,4),BackgroundTransparency=1,Text="",Font=Enum.Font.GothamBold,TextSize=16,TextColor3=C.txt,TextStrokeTransparency=0.5,Visible=false,Parent=timeGui})
 local roundEnd=0
 local lastGun=false
+local roundT=os.clock()
+LP.CharacterAdded:Connect(function() roundT=os.clock() end)
+local LN={}
+local function drawLine(idx,from,to,col,on)
+	local f=LN[idx]
+	if not f then
+		f=B("Frame",{Size=UDim2.fromOffset(1,1),BackgroundColor3=col,BorderSizePixel=0,ZIndex=90,Parent=gui})
+		LN[idx]=f
+	end
+	if not on then f.Visible=false return end
+	local d=to-from
+	f.Size=UDim2.fromOffset(math.max(d.Magnitude,1),1)
+	f.Position=UDim2.fromOffset(from.X,from.Y)
+	f.Rotation=math.deg(math.atan2(d.Y,d.X))
+	f.BackgroundColor3=col
+	f.BackgroundTransparency=0.15
+	f.Visible=true
+end
 task.spawn(function()
 	while task.wait(0.6) do
 		pcall(function()
-			local sawRole=false
+						local sawRole=false
+			local cam=workspace.CurrentCamera
+			local vps=cam.ViewportSize
+			local center=Vector2.new(vps.X/2,vps.Y/2)
+			local early=(os.clock()-roundT)<10
+			local li=0
 			for _,pl in ipairs(P:GetPlayers()) do
 				local c=pl.Character
 				if c and c:FindFirstChildOfClass("Humanoid") then
 					local hasKnife=(c:FindFirstChild("Knife")~=nil) or (pl.Backpack and pl.Backpack:FindFirstChild("Knife"))
 					local hasGun=(c:FindFirstChild("Gun")~=nil) or (pl.Backpack and pl.Backpack:FindFirstChild("Gun"))
-					if hasKnife then
-						sawRole=true
+					local col=nil
+					if early then
+						col=CLR.Civ
+						hl(c,CLR.Civ,ES.Civ)
+					elseif hasKnife then
+						sawRole=true col=CLR.Killer
 						hl(c,CLR.Killer,ES.Killer)
 					elseif hasGun then
-						sawRole=true
+						sawRole=true col=CLR.Police
 						hl(c,CLR.Police,ES.Police)
 					elseif sawRole and pl~=LP then
+						col=CLR.Civ
 						hl(c,CLR.Civ,ES.Civ)
 					else
 						hl(c,CLR.Civ,false)
 					end
+					if pl~=LP and col then
+						li=li+1
+						local hr=c:FindFirstChild("HumanoidRootPart")
+						if hr and ES.Line then
+							local sp,onv=cam:WorldToViewportPoint(hr.Position)
+							drawLine(li,center,Vector2.new(sp.X,sp.Y),col,onv)
+						else
+							drawLine(li,center,center,col,false)
+						end
+					end
+				end
+			end
+			for i=li+1,#LN do if LN[i] then LN[i].Visible=false end end
 				end
 			end
 			for _,o in ipairs(workspace:GetChildren()) do
