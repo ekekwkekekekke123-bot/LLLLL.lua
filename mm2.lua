@@ -88,6 +88,453 @@ local function mmToast(msg)
 	end)
 	task.delay(1.65,function() pcall(function() g:Destroy() end) end)
 end
+-- ============================================================
+-- [新增] 警长功能 / 杀手功能
+-- 依赖本文件已有: B TS C pn side body LP P mmToast
+-- 道具判定: Tool 名 "Knife" = 杀手, "Gun" = 警长 (与第170行逻辑一致)
+-- ============================================================
+local UIS = game:GetService("UserInputService")
+local RS = game:GetService("RunService")
+
+local CFG = { ShAim = false, ShLoop = false, KnOn = false, KnR = 20 }
+local RT = {}
+
+-- ---------- 角色 / 道具 ----------
+local function toolOf(pl, nm)
+	local c = pl and pl.Character
+	local bp = pl and pl:FindFirstChild("Backpack")
+	if c then
+		local t = c:FindFirstChild(nm)
+		if t and t:IsA("Tool") then return t end
+	end
+	if bp then
+		local t = bp:FindFirstChild(nm)
+		if t and t:IsA("Tool") then return t end
+	end
+end
+local function findKiller()
+	for _, pl in ipairs(P:GetPlayers()) do
+		if pl ~= LP and pl.Character and toolOf(pl, "Knife") then
+			return pl, pl.Character
+		end
+	end
+end
+local function findSheriff()
+	for _, pl in ipairs(P:GetPlayers()) do
+		if pl ~= LP and pl.Character and toolOf(pl, "Gun") then
+			return pl, pl.Character
+		end
+	end
+end
+local function myKnife() return toolOf(LP, "Knife") end
+local function myGun() return toolOf(LP, "Gun") end
+local function isMurderer() return myKnife() ~= nil end
+local function isSheriff() return myGun() ~= nil end
+local function myChar()
+	local c = LP.Character
+	if not c then return end
+	local h = c:FindFirstChildOfClass("Humanoid")
+	local r = c:FindFirstChild("HumanoidRootPart")
+	if h and r then return c, h, r end
+end
+
+-- ---------- 页面 ----------
+local espBtn
+for _, ch in ipairs(side:GetChildren()) do
+	if ch:IsA("TextButton") and ch.Text == "ESP" then espBtn = ch break end
+end
+local function mkPageBtn(txt, order)
+	return B("TextButton",{Size=UDim2.new(1,0,0,26),BackgroundColor3=C.row,BorderSizePixel=0,Text=txt,Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.txt,AutoButtonColor=false,LayoutOrder=order,ZIndex=301,Parent=side})
+end
+local shBtn = mkPageBtn("警长功能", 2)
+local muBtn = mkPageBtn("杀手功能", 3)
+
+local function mkPage()
+	return B("ScrollingFrame",{Size=UDim2.new(1,-84,1,-44),Position=UDim2.fromOffset(80,38),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=2,ScrollBarImageColor3=C.off,CanvasSize=UDim2.new(0,0,0,0),AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollingDirection=Enum.ScrollingDirection.Y,ZIndex=108,Visible=false,Parent=pn})
+end
+local bodySh = mkPage()
+local bodyMu = mkPage()
+
+local function showPage(p, btn)
+	body.Visible = (p == body)
+	bodySh.Visible = (p == bodySh)
+	bodyMu.Visible = (p == bodyMu)
+	for _, x in ipairs({espBtn, shBtn, muBtn}) do
+		if x then
+			x.BackgroundColor3 = (x == btn) and C.accent or C.row
+			x.TextColor3 = (x == btn) and Color3.new(1,1,1) or C.txt
+		end
+	end
+end
+if espBtn then espBtn.MouseButton1Click:Connect(function() showPage(body, espBtn) end) end
+shBtn.MouseButton1Click:Connect(function() showPage(bodySh, shBtn) end)
+muBtn.MouseButton1Click:Connect(function() showPage(bodyMu, muBtn) end)
+
+-- ---------- 控件 ----------
+local function rowToggle(par, yRef, label, key, cb)
+	local row = B("TextButton",{Size=UDim2.new(1,0,0,30),Position=UDim2.fromOffset(0,yRef.v),BackgroundColor3=C.row,BorderSizePixel=0,Text="",AutoButtonColor=false,ZIndex=130,Parent=par})
+	yRef.v = yRef.v + 34
+	B("UIStroke",{Color=Color3.fromRGB(150,140,128),Transparency=0.4,Parent=row})
+	B("TextLabel",{Size=UDim2.new(1,-56,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text=label,Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=131,Parent=row})
+	local sw = B("Frame",{Size=UDim2.fromOffset(32,18),Position=UDim2.new(1,-42,0.5,-9),BackgroundColor3=CFG[key] and C.accent or C.off,BorderSizePixel=0,ZIndex=131,Parent=row})
+	B("UIStroke",{Color=Color3.fromRGB(95,88,80),Transparency=0.3,Parent=sw})
+	local kn = B("Frame",{Size=UDim2.fromOffset(14,14),Position=UDim2.fromOffset(CFG[key] and 16 or 2,2),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=132,Parent=sw})
+	row.MouseButton1Click:Connect(function()
+		CFG[key] = not CFG[key]
+		sw.BackgroundColor3 = CFG[key] and C.accent or C.off
+		TS:Create(kn,TweenInfo.new(0.18,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Position=UDim2.fromOffset(CFG[key] and 16 or 2,2)}):Play()
+		if cb then pcall(cb, CFG[key]) end
+	end)
+end
+
+local function rowButton(par, yRef, label, cb)
+	local row = B("TextButton",{Size=UDim2.new(1,0,0,28),Position=UDim2.fromOffset(0,yRef.v),BackgroundColor3=C.row,BorderSizePixel=0,Text=label,Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=C.txt,AutoButtonColor=false,ZIndex=130,Parent=par})
+	yRef.v = yRef.v + 32
+	B("UIStroke",{Color=Color3.fromRGB(150,140,128),Transparency=0.4,Parent=row})
+	row.MouseButton1Click:Connect(function() pcall(cb) end)
+end
+
+local function rowNum(par, yRef, label, key, ph, mn, mx, cb)
+	local row = B("Frame",{Size=UDim2.new(1,0,0,30),Position=UDim2.fromOffset(0,yRef.v),BackgroundColor3=C.row,BorderSizePixel=0,ZIndex=130,Parent=par})
+	yRef.v = yRef.v + 34
+	B("UIStroke",{Color=Color3.fromRGB(150,140,128),Transparency=0.4,Parent=row})
+	B("TextLabel",{Size=UDim2.new(1,-86,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text=label,Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=131,Parent=row})
+	local tb = B("TextBox",{Size=UDim2.fromOffset(64,20),Position=UDim2.new(1,-72,0.5,-10),BackgroundColor3=C.off,BorderSizePixel=0,Text=tostring(CFG[key] or ""),PlaceholderText=ph or "",PlaceholderColor3=C.dim,Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=C.txt,ClearTextOnFocus=false,ZIndex=131,Parent=row})
+	tb:GetPropertyChangedSignal("Text"):Connect(function()
+		local v = tonumber(tb.Text)
+		if v then
+			CFG[key] = math.clamp(v, mn, mx)
+			if cb then pcall(cb, CFG[key]) end
+		end
+	end)
+end
+
+-- ---------- 1. 子弹追踪(杀手) ----------
+-- hook __namecall, 拦截 Raycast / FireServer 的攻击参数,
+-- 把目标点替换成杀手 Head, 无 FOV 全向强锁
+local shTgt = nil
+task.spawn(function()
+	while true do
+		task.wait(0.2)
+		pcall(function()
+			if CFG.ShAim then
+				local _, ch = findKiller()
+				shTgt = ch
+			else
+				shTgt = nil
+			end
+		end)
+	end
+end)
+
+-- ---------- 2. 甩飞 ----------
+local function flingOne(pl, tag)
+	if RT.flingC then mmToast("甩飞进行中") return end
+	local c, h, r = myChar()
+	local tc = pl and pl.Character
+	local tr = tc and tc:FindFirstChild("HumanoidRootPart")
+	if not (r and tr) then mmToast("甩飞失败 · 目标无效") return end
+	RT.flingSave = r.CFrame
+	local endT = os.clock() + 0.85
+	RT.flingC = RS.RenderStepped:Connect(function()
+		local c2, h2, r2 = myChar()
+		if not r2 then
+			if RT.flingC then RT.flingC:Disconnect() RT.flingC = nil end
+			return
+		end
+		local cur = pl.Character and pl.Character:FindFirstChild("HumanoidRootPart")
+		if cur then
+			r2.CFrame = cur.CFrame
+			r2.AssemblyAngularVelocity = Vector3.new(6e4, 6e4, 6e4)
+			r2.AssemblyLinearVelocity = Vector3.new(0, 4e3, 0)
+		end
+		if os.clock() >= endT then
+			RT.flingC:Disconnect() RT.flingC = nil
+			local c3, h3, r3 = myChar()
+			if r3 and RT.flingSave then
+				r3.CFrame = RT.flingSave
+				r3.AssemblyLinearVelocity = Vector3.zero
+				r3.AssemblyAngularVelocity = Vector3.zero
+			end
+			RT.flingSave = nil
+			mmToast((tag or "目标") .. " 已甩飞")
+		end
+	end)
+end
+
+-- ---------- 3. 传送到身后 ----------
+local function tpBehind(pl)
+	local c, h, r = myChar()
+	local tc = pl and pl.Character
+	local tr = tc and tc:FindFirstChild("HumanoidRootPart")
+	if not (r and tr) then mmToast("传送失败 · 目标无效") return end
+	r.CFrame = tr.CFrame * CFrame.new(0, 0, 3)
+	r.AssemblyLinearVelocity = Vector3.zero
+	r.AssemblyAngularVelocity = Vector3.zero
+	mmToast("已传送到 " .. pl.Name .. " 身后")
+end
+
+-- ---------- 4. 循环传送到身后(穿墙) ----------
+local function tpLoopSet(on)
+	if RT.tplC then RT.tplC:Disconnect() RT.tplC = nil end
+	if RT.tplClip then RT.tplClip:Disconnect() RT.tplClip = nil end
+	if not on then
+		local c, h, r = myChar()
+		if RT.tplSave and r then
+			r.CFrame = RT.tplSave
+			r.AssemblyLinearVelocity = Vector3.zero
+			r.AssemblyAngularVelocity = Vector3.zero
+		end
+		RT.tplSave = nil
+		if RT.tplCols then
+			for p, o in pairs(RT.tplCols) do
+				if p and p.Parent then pcall(function() p.CanCollide = o end) end
+			end
+			RT.tplCols = nil
+		end
+		mmToast("已回到原位")
+		return
+	end
+	local c, h, r = myChar()
+	if not r then return end
+	RT.tplSave = r.CFrame
+	RT.tplCols = {}
+	-- 穿墙: 身体部件 CanCollide 全关
+	RT.tplClip = RS.RenderStepped:Connect(function()
+		local cc = LP.Character
+		if not cc then return end
+		for _, d in ipairs(cc:GetDescendants()) do
+			if d:IsA("BasePart") and RT.tplCols[d] == nil then
+				RT.tplCols[d] = d.CanCollide
+				d.CanCollide = false
+			end
+		end
+	end)
+	-- 每帧跟到杀手背后 3.2 格
+	RT.tplC = RS.RenderStepped:Connect(function()
+		local cc, hh, rr = myChar()
+		if not rr then return end
+		local kpl, kch = findKiller()
+		local tr = kch and kch:FindFirstChild("HumanoidRootPart")
+		if tr then
+			rr.CFrame = tr.CFrame * CFrame.new(0, 0, 3.2)
+			rr.AssemblyLinearVelocity = Vector3.zero
+		end
+	end)
+	mmToast("循环跟随已开启")
+end
+
+-- ---------- 击杀核心 ----------
+-- MM2 刀是 Tool.Activated 复制到服务器 + Handle 距离判定,
+-- 所以"贴脸 + Activate"是有效路径
+local function stabOne(pl)
+	local c, h, r = myChar()
+	local tool = myKnife()
+	local tr = pl and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart")
+	if not (r and tool and tr) then return false end
+	r.CFrame = tr.CFrame
+	pcall(function() tool:Activate() end)
+	pcall(function() tool:Activate() end)
+	return true
+end
+
+local function killAll()
+	if not isMurderer() then mmToast("你不是杀手") return end
+	local c, h, r = myChar()
+	local tool = myKnife()
+	if not (r and tool) then mmToast("手里没刀") return end
+	local save = r.CFrame
+	local n = 0
+	for _, pl in ipairs(P:GetPlayers()) do
+		if pl ~= LP and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
+			r.CFrame = pl.Character.HumanoidRootPart.CFrame
+			pcall(function() tool:Activate() end)
+			n = n + 1
+			task.wait(0.06)
+		end
+	end
+	r.CFrame = save
+	r.AssemblyLinearVelocity = Vector3.zero
+	r.AssemblyAngularVelocity = Vector3.zero
+	mmToast("一键击杀 · " .. n .. " 人")
+end
+
+local function killSheriff()
+	if not isMurderer() then mmToast("你不是杀手") return end
+	local pl = findSheriff()
+	if not pl then mmToast("没找到警长") return end
+	stabOne(pl)
+	mmToast("已击杀警长 " .. pl.Name)
+end
+
+local function killNearest()
+	if not isMurderer() then mmToast("你不是杀手") return end
+	local c, h, r = myChar()
+	if not r then return end
+	local best, bd = nil, math.huge
+	for _, pl in ipairs(P:GetPlayers()) do
+		if pl ~= LP and pl.Character then
+			local tr = pl.Character:FindFirstChild("HumanoidRootPart")
+			if tr then
+				local d = (tr.Position - r.Position).Magnitude
+				if d < bd then bd = d best = pl end
+			end
+		end
+	end
+	if not best then mmToast("附近没人") return end
+	stabOne(best)
+	mmToast("已击杀最近 " .. best.Name)
+end
+
+local function flingSheriff()
+	if not isMurderer() then mmToast("你不是杀手") return end
+	local pl = findSheriff()
+	if not pl then mmToast("没找到警长") return end
+	flingOne(pl, "警长")
+end
+
+-- ---------- 5. 修改飞刀范围 ----------
+local KN = {}
+local function knifeRangeSet()
+	if not CFG.KnOn then
+		for p, o in pairs(KN) do
+			if p and p.Parent then pcall(function() p.Size = o end) end
+		end
+		KN = {}
+		return
+	end
+	local range = math.clamp(tonumber(CFG.KnR) or 20, 10, 60)
+	local mult = math.max(1, range / 4)
+	local function blow(t)
+		if not t then return end
+		for _, d in ipairs(t:GetDescendants()) do
+			if d:IsA("BasePart") and KN[d] == nil then
+				KN[d] = d.Size
+				d.Size = d.Size * mult
+				d.CanTouch = true
+			end
+		end
+	end
+	blow(myKnife())
+	local cc = LP.Character
+	if cc then
+		for _, d in ipairs(cc:GetDescendants()) do
+			if d:IsA("Tool") then blow(d) end
+		end
+	end
+	local bp = LP:FindFirstChild("Backpack")
+	if bp then
+		for _, d in ipairs(bp:GetChildren()) do
+			if d:IsA("Tool") then blow(d) end
+		end
+	end
+end
+workspace.DescendantAdded:Connect(function(d)
+	if not (CFG.KnOn and CFG.KnR) then return end
+	if not d:IsA("BasePart") then return end
+	local nm = string.lower(d.Name or "")
+	if string.find(nm, "knife") or string.find(nm, "blade") or string.find(nm, "throw") then
+		task.delay(0.15, function()
+			if not CFG.KnOn then return end
+			if KN[d] == nil and d.Parent then
+				KN[d] = d.Size
+				local range = math.clamp(tonumber(CFG.KnR) or 20, 10, 60)
+				d.Size = Vector3.new(range * 0.5, range * 0.5, range * 0.5)
+				d.CanTouch = true
+			end
+		end)
+	end
+end)
+
+-- ---------- 统一 namecall hook: 子弹追踪 + 飞刀方向修正 ----------
+pcall(function()
+	local old
+	old = hookmetamethod(game, "__namecall", function(self, ...)
+		local m = getnamecallmethod()
+		local cam = workspace.CurrentCamera
+		local cp = (cam and cam.CFrame.Position) or Vector3.zero
+		-- 子弹追踪
+		if CFG.ShAim and shTgt and shTgt.Parent then
+			local head = shTgt:FindFirstChild("Head") or shTgt:FindFirstChild("HumanoidRootPart")
+			if head then
+				local aim = (head.Position - cp).Unit * 1000
+				if m == "Raycast" then
+					local a = {...}
+					if #a >= 2 and typeof(a[1]) == "Vector3" and typeof(a[2]) == "Vector3" then
+						a[1] = cp a[2] = aim
+						return old(self, table.unpack(a))
+					end
+				elseif m == "FireServer" then
+					local a = {...}
+					local n = #a
+					if n >= 2 and typeof(a[n-1]) == "Vector3" and typeof(a[n]) == "Vector3" then
+						a[n-1] = cp a[n] = aim
+						return old(self, table.unpack(a))
+					end
+				end
+			end
+		end
+		-- 飞刀方向修正(保持原速度大小, 只改方向到范围内最近敌人)
+		if CFG.KnOn and (m == "FireServer" or m == "InvokeServer") then
+			local nm = string.lower(self.Name or "")
+			if string.find(nm, "throw") or string.find(nm, "knife") or string.find(nm, "blade") then
+				local range = math.clamp(tonumber(CFG.KnR) or 20, 10, 60)
+				local c, h, r = myChar()
+				if r then
+					local best, bd = nil, range
+					for _, pl in ipairs(P:GetPlayers()) do
+						if pl ~= LP and pl.Character then
+							local tr = pl.Character:FindFirstChild("HumanoidRootPart")
+							if tr then
+								local d = (tr.Position - r.Position).Magnitude
+								if d < bd then bd = d best = tr end
+							end
+						end
+					end
+					if best then
+						local a = {...}
+						for i = #a, 1, -1 do
+							if typeof(a[i]) == "Vector3" then
+								local mag = a[i].Magnitude
+								if mag > 0.01 then
+									a[i] = (best.Position - cp).Unit * mag
+									return old(self, table.unpack(a))
+								end
+								break
+							end
+						end
+					end
+				end
+			end
+		end
+		return old(self, ...)
+	end)
+end)
+
+-- ---------- 面板构建 ----------
+local ySh = {v = 0}
+local yMu = {v = 0}
+
+rowToggle(bodySh, ySh, "子弹追踪（杀手）", "ShAim")
+rowButton(bodySh, ySh, "甩飞杀手", function()
+	if not isSheriff() then mmToast("你不是警长") return end
+	local pl = findKiller()
+	if not pl then mmToast("没找到杀手") return end
+	flingOne(pl, "杀手")
+end)
+rowButton(bodySh, ySh, "传送到杀手身后", function()
+	local pl = findKiller()
+	if not pl then mmToast("没找到杀手") return end
+	tpBehind(pl)
+end)
+rowToggle(bodySh, ySh, "循环传送到杀手身后", "ShLoop", tpLoopSet)
+
+rowButton(bodyMu, yMu, "一键击杀所有人", killAll)
+rowButton(bodyMu, yMu, "击杀警长", killSheriff)
+rowButton(bodyMu, yMu, "击杀最近的人", killNearest)
+rowButton(bodyMu, yMu, "甩飞警长", flingSheriff)
+rowToggle(bodyMu, yMu, "修改飞刀范围", "KnOn", function() knifeRangeSet() end)
+rowNum(bodyMu, yMu, "飞刀范围", "KnR", "10-60", 10, 60, function() knifeRangeSet() end)
 minBtn.MouseButton1Click:Connect(function()
 	pn.Visible=false
 	if gui:FindFirstChild("iconHolder") then return end
