@@ -594,7 +594,6 @@ minBtn.MouseButton1Click:Connect(function()
 		TS:Create(pn,TweenInfo.new(0.24,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.fromOffset(PW,PH),Position=UDim2.fromOffset(x0,y0),BackgroundTransparency=0.03}):Play()
 	end)
 end)
-	end)
 	hit.InputChanged:Connect(function(i)
 		if drag and (i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseMovement) then
 			moved=moved+math.abs(i.Delta.X)+math.abs(i.Delta.Y)
