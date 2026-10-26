@@ -1063,10 +1063,10 @@ local side=B("ScrollingFrame",{Size=UDim2.new(0,74,1,-33),Position=UDim2.fromOff
 B("UIListLayout",{Padding=UDim.new(0,3),SortOrder=Enum.SortOrder.LayoutOrder,Parent=side})
 B("UIPadding",{PaddingLeft=UDim.new(0,6),PaddingRight=UDim.new(0,6),PaddingTop=UDim.new(0,5),Parent=side})
 local function sideBtn(t,i) local b=B("TextButton",{Size=UDim2.new(1,0,0,24),BackgroundColor3=Color3.fromRGB(246,241,232),Text=t,Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=Color3.fromRGB(255,255,230),AutoButtonColor=false,LayoutOrder=i,ZIndex=16,Parent=side}) R(b,7) return b end
-local sb={} for i,nm in ipairs({"玩家功能","透视功能","自瞄","子弹追踪","互动功能","NPC","画面功能","危险","配置"}) do sb[i]=sideBtn(nm,i) end
+local sb={} for i,nm in ipairs({"玩家功能","透视功能","自瞄","子弹追踪","互动功能","NPC","画面功能","危险","配置","服务器"}) do sb[i]=sideBtn(nm,i) end
 local function spage(v) local f=B("ScrollingFrame",{Size=UDim2.new(1,-80,1,-37),Position=UDim2.fromOffset(76,35),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=2,ScrollBarImageColor3=C.off,AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollingDirection=Enum.ScrollingDirection.Y,Visible=v,ZIndex=14,Parent=pn}) B("UIListLayout",{Padding=UDim.new(0,4),SortOrder=Enum.SortOrder.LayoutOrder,Parent=f}) B("UIPadding",{PaddingBottom=UDim.new(0,8),PaddingRight=UDim.new(0,4),Parent=f}) return f end
-local pgP=spage(true) local pgE=spage(false) local pgM=spage(false) local pgA=spage(false) local pgI=spage(false) local pgN=spage(false) local pgV=spage(false) local pgW=spage(false) local pgS=spage(false)
-            local tabs={sb[1],sb[2],sb[3],sb[4],sb[5],sb[6],sb[7],sb[8],sb[9]} local pages={pgP,pgE,pgM,pgA,pgI,pgN,pgV,pgW,pgS}
+local pgP=spage(true) local pgE=spage(false) local pgM=spage(false) local pgA=spage(false) local pgI=spage(false) local pgN=spage(false) local pgV=spage(false) local pgW=spage(false) local pgS=spage(false) pgSv=spage(false)
+            local tabs={sb[1],sb[2],sb[3],sb[4],sb[5],sb[6],sb[7],sb[8],sb[9],sb[10]} local pages={pgP,pgE,pgM,pgA,pgI,pgN,pgV,pgW,pgS,pgSv}
 local function selp(i) for k=1,#tabs do pages[k].Visible=(k==i) tabs[k].BackgroundColor3=(k==i) and C.accent or Color3.fromRGB(246,241,231) tabs[k].TextColor3=(k==i) and Color3.new(0,0,0) or C.txt end end
 for k=1,#tabs do tabs[k].MouseButton1Click:Connect(function() selp(k) end) end
 function wxInitFX()
@@ -2683,5 +2683,12 @@ RS:BindToRenderStep("wxAim",Enum.RenderPriority.Camera.Value+1,function()
 			end
 		end
 	end)
+end)
+hd(pgSv,"服务器")
+bt(pgSv,"MM2",function()
+	local ok=pcall(function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/ekekwkekekekke123-bot/LLLLL.lua/main/mm2.lua?v="..os.time()))()
+	end)
+	if not ok then wxToast("MM2 加载失败") end
 end)
 end _main()
