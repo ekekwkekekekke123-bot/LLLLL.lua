@@ -50,6 +50,8 @@ local slay=Instance.new("UIListLayout") slay.Padding=UDim.new(0,4) slay.SortOrde
 local spad=Instance.new("UIPadding") spad.PaddingLeft=UDim.new(0,6) spad.PaddingRight=UDim.new(0,6) spad.PaddingTop=UDim.new(0,6) spad.Parent=side
 B("TextButton",{Size=UDim2.new(1,0,0,26),BackgroundColor3=C.accent,BorderSizePixel=0,Text="ESP",Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=Color3.new(1,1,1),AutoButtonColor=false,LayoutOrder=1,ZIndex=301,Parent=side})
 local body=B("ScrollingFrame",{Size=UDim2.new(1,-84,1,-44),Position=UDim2.fromOffset(80,38),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=2,CanvasSize=UDim2.new(0,0,0,0),AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollBarImageColor3=C.off,ZIndex=108,Parent=pn})
+local bodySh=B("Frame",{Size=body.Size,Position=body.Position,BackgroundTransparency=1,Visible=false,ZIndex=108,Parent=pn})
+local bodyKr=B("Frame",{Size=body.Size,Position=body.Position,BackgroundTransparency=1,Visible=false,ZIndex=108,Parent=pn})
 local ES={Killer=false,Police=false,Civ=false,Trap=false,Gun=false,Time=false,Line=false}
 local CLR={Killer=Color3.fromRGB(255,60,60),Police=Color3.fromRGB(60,140,255),Civ=Color3.fromRGB(60,220,110),Trap=Color3.fromRGB(255,232,120),Gun=Color3.fromRGB(90,220,255)}
 local yv=0
@@ -621,6 +623,19 @@ local LN={}
 local function drawLine(idx,from,to,col,on)
 	local f=LN[idx]
 	if not f then
+		f=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),BackgroundColor3=col,BorderSizePixel=0,ZIndex=90,Parent=gui})
+		LN[idx]=f
+	end
+	if not on then f.Visible=false return end
+	local dx,dy=to.X-from.X,to.Y-from.Y
+	f.Size=UDim2.new(0,math.sqrt(dx*dx+dy*dy),0,1.2)
+	f.Position=UDim2.new(0,(from.X+to.X)/2,0,(from.Y+to.Y)/2)
+	f.Rotation=math.deg(math.atan2(dy,dx))
+	f.BackgroundColor3=col
+	f.Visible=true
+end
+	local f=LN[idx]
+	if not f then
 		f=B("Frame",{Size=UDim2.fromOffset(1,1),BackgroundColor3=col,BorderSizePixel=0,ZIndex=90,Parent=gui})
 		LN[idx]=f
 	end
@@ -741,7 +756,15 @@ task.spawn(function()
 				local best,bd=nil,1e9
 				for _,o in ipairs(workspace:GetChildren()) do
 					local nm=string.lower(o.Name)
-					if string.find(nm,"coin") or string.find(nm,"金币") then
+									for _,o in ipairs(workspace:GetDescendants()) do
+					if o:IsA("BasePart") and o.Parent then
+						local nm=string.lower(o.Name)
+						if string.find(nm,"coin") or string.find(nm,"cash") or string.find(nm,"money") then
+							local d=(o.Position-hr.Position).Magnitude
+							if d<bd then best=o bd=d end
+						end
+					end
+				end
 						local p=o:IsA("BasePart") and o or o.PrimaryPart
 						if p and p.Parent then
 							local d=(p.Position-hr.Position).Magnitude
