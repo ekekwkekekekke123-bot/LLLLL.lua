@@ -2689,6 +2689,22 @@ bt(pgSv,"MM2",function()
 	local ok=pcall(function()
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/ekekwkekekekke123-bot/LLLLL.lua/main/mm2.lua?v="..os.time()))()
 	end)
-	if not ok then wxToast("MM2 加载失败") end
+	if not ok then
+		wxToast("MM2 加载失败")
+		return
+	end
+	task.wait(0.25)
+	for k,v in pairs(S) do
+		if type(v)=="boolean" then S[k]=false end
+	end
+	pcall(function()
+		for k in pairs(S) do if apK then pcall(apK,k) end end
+	end)
+	pcall(function()
+		for _,g in ipairs(safeParent():GetChildren()) do
+			if g:IsA("ScreenGui") and g.Name:sub(1,3)=="wx_" then g:Destroy() end
+		end
+	end)
+	dead=true
 end)
 end _main()
