@@ -648,3 +648,80 @@ task.spawn(function()
 		end)
 	end
 end)
+--==== 自动 栏目 ====
+local AU={Coin=false,GunPick=false}
+local autoBtn=B("TextButton",{Size=UDim2.new(1,0,0,26),BackgroundColor3=C.row,BorderSizePixel=0,Text="自动",Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.txt,AutoButtonColor=false,LayoutOrder=4,ZIndex=301,Parent=side})
+local bodyAuto=B("Frame",{Size=UDim2.new(1,-84,1,-44),Position=UDim2.fromOffset(80,38),BackgroundTransparency=1,Visible=false,ZIndex=108,Parent=pn})
+autoBtn.MouseButton1Click:Connect(function()
+	local v=not bodyAuto.Visible
+	bodyAuto.Visible=v
+	body.Visible=not v
+	autoBtn.BackgroundColor3=v and C.accent or C.row
+	autoBtn.TextColor3=v and Color3.new(1,1,1) or C.txt
+end)
+local ay=0
+local function mkToggle2(name,key)
+	local row=B("TextButton",{Size=UDim2.new(1,0,0,30),Position=UDim2.fromOffset(0,ay),BackgroundColor3=C.row,BorderSizePixel=0,Text="",AutoButtonColor=false,ZIndex=130,Parent=bodyAuto})
+	ay=ay+34
+	B("UIStroke",{Color=Color3.fromRGB(150,140,128),Transparency=0.4,Parent=row})
+	B("TextLabel",{Size=UDim2.new(1,-56,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text=name,Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=131,Parent=row})
+	local sw=B("Frame",{Size=UDim2.fromOffset(32,18),Position=UDim2.new(1,-42,0.5,-9),BackgroundColor3=C.off,BorderSizePixel=0,ZIndex=131,Parent=row})
+	B("UIStroke",{Color=Color3.fromRGB(95,88,80),Transparency=0.3,Parent=sw})
+	local kn=B("Frame",{Size=UDim2.fromOffset(14,14),Position=UDim2.fromOffset(2,2),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=132,Parent=sw})
+	row.MouseButton1Click:Connect(function()
+		AU[key]=not AU[key]
+		sw.BackgroundColor3=AU[key] and C.accent or C.off
+		TS:Create(kn,TweenInfo.new(0.18,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Position=UDim2.fromOffset(AU[key] and 16 or 2,2)}):Play()
+	end)
+end
+mkToggle2("自动拾取金币","Coin")
+mkToggle2("自动传送捡枪","GunPick")
+task.spawn(function()
+	while true do
+		task.wait(0.1)
+		if AU.Coin then
+			pcall(function()
+				local ch=LP.Character
+				local hr=ch and ch:FindFirstChild("HumanoidRootPart")
+				if not hr then return end
+				local best,bd=nil,1e9
+				for _,o in ipairs(workspace:GetChildren()) do
+					local nm=string.lower(o.Name)
+					if string.find(nm,"coin") or string.find(nm,"金币") then
+						local p=o:IsA("BasePart") and o or o.PrimaryPart
+						if p and p.Parent then
+							local d=(p.Position-hr.Position).Magnitude
+							if d<bd then best=p bd=d end
+						end
+					end
+				end
+				if best then
+					hr.CFrame=CFrame.new(best.Position+Vector3.new(0,3,0))
+					task.wait(0.03)
+				end
+			end)
+		end
+	end
+end)
+task.spawn(function()
+	while true do
+		task.wait(0.1)
+		if AU.GunPick then
+			pcall(function()
+				local ch=LP.Character
+				local hr=ch and ch:FindFirstChild("HumanoidRootPart")
+				if not hr then return end
+				local gun=nil
+				for _,o in ipairs(workspace:GetChildren()) do
+					if o:IsA("Tool") and string.find(string.lower(o.Name),"gun") then gun=o break end
+				end
+				if gun and gun.Parent then
+					local origin=hr.CFrame
+					hr.CFrame=CFrame.new(gun.Position+Vector3.new(0,3,0))
+					task.wait(0.04)
+					hr.CFrame=origin
+				end
+			end)
+		end
+	end
+end)
