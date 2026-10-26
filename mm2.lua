@@ -132,7 +132,14 @@ minBtn.MouseButton1Click:Connect(function()
 	end)
 end)
 close.MouseButton1Click:Connect(function()
-	pcall(function() gui:Destroy() end)
+	for _,d in ipairs(workspace:GetDescendants()) do
+		if d.Name=="mm2hl" then pcall(function() d:Destroy() end) end
+	end
+	pcall(function()
+		for _,g in ipairs(SP():GetChildren()) do
+			if g.Name=="mm2_ui" or g.Name=="mm2_icon" then g:Destroy() end
+		end
+	end)
 end)
 local HL={}
 local function hl(obj,col,on)
@@ -140,6 +147,7 @@ local function hl(obj,col,on)
 	local h=HL[obj]
 	if not h then
 		h=Instance.new("Highlight")
+				h.Name="mm2hl"
 		h.FillTransparency=1
 		h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
 		h.Parent=obj
