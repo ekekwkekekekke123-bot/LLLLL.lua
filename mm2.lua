@@ -54,10 +54,29 @@ local y0=math.floor((vp0.Y-PH)/2)
 local pn=B("Frame",{Size=UDim2.fromOffset(math.floor(PW*0.92),math.floor(PH*0.92)),Position=UDim2.fromOffset(x0+math.floor(PW*0.04),y0+math.floor(PH*0.04)),BackgroundColor3=C.bg,BackgroundTransparency=1,ZIndex=10,Parent=gui})
 local st=Instance.new("UIStroke") st.Color=Color3.fromRGB(120,110,98) st.Transparency=0.55 st.Parent=pn
 local bar=B("Frame",{Size=UDim2.new(1,0,0,32),BackgroundTransparency=1,ZIndex=11,Parent=pn})
-B("TextLabel",{Size=UDim2.new(1,-70,1,0),Position=UDim2.fromOffset(14,0),BackgroundTransparency=1,Text="MM2 · LLL",Font=Enum.Font.GothamBold,TextSize=13,TextColor3=C.accent,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=12,Parent=bar})
+B("TextLabel",{Size=UDim2.new(1,-80,1,0),Position=UDim2.fromOffset(14,0),BackgroundTransparency=1,Text="MM2 · LLL",Font=Enum.Font.GothamBold,TextSize=13,TextColor3=C.accent,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=12,Parent=bar})
+local minBtn=B("TextButton",{Size=UDim2.fromOffset(30,30),Position=UDim2.new(1,-64,0.5,0),AnchorPoint=Vector2.new(0,0.5),BackgroundTransparency=1,Text="－",Font=Enum.Font.GothamBold,TextSize=16,TextColor3=C.dim,ZIndex=12,Parent=bar})
+minBtn.MouseButton1Click:Connect(function()
+	TS:Create(pn,TweenInfo.new(0.16,Enum.EasingStyle.Quart,Enum.EasingDirection.In),{Size=UDim2.fromOffset(math.floor(PW*0.92),math.floor(PH*0.92)),BackgroundTransparency=1}):Play()
+	task.wait(0.18)
+	pcall(function() gui:Destroy() end)
+	local ig=B("ScreenGui",{IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=70,Parent=safeParent()})
+	local ib=B("TextButton",{Size=UDim2.fromOffset(58,58),Position=UDim2.fromOffset(20,20),BackgroundColor3=Color3.fromRGB(20,20,24),BackgroundTransparency=0.15,Text="wx",Font=Enum.Font.GothamBold,TextSize=16,TextColor3=Color3.fromRGB(200,220,255),Parent=ig})
+	local ir=Instance.new("UICorner") ir.CornerRadius=UDim.new(1,0) ir.Parent=ib
+	ib.MouseButton1Click:Connect(function()
+		ib:Destroy()
+		pcall(function()
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/ekekwkekekekke123-bot/LLLLL.lua/main/wx?v="..os.time()))()
+		end)
+	end)
+end)
 local close=B("TextButton",{Size=UDim2.fromOffset(30,30),Position=UDim2.new(1,-34,0.5,0),AnchorPoint=Vector2.new(0,0.5),BackgroundTransparency=1,Text="×",Font=Enum.Font.GothamBold,TextSize=18,TextColor3=C.dim,ZIndex=12,Parent=bar})
 B("Frame",{Size=UDim2.new(1,0,0,1),Position=UDim2.fromOffset(0,32),BackgroundColor3=C.off,BackgroundTransparency=0.15,ZIndex=11,Parent=pn})
-local body=B("ScrollingFrame",{Size=UDim2.new(1,-12,1,-44),Position=UDim2.fromOffset(6,38),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=2,CanvasSize=UDim2.new(0,0,0,0),AutomaticCanvasSize=Enum.AutomaticSize.Y,ZIndex=11,Parent=pn})
+local side=B("ScrollingFrame",{Size=UDim2.new(0,74,1,-33),Position=UDim2.fromOffset(0,33),BackgroundColor3=C.row,BackgroundTransparency=0.05,BorderSizePixel=0,ScrollBarThickness=2,CanvasSize=UDim2.new(0,0,0,0),AutomaticCanvasSize=Enum.AutomaticSize.Y,ZIndex=12,Parent=pn})
+local slay=Instance.new("UIListLayout") slay.Padding=UDim.new(0,3) slay.SortOrder=Enum.SortOrder.LayoutOrder slay.Parent=side
+local spad=Instance.new("UIPadding") spad.PaddingLeft=UDim.new(0,6) spad.PaddingRight=UDim.new(0,6) spad.PaddingTop=UDim.new(0,5) spad.Parent=side
+local ebtn=B("TextButton",{Size=UDim2.new(1,0,0,24),BackgroundColor3=C.accent,Text="ESP",Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=Color3.new(1,1,1),AutoButtonColor=false,LayoutOrder=1,Parent=side})
+local body=B("ScrollingFrame",{Size=UDim2.new(1,-84,1,-44),Position=UDim2.fromOffset(80,38),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=2,CanvasSize=UDim2.new(0,0,0,0),AutomaticCanvasSize=Enum.AutomaticSize.Y,ZIndex=11,Parent=pn})
 local lay=Instance.new("UIListLayout") lay.Padding=UDim.new(0,4) lay.SortOrder=Enum.SortOrder.LayoutOrder lay.Parent=body
 TS:Create(pn,TweenInfo.new(0.22,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{
 	Size=UDim2.fromOffset(PW,PH),
@@ -77,14 +96,16 @@ end)
 local ES={Killer=false,Police=false,Civ=false,Trap=false,Gun=false,Time=false}
 local CLR={Killer=Color3.fromRGB(255,60,60),Police=Color3.fromRGB(60,140,255),Civ=Color3.fromRGB(60,220,110),Trap=Color3.fromRGB(255,232,120),Gun=Color3.fromRGB(90,220,255)}
 local function mkToggle(name,key)
-	local row=B("Frame",{Size=UDim2.new(1,0,0,28),BackgroundColor3=C.row,Parent=body})
-	B("TextLabel",{Size=UDim2.new(1,-50,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text=name,Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,Parent=row})
-	local sw=B("Frame",{Size=UDim2.fromOffset(30,16),Position=UDim2.new(1,-40,0.5,-8),BackgroundColor3=C.off,Parent=row})
-	local kn=B("Frame",{Size=UDim2.fromOffset(12,12),Position=UDim2.fromOffset(2,2),BackgroundColor3=Color3.new(1,1,1),Parent=sw})
+	local row=B("Frame",{Size=UDim2.new(1,0,0,30),BackgroundColor3=Color3.fromRGB(212,204,191),BackgroundTransparency=0.25,Parent=body})
+	local rs=Instance.new("UIStroke") rs.Color=Color3.fromRGB(140,130,118) rs.Transparency=0.55 rs.Parent=row
+	B("TextLabel",{Size=UDim2.new(1,-56,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text=name,Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=Color3.fromRGB(38,38,38),TextXAlignment=Enum.TextXAlignment.Left,Parent=row})
+	local sw=B("Frame",{Size=UDim2.fromOffset(32,18),Position=UDim2.new(1,-42,0.5,-9),BackgroundColor3=Color3.fromRGB(160,152,140),Parent=row})
+	local ss=Instance.new("UIStroke") ss.Color=Color3.fromRGB(90,84,76) ss.Transparency=0.3 ss.Parent=sw
+	local kn=B("Frame",{Size=UDim2.fromOffset(14,14),Position=UDim2.fromOffset(2,2),BackgroundColor3=Color3.new(1,1,1),Parent=sw})
 	local btn=B("TextButton",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="",Parent=sw})
 	btn.MouseButton1Click:Connect(function()
 		ES[key]=not ES[key]
-		sw.BackgroundColor3=ES[key] and C.accent or C.off
+		sw.BackgroundColor3=ES[key] and C.accent or Color3.fromRGB(160,152,140)
 		local ti=TweenInfo.new(0.18,Enum.EasingStyle.Quad,Enum.EasingDirection.Out)
 		TS:Create(kn,ti,{Position=UDim2.fromOffset(ES[key] and 16 or 2,2)}):Play()
 	end)
