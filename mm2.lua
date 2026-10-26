@@ -58,33 +58,34 @@ B("TextLabel",{Size=UDim2.new(1,-80,1,0),Position=UDim2.fromOffset(14,0),Backgro
 local minBtn=B("TextButton",{Size=UDim2.fromOffset(30,30),Position=UDim2.new(1,-64,0.5,0),AnchorPoint=Vector2.new(0,0.5),BackgroundTransparency=1,Text="－",Font=Enum.Font.GothamBold,TextSize=16,TextColor3=C.dim,ZIndex=12,Parent=bar})
 local miniMade=false
 minBtn.MouseButton1Click:Connect(function()
-	TS:Create(pn,TweenInfo.new(0.16,Enum.EasingStyle.Quart,Enum.EasingDirection.In),{Size=UDim2.fromOffset(math.floor(PW*0.92),math.floor(PH*0.92)),BackgroundTransparency=1}):Play()
-	task.wait(0.18)
 	pn.Visible=false
 	if miniMade then return end
 	miniMade=true
 	local ig=B("ScreenGui",{IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=70,Parent=safeParent()})
-	local ib=B("TextButton",{Size=UDim2.fromOffset(34,34),Position=UDim2.fromOffset(18,18),BackgroundColor3=Color3.fromRGB(255,255,255),BackgroundTransparency=0.5,Text="M",Font=Enum.Font.GothamBold,TextSize=12,TextColor3=Color3.fromRGB(70,70,70),AutoButtonColor=false,Parent=ig})
+	local hit=B("TextButton",{Size=UDim2.fromOffset(60,60),Position=UDim2.fromOffset(12,12),BackgroundTransparency=1,Text="",AutoButtonColor=false,Parent=ig})
+	local ib=B("TextButton",{Size=UDim2.fromOffset(34,34),Position=UDim2.fromScale(0.5,0.5),AnchorPoint=Vector2.new(0.5,0.5),BackgroundColor3=Color3.fromRGB(255,255,255),BackgroundTransparency=0.45,Text="wx",Font=Enum.Font.GothamBold,TextSize=12,TextColor3=Color3.fromRGB(70,70,70),AutoButtonColor=false,Parent=hit})
 	local ir=Instance.new("UICorner") ir.CornerRadius=UDim.new(1,0) ir.Parent=ib
-	local is=Instance.new("UIStroke") is.Color=Color3.fromRGB(255,255,255) is.Transparency=0.3 is.Thickness=1 is.Parent=ib
-	local gr=Instance.new("UIGradient") gr.Rotation=120 gr.Color=ColorSequence.new(Color3.fromRGB(255,255,255),Color3.fromRGB(198,208,224)) gr.Parent=ib
+	local is=Instance.new("UIStroke") is.Color=Color3.fromRGB(255,255,255) is.Transparency=0.25 is.Thickness=1.2 is.Parent=ib
+	local gr=Instance.new("UIGradient") gr.Rotation=120 gr.Color=ColorSequence.new(Color3.fromRGB(255,255,255),Color3.fromRGB(200,212,228)) gr.Parent=ib
 	local drag=false
+	local off=Vector2.zero
 	local moved=0
-	ib.InputBegan:Connect(function(i)
+	hit.InputBegan:Connect(function(i)
 		if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseButton1 then
 			drag=true moved=0
+			off=hit.AbsolutePosition-Vector2.new(i.Position.X,i.Position.Y)
 		end
 	end)
-	ib.InputChanged:Connect(function(i)
+	hit.InputChanged:Connect(function(i)
 		if drag and (i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseMovement) then
 			moved=moved+math.abs(i.Delta.X)+math.abs(i.Delta.Y)
-			ib.Position=UDim2.new(0,ib.Position.X.Offset+i.Delta.X,0,ib.Position.Y.Offset+i.Delta.Y)
+			hit.Position=UDim2.fromOffset(i.Position.X+off.X,i.Position.Y+off.Y)
 		end
 	end)
-	ib.InputEnded:Connect(function()
+	hit.InputEnded:Connect(function()
 		if not drag then return end
 		drag=false
-		if moved<6 then
+		if moved<8 then
 			pn.Visible=true
 			pn.BackgroundTransparency=1
 			TS:Create(pn,TweenInfo.new(0.22,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.fromOffset(PW,PH),Position=UDim2.fromOffset(x0,y0),BackgroundTransparency=0.05}):Play()
