@@ -174,7 +174,8 @@ local function showPage(p, btn)
 	bodySh.Visible = (p == bodySh)
 	bodyMu.Visible = (p == bodyMu)
 	bodyAuto.Visible = (p == bodyAuto)
-	for _, x in ipairs({espBtn, shBtn, muBtn, autoBtn}) do
+	local all={espBtn,shBtn,muBtn,autoBtn}
+	for _,x in ipairs(all) do
 		if x then
 			x.BackgroundColor3 = (x == btn) and C.accent or C.row
 			x.TextColor3 = (x == btn) and Color3.new(1,1,1) or C.txt
@@ -641,14 +642,21 @@ local function drawLine(idx,from,to,col,on)
 	f.Visible=true
 end
 task.spawn(function()
-	while task.wait(0.6) do
+	while task.wait(0.016) do
 		pcall(function()
 						local sawRole=false
 			local cam=workspace.CurrentCamera
 			local vps=cam.ViewportSize
 			local center=Vector2.new(vps.X/2,vps.Y/2)
 						local fromP=(posV=="顶部") and Vector2.new(vps.X/2,0) or Vector2.new(vps.X/2,vps.Y)
-				local early=(os.clock()-roundT)<10
+							local anyW=false
+			for _,p2 in ipairs(P:GetPlayers()) do
+				local c2=p2.Character
+				if c2 and (c2:FindFirstChild("Knife") or c2:FindFirstChild("Gun") or (p2.Backpack and (p2.Backpack:FindFirstChild("Knife") or p2.Backpack:FindFirstChild("Gun")))) then
+					anyW=true break
+				end
+			end
+					local early=(os.clock()-roundT)<10
 			local li=0
 			for _,pl in ipairs(P:GetPlayers()) do
 				local c=pl.Character
@@ -656,7 +664,7 @@ task.spawn(function()
 					local hasKnife=(c:FindFirstChild("Knife")~=nil) or (pl.Backpack and pl.Backpack:FindFirstChild("Knife"))
 					local hasGun=(c:FindFirstChild("Gun")~=nil) or (pl.Backpack and pl.Backpack:FindFirstChild("Gun"))
 					local col=nil
-					if early then
+										if not anyW then
 						col=CLR.Civ
 						hl(c,CLR.Civ,ES.Civ)
 					elseif hasKnife then
@@ -698,10 +706,14 @@ task.spawn(function()
 				lastGun=false
 				mmToast("枪械已被拾取")
 			end
-			if ES.Time then
-				if roundEnd==0 or roundEnd-os.clock()<-5 then roundEnd=os.clock()+180 end
-				local left=math.max(0,math.floor(roundEnd-os.clock()))
-				timeLbl.Text=string.format("%d:%02d",math.floor(left/60),left%60)
+						if ES.Time then
+				if not anyW then
+					timeLbl.Text="0:00"
+				else
+					if roundEnd==0 or roundEnd<os.clock()-180 then roundEnd=os.clock()+180 end
+					local left=math.max(0,math.floor(roundEnd-os.clock()))
+					timeLbl.Text=string.format("%d:%02d",math.floor(left/60),left%60)
+				end
 				timeLbl.Visible=true
 			else
 				timeLbl.Visible=false
