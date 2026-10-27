@@ -1,26 +1,3 @@
--- ===== 临时调试条（用完删掉）=====
-local _dbg = Instance.new("ScreenGui")
-_dbg.Name = "mm2_dbg"
-_dbg.IgnoreGuiInset = true
-_dbg.ResetOnSpawn = false
-_dbg.DisplayOrder = 9999
-local _ok = pcall(function() _dbg.Parent = game:GetService("CoreGui") end)
-if not _ok then
-	_dbg.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
-end
-local _dl = Instance.new("TextLabel")
-_dl.Size = UDim2.new(1, 0, 0, 22)
-_dl.Position = UDim2.new(0, 0, 0, 110)
-_dl.BackgroundTransparency = 0.35
-_dl.BackgroundColor3 = Color3.new(0, 0, 0)
-_dl.TextColor3 = Color3.fromRGB(255, 225, 130)
-_dl.Font = Enum.Font.GothamBold
-_dl.TextSize = 11
-_dl.Text = "debug ready"
-_dl.TextXAlignment = Enum.TextXAlignment.Left
-_dl.Parent = _dbg
-function dlog(s) _dl.Text = tostring(s) end
--- ===== 调试条结束 =====
 --===== MM2 · LLL =====
 do
 	local G=_G
