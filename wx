@@ -362,7 +362,7 @@ local function setP(d,ch,on,col)
 	d.hl.OutlineColor=col
 end
 
-local function drawP(p,cam,vp)         ← 343 行（这一行原封不动，往下挪）
+local function drawP(p,cam,vp)         
 local function drawP(p,cam,vp)
 	local ch=p.Character if not ch then return end
 	local hu=ch:FindFirstChildOfClass("Humanoid")
