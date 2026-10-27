@@ -498,7 +498,7 @@ local function pick(cam,cx,cy)
 					local d=(cam.CFrame.Position-part.Position).Magnitude
 					local sp,on=cam:WorldToViewportPoint(part.Position)
 					local ang=(Vector2.new(sp.X,sp.Y)-Vector2.new(cx,cy)).Magnitude
-					if (on or S.AiWall) and d<=S.AiMax and ((S.Lock~="无") or (not S.FovFixed) or ang<=S.FovR) then
+										if (on or S.AiWall) and d<=math.min(S.AiMax,1000) and ((S.Lock~="无") or (not S.FovFixed) or ang<=S.FovR) then
 						local v=ang
 						if S.AiPrio=="距离最近" then v=d elseif S.AiPrio=="血量最少" then v=hu.Health end
 						if bv==nil or v<bv then best=t bv=v end
@@ -1529,9 +1529,10 @@ apply.MouseButton1Click:Connect(function()
 	pcall(nespApply)
 end)
                                  local function cr(par,l,tb)
-	local rw=B("Frame",{Size=UDim2.new(1,0,0,30),BackgroundColor3=C.row,BackgroundTransparency=0.35,LayoutOrder=nxt(),ZIndex=15,Parent=par}) R(rw,8)
-	B("TextLabel",{Size=UDim2.new(1,-52,1,0),Position=UDim2.fromOffset(8,0),BackgroundTransparency=1,Text=l,Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=16,Parent=rw})
-	local sw=B("TextButton",{Size=UDim2.fromOffset(28,18),Position=UDim2.new(1,-36,0.5,0),AnchorPoint=Vector2.new(0,0.5),BackgroundColor3=tb.Col,Text="",AutoButtonColor=false,ZIndex=16,Parent=rw}) R(sw,6)
+		local rw=B("Frame",{Size=UDim2.new(1,0,0,30),BackgroundColor3=C.row,BackgroundTransparency=0,LayoutOrder=nxt(),ZIndex=130,Parent=par}) R(rw,8)
+	B("UIStroke",{Color=Color3.fromRGB(150,140,128),Transparency=0.4,Parent=rw})
+	B("TextLabel",{Size=UDim2.new(1,-52,1,0),Position=UDim2.fromOffset(8,0),BackgroundTransparency=1,Text=l,Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=131,Parent=rw})
+	local sw=B("TextButton",{Size=UDim2.fromOffset(28,18),Position=UDim2.new(1,-36,0.5,0),AnchorPoint=Vector2.new(0,0.5),BackgroundColor3=tb.Col,Text="",AutoButtonColor=false,ZIndex=131,Parent=rw}) R(sw,6)
 	sw.MouseButton1Click:Connect(function() cpt=tb cps=sw swA.BackgroundColor3=tb.Col cpH,cpS,cpV=tb.Col:ToHSV() cpA=1 cpTitle.Text=l cpSync() cpv.Visible=true cpBlock.Visible=true end)
 end
 local spinAng=0
@@ -1680,7 +1681,7 @@ for _,t in ipairs(EIT) do
 	if k=="Ar" then nb(pgE,"箭头半径","ArR",S.ArR,"0-175 (0=默认)",0,175) end
 end
 hd(pgA,"基础") T(pgA,"启用","AiOn",false) T(pgA,"队伍检查","AiTeam",true) T(pgA,"可见性检查","AiVis",true) T(pgA,"穿墙（静默穿透）","AiWall",false) T(pgA,"漏打模式","AiMiss",false) N(pgA,"命中率","AiAcc",0,100)                    
-hd(pgA,"目标") selrow(pgA,"目标种类",{"玩家","NPC","全部"},"AiType") selrow(pgA,"目标部位",{"Head","HumanoidRootPart","Torso"},"AiPart") selrow(pgA,"优先模式",{"准星最近","距离最近","血量最少"},"AiPrio") N(pgA,"最大距离","AiMax",50,2000) selrow(pgA,"静默瞄准方式",{"Raycast","FireServer","双通道"},"SilentMode")
+hd(pgA,"目标") selrow(pgA,"目标种类",{"玩家","NPC","全部"},"AiType") selrow(pgA,"目标部位",{"Head","HumanoidRootPart","Torso"},"AiPart") selrow(pgA,"优先模式",{"准星最近","距离最近","血量最少"},"AiPrio") N(pgA,"最大距离","AiMax",50,1000) selrow(pgA,"静默瞄准方式",{"Raycast","FireServer","双通道"},"SilentMode")
 hd(pgA,"准星") T(pgA,"显示FOV圈","FovOn",true) cr(pgA,"FOV圈颜色",S.TgtC) N(pgA,"FOV圈半径","FovR",20,200) T(pgA,"固定FOV","FovFixed",true) T(pgA,"启用彩虹色","RainOn",false) N(pgA,"颜色变换速度","RainSpd",1,10)
 hd(pgA,"信息") selrow(pgA,"信息显示样式",{"名称头顶","独立面板"},"InfoStyle") T(pgA,"显示目标名字","ShowName",true) T(pgA,"显示目标血量","ShowHp",true) T(pgA,"显示目标距离","ShowDist",true) T(pgA,"显示目标类别","ShowType",true)
 hd(pgA,"高亮") T(pgA,"启用高亮","AiHl",false) cr(pgA,"高亮颜色",S.HlC) T(pgA,"显示目标追踪线","TLine",false) cr(pgA,"追踪线颜色",S.TrC)
