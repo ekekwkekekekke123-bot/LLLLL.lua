@@ -674,7 +674,7 @@ local timeGui=B("ScreenGui",{IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder
 local timeLbl=B("TextLabel",{Size=UDim2.fromOffset(200,26),Position=UDim2.new(0.5,-100,0,34),BackgroundTransparency=1,Text="",Font=Enum.Font.GothamBlack,TextSize=18,TextColor3=Color3.fromRGB(255,232,150),TextStrokeTransparency=0.3,Visible=false,Parent=timeGui})
 local roundEnd=0
 local lastGun=false
-local rStart=0 local wasW=false local gpT=0
+local rStart=0 local wasW=false local gpT=0 local lastLookup=0
 local timerLabel=nil
 local function findTimerLabel()
 	local pg=LP:FindFirstChild("PlayerGui")
@@ -783,43 +783,61 @@ task.spawn(function()
 				end
 			end
 			for i=li+1,#LN do if LN[i] then LN[i].Visible=false end end
+								local gunOn=false
+			local myHRg=LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
 			for _,o in ipairs(workspace:GetChildren()) do
 				local nm=string.lower(o.Name)
 				if o:IsA("Tool") and string.find(nm,"gun") then
+					gunOn=true
 					hl(o,CLR.Gun,ES.Gun)
-					if ES.Gun and not lastGun then mmToast("枪械已掉落") end
-					lastGun=true
+					if ES.Gun then
+						local hd=o:FindFirstChild("Handle")
+						if hd then
+							local bg=hd:FindFirstChild("mm2_gdist")
+							if not bg then
+								bg=B("BillboardGui",{Name="mm2_gdist",Size=UDim2.fromOffset(70,18),StudsOffset=Vector3.new(0,1.8,0),AlwaysOnTop=true,Parent=hd})
+								B("TextLabel",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="",Font=Enum.Font.GothamBold,TextSize=11,TextColor3=CLR.Gun,Parent=bg})
+							end
+							bg.Enabled=true
+							local tl=bg:FindFirstChildOfClass("TextLabel")
+							if tl and myHRg then
+								tl.Text=math.floor((hd.Position-myHRg.Position).Magnitude).."m"
+							end
+						end
+					end
 				elseif string.find(nm,"trap") or string.find(nm,"beartrap") then
 					hl(o,CLR.Trap,ES.Trap)
 				end
 			end
-			if lastGun and not workspace:FindFirstChildWhichIsA("Tool") then
-				lastGun=false
-				mmToast("枪械已被拾取")
-			end
+			if ES.Gun and gunOn and not lastGun then mmToast("枪械已掉落") end
+			if ES.Gun and not gunOn and lastGun then mmToast("枪械已被拾取") end
+			lastGun=gunOn						
+					if anyW and not wasW then rStart=os.clock() end
+						if not anyW then rStart=0 end
+						wasW=anyW
+						if os.clock()-lastLookup>1 then
+							lastLookup=os.clock()
+							if not timerLabel or not timerLabel.Parent then timerLabel=findTimerLabel() end
+						end
+						local txt=nil
+						if timerLabel and timerLabel.Parent then
+							txt=string.match(timerLabel.Text,"(%d+:%d%d)")
+						end
+						if not txt then
+							if anyW and rStart>0 then
+								local left=math.max(0,180-math.floor(os.clock()-rStart))
+								txt=string.format("%d:%02d",math.floor(left/60),left%60)
+							else
+								txt="0:00"
+							end
+						end
 						if ES.Time then
-				if anyW and not wasW then rStart=os.clock() end
-				wasW=anyW
-				local txt=nil
-				if timerLabel and timerLabel.Parent then
-					txt=string.match(timerLabel.Text,"(%d+:%d%d)")
-				else
-					timerLabel=findTimerLabel()
-				end
-				if not txt then
-					if anyW and rStart>0 then
-						local left=math.max(0,120-math.floor(os.clock()-rStart))
-						txt=string.format("%d:%02d",math.floor(left/60),left%60)
-					else
-						txt="0:00"
-					end
-				end
-				timeLbl.Text=txt
-				timeLbl.Visible=true
-			else
-				timeLbl.Text=""
-				timeLbl.Visible=false
-			end
+							timeLbl.Text=txt
+							timeLbl.Visible=true
+						else
+							timeLbl.Text=""
+							timeLbl.Visible=false
+						end 
 		end)
 	end
 end)
