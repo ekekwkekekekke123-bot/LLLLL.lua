@@ -2408,16 +2408,30 @@ end
 for _,o in ipairs(workspace.CurrentCamera:GetChildren()) do
 	if o:IsA("Highlight") then o:Destroy() end
 end
+for _,o in ipairs(workspace.CurrentCamera:GetChildren()) do
+	if o:IsA("Highlight") and o.Name=="wxhl" then o:Destroy() end
+end
 local HLP={}
-for i=1,12 do
-	local h=Instance.new("Highlight")
-	h.Name="wxhl"
-	h.FillTransparency=1
-	h.OutlineTransparency=0
-	h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
-	h.Enabled=false
-	h.Parent=workspace.CurrentCamera
-	HLP[i]=h
+local function getHL(i)
+	local h=HLP[i]
+	if h and not h.Parent then h=nil HLP[i]=nil end
+	if not h then
+		h=Instance.new("Highlight")
+		h.Name="wxhl"
+		h.FillTransparency=1
+		h.OutlineTransparency=0
+		h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
+		h.Enabled=false
+		h.Parent=workspace.CurrentCamera
+		HLP[i]=h
+	end
+	return h
+end
+local function freeHL()
+	for _,h in ipairs(HLP) do
+		if h then pcall(function() h:Destroy() end) end
+	end
+	HLP={}
 end
 RS.RenderStepped:Connect(function()
 	local cam=workspace.CurrentCamera
@@ -2449,16 +2463,20 @@ RS.RenderStepped:Connect(function()
 		end
 		table.sort(list,function(a,b) return a[2]<b[2] end)
 	end
-	for i=1,30 do
-		local h=HLP[i]
-		local it=list[i]
-		if it then
+		if #list==0 then
+		if next(HLP) then freeHL() end
+	else
+		local n=math.min(#list,30)
+		for i=1,n do
+			local h=getHL(i)
+			local it=list[i]
 			h.Adornee=it[1]
 			h.OutlineColor=(it[4]==1) and Color3.fromRGB(0,255,180) or Color3.fromRGB(255,225,130)
 			h.Enabled=true
-		else
-			h.Enabled=false
-			h.Adornee=nil
+		end
+		for i=n+1,30 do
+			local h=HLP[i]
+			if h then h.Enabled=false h.Adornee=nil end
 		end
 	end
 	for i=1,50 do
