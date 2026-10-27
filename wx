@@ -340,8 +340,6 @@ local function mk(p)
 		d.hl=nil
 	DD[p]=d
 end
-	end                                    
-
 local function setP(d,ch,on,col)       
 	if not on then
 		if d.hl then d.hl:Destroy() d.hl=nil end
@@ -360,9 +358,7 @@ local function setP(d,ch,on,col)
 	d.hl.Enabled=true
 	d.hl.FillColor=col
 	d.hl.OutlineColor=col
-end
-
-local function drawP(p,cam,vp)         
+end         
 local function drawP(p,cam,vp)
 	local ch=p.Character if not ch then return end
 	local hu=ch:FindFirstChildOfClass("Humanoid")
