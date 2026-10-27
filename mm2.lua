@@ -617,16 +617,21 @@ local function hl(obj,col,on)
 	if not obj then return end
 	local h=HL[obj]
 	if h and not h.Parent then h=nil HL[obj]=nil end
-	if not h then
-		h=Instance.new("Highlight")
-		h.Name="mm2hl"
-		h.FillTransparency=1
-		h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
-		h.Parent=obj
-		HL[obj]=h
+	if on then
+		if not h then
+			h=Instance.new("Highlight")
+			h.Name="mm2hl"
+			h.FillTransparency=1
+			h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
+			h.Parent=obj
+			HL[obj]=h
+		end
+		h.OutlineColor=col
+		h.Enabled=true
+	elseif h then
+		h:Destroy()
+		HL[obj]=nil
 	end
-	h.OutlineColor=col
-	h.Enabled=on
 end
 local timeGui=B("ScreenGui",{IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=65,Parent=SP()})
 local timeLbl=B("TextLabel",{Size=UDim2.fromOffset(200,26),Position=UDim2.new(0.5,-100,0,34),BackgroundTransparency=1,Text="",Font=Enum.Font.GothamBlack,TextSize=18,TextColor3=Color3.fromRGB(255,232,150),TextStrokeTransparency=0.3,Visible=false,Parent=timeGui})
