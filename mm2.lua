@@ -491,96 +491,71 @@ workspace.DescendantAdded:Connect(function(d)
 	end
 end)
 
--- ---------- 统一 namecall hook（已修复 ... 语法错误） ----------
-pcall(function()
-	local atkKeys = {"shoot", "fire", "bullet", "gun", "hit", "attack", "damage", "ray", "swing", "stab", "slash"}
-	local function isAtkRemote(nm)
+-- ---------- 子弹追踪：静默自瞄（不改伤害，只改瞄准）----------
+do
+	local DBG = false
+	local keys = {"gun","shoot","fire","bullet","shot","snipe"}
+	local function isGunRemote(nm)
 		nm = string.lower(nm or "")
-		for _, k in ipairs(atkKeys) do
+		for _, k in ipairs(keys) do
 			if string.find(nm, k, 1, true) then return true end
 		end
 		return false
 	end
-	local cam, camT = nil, 0
-	local function getCamPos()
-		local now = os.clock()
-		if not cam or now - camT > 0.25 then
-			cam = workspace.CurrentCamera
-			camT = now
+	local function tgtHead()
+		local t = shTgt
+		if not t or not t.Parent then return nil end
+		local hum = t:FindFirstChildOfClass("Humanoid")
+		if not hum or hum.Health <= 0 then return nil end
+		return t:FindFirstChild("Head") or t:FindFirstChild("HumanoidRootPart")
+	end
+	local function muzzle()
+		local ch = LP.Character
+		if not ch then return workspace.CurrentCamera.CFrame.Position end
+		local tool = ch:FindFirstChildOfClass("Tool")
+		if tool then
+			local h = tool:FindFirstChild("Handle") or tool:FindFirstChild("Barrel")
+			if h then return h.Position end
 		end
-		return (cam and cam.CFrame.Position) or Vector3.zero
+		local hd = ch:FindFirstChild("Head")
+		return hd and hd.Position or workspace.CurrentCamera.CFrame.Position
 	end
 	local old
 	old = hookmetamethod(game, "__namecall", function(self, ...)
-		if not (CFG.ShAim or CFG.KnOn) then return old(self, ...) end
 		local m = getnamecallmethod()
-		if m ~= "Raycast" and m ~= "FireServer" and m ~= "InvokeServer" then return old(self, ...) end
-
+		if m ~= "FireServer" or not CFG.ShAim then return old(self, ...) end
+		if typeof(self) ~= "Instance" or not isGunRemote(self.Name) then return old(self, ...) end
+		local head = tgtHead()
+		if not head then return old(self, ...) end
 		local args = {...}
-
-		local ok, newArgs = pcall(function()
-			if CFG.ShAim and shTgt and shTgt.Parent then
-				local head = shTgt:FindFirstChild("Head") or shTgt:FindFirstChild("HumanoidRootPart")
-				if head then
-					local cp = getCamPos()
-					local aim = (head.Position - cp).Unit * 1000
-					if m == "Raycast" and self == workspace then
-						if #args >= 2 and typeof(args[1]) == "Vector3" and typeof(args[2]) == "Vector3" then
-							args[1] = cp
-							args[2] = aim
-							return args
-						end
-					elseif m == "FireServer" and isAtkRemote(self.Name) then
-						local n = #args
-						if n >= 2 and typeof(args[n - 1]) == "Vector3" and typeof(args[n]) == "Vector3" then
-							args[n - 1] = cp
-							args[n] = aim
-							return args
-						end
+		local from = muzzle()
+		local dir = head.Position - from
+		if dir.Magnitude < 0.01 then return old(self, ...) end
+		dir = dir.Unit
+		local cam = workspace.CurrentCamera
+		local sp, on = cam:WorldToViewportPoint(head.Position)
+		pcall(function()
+			for i = 1, #args do
+				local a = args[i]
+				local t = typeof(a)
+				if t == "CFrame" then
+					args[i] = CFrame.lookAt(a.Position, head.Position)
+				elseif t == "Vector3" then
+					local mg = a.Magnitude
+					if mg >= 50 then
+						args[i] = dir * mg
+					elseif mg > 0.01 and mg < 2 then
+						args[i] = dir
 					end
+				elseif t == "Vector2" and on then
+					args[i] = Vector2.new(sp.X, sp.Y)
 				end
 			end
-			if CFG.KnOn and (m == "FireServer" or m == "InvokeServer") then
-				local nm = string.lower(self.Name or "")
-				if string.find(nm, "throw") or string.find(nm, "knife") or string.find(nm, "blade") then
-					local range = math.clamp(tonumber(CFG.KnR) or 20, 10, 60)
-					local c, h, r = myChar()
-					if r then
-						local cp = getCamPos()
-						local best, bd = nil, range
-						for _, pl in ipairs(P:GetPlayers()) do
-							if pl ~= LP and pl.Character then
-								local tr = pl.Character:FindFirstChild("HumanoidRootPart")
-								if tr then
-									local d = (tr.Position - r.Position).Magnitude
-									if d < bd then bd = d best = tr end
-								end
-							end
-						end
-						if best then
-							for i = #args, 1, -1 do
-								if typeof(args[i]) == "Vector3" then
-									local mag = args[i].Magnitude
-									if mag > 0.01 then
-										args[i] = (best.Position - cp).Unit * mag
-										return args
-									end
-									break
-								end
-							end
-						end
-					end
-				end
-			end
-			return nil
 		end)
-
-		if ok and newArgs then
-			return old(self, table.unpack(newArgs))
-		end
+		if DBG then dlog("AIM " .. tostring(self.Name) .. " → " .. tostring(shTgt and shTgt.Name)) end
 		return old(self, table.unpack(args))
 	end)
-end)
+end
 
 -- ---------- 面板构建 ----------
 local ySh = {v = 0}
