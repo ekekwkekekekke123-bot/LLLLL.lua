@@ -674,7 +674,7 @@ local timeGui=B("ScreenGui",{IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder
 local timeLbl=B("TextLabel",{Size=UDim2.fromOffset(200,26),Position=UDim2.new(0.5,-100,0,34),BackgroundTransparency=1,Text="",Font=Enum.Font.GothamBlack,TextSize=18,TextColor3=Color3.fromRGB(255,232,150),TextStrokeTransparency=0.3,Visible=false,Parent=timeGui})
 local roundEnd=0
 local lastGun=false
-local rStart=0 local wasW=false local gpT=0 local lastLookup=0
+local rStart=0 local wasW=false local gpT=0 local lastLookup=0 local coinCache={} local lastScan=0 local lastTp=0
 local timerLabel=nil
 local function findTimerLabel()
 	local pg=LP:FindFirstChild("PlayerGui")
@@ -945,22 +945,34 @@ task.spawn(function()
 		local ch=LP.Character
 		local hr=ch and ch:FindFirstChild("HumanoidRootPart")
 		if hr then
-						if AU.Coin then
+									if AU.Coin then
 				pcall(function()
-					local best,bd=nil,300
-					for _,o in ipairs(workspace:GetDescendants()) do
-						if o:IsA("BasePart") and o.Parent then
-							local nm=string.lower(o.Name)
-							local pnm=string.lower(o.Parent.Name or "")
-							if string.find(nm,"coin") or string.find(nm,"cash") or string.find(nm,"money") or string.find(nm,"gold") or string.find(pnm,"coin") then
+					local now=os.clock()
+					if now-lastScan>1.2 or #coinCache==0 then
+						lastScan=now
+						coinCache={}
+						for _,o in ipairs(workspace:GetDescendants()) do
+							if o:IsA("BasePart") and o.Parent then
+								local nm=string.lower(o.Name)
+								local pnm=string.lower(o.Parent.Name or "")
+								if string.find(nm,"coin") or string.find(nm,"cash") or string.find(nm,"money") or string.find(nm,"gold") or string.find(pnm,"coin") then
+									table.insert(coinCache,o)
+								end
+							end
+						end
+					end
+					if now-lastTp>=0.5 and #coinCache>0 then
+						local best,bd=nil,300
+						for _,o in ipairs(coinCache) do
+							if o.Parent then
 								local d=(o.Position-hr.Position).Magnitude
 								if d<bd then bd=d best=o end
 							end
 						end
-					end
-					if best then
-						hr.CFrame=CFrame.new(best.Position+Vector3.new(0,1.5,0))
-						task.wait(0.12)
+						if best then
+							lastTp=now
+							hr.CFrame=CFrame.new(best.Position+Vector3.new(0,1.5,0))
+						end
 					end
 				end)
 			end
