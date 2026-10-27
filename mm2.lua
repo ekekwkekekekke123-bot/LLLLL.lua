@@ -422,11 +422,13 @@ local function knifeRangeSet()
 	end
 	local range = math.clamp(tonumber(CFG.KnR) or 20, 10, 60)
 	local mult = math.max(1, range / 4)
-	local function blow(t)
+		local function blow(t)
 		if not t then return end
 		for _, d in ipairs(t:GetDescendants()) do
-			if d:IsA("BasePart") and KN[d] == nil then
+			if d:IsA("BasePart") and d.Name~="Handle" and KN[d] == nil then
 				KN[d] = d.Size
+				d.CanCollide = false
+				d.Massless = true
 				d.Size = d.Size * mult
 				d.CanTouch = true
 			end
@@ -449,6 +451,7 @@ end
 workspace.DescendantAdded:Connect(function(d)
 	if not (CFG.KnOn and CFG.KnR) then return end
 	if not d:IsA("BasePart") then return end
+	if d.Name=="Handle" then return end
 	local nm = string.lower(d.Name or "")
 	if string.find(nm, "knife") or string.find(nm, "blade") or string.find(nm, "throw") then
 		task.delay(0.15, function()
@@ -456,6 +459,8 @@ workspace.DescendantAdded:Connect(function(d)
 			if KN[d] == nil and d.Parent then
 				KN[d] = d.Size
 				local range = math.clamp(tonumber(CFG.KnR) or 20, 10, 60)
+				d.CanCollide = false
+				d.Massless = true
 				d.Size = Vector3.new(range * 0.5, range * 0.5, range * 0.5)
 				d.CanTouch = true
 			end
@@ -636,6 +641,7 @@ local HL={}
 local function hl(obj,col,on)
 	if not obj then return end
 	local h=HL[obj]
+	if h and not h.Parent then h=nil HL[obj]=nil end
 	if not h then
 		h=Instance.new("Highlight")
 		h.Name="mm2hl"
@@ -651,6 +657,7 @@ local timeGui=B("ScreenGui",{IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder
 local timeLbl=B("TextLabel",{Size=UDim2.fromOffset(200,26),Position=UDim2.new(0.5,-100,0,34),BackgroundTransparency=1,Text="",Font=Enum.Font.GothamBlack,TextSize=18,TextColor3=Color3.fromRGB(255,232,150),TextStrokeTransparency=0.3,Visible=false,Parent=timeGui})
 local roundEnd=0
 local lastGun=false
+local rStart=0 local wasW=false local gpT=0
 local timerLabel=nil
 local function findTimerLabel()
 	local pg=LP:FindFirstChild("PlayerGui")
@@ -759,15 +766,27 @@ task.spawn(function()
 				lastGun=false
 				mmToast("枪械已被拾取")
 			end
-			if ES.Time then
-				if not (timerLabel and timerLabel.Parent) then timerLabel=findTimerLabel() end
-				if timerLabel then
-					timeLbl.Text=timerLabel.Text
+						if ES.Time then
+				if anyW and not wasW then rStart=os.clock() end
+				wasW=anyW
+				local txt=nil
+				if timerLabel and timerLabel.Parent then
+					txt=string.match(timerLabel.Text,"(%d+:%d%d)")
 				else
-					timeLbl.Text="--:--"
+					timerLabel=findTimerLabel()
 				end
+				if not txt then
+					if anyW and rStart>0 then
+						local left=math.max(0,120-math.floor(os.clock()-rStart))
+						txt=string.format("%d:%02d",math.floor(left/60),left%60)
+					else
+						txt="0:00"
+					end
+				end
+				timeLbl.Text=txt
 				timeLbl.Visible=true
 			else
+				timeLbl.Text=""
 				timeLbl.Visible=false
 			end
 		end)
@@ -877,31 +896,16 @@ task.spawn(function()
 		local ch=LP.Character
 		local hr=ch and ch:FindFirstChild("HumanoidRootPart")
 		if hr then
-			if AU.Coin then
+						if AU.Coin then
 				pcall(function()
 					local best,bd=nil,300
-					local function tryCoin(o)
-						if not o or not o.Parent then return end
-						local part=nil
-						if o:IsA("BasePart") then part=o
-						elseif o:IsA("Model") then part=o.PrimaryPart or o:FindFirstChildWhichIsA("BasePart") end
-						if part then
-							local d=(part.Position-hr.Position).Magnitude
-							if d<bd then bd=d best=part end
-						end
-					end
-					for _,o in ipairs(workspace:GetChildren()) do
-						if o.Parent then
+					for _,o in ipairs(workspace:GetDescendants()) do
+						if o:IsA("BasePart") and o.Parent then
 							local nm=string.lower(o.Name)
-							if string.find(nm,"coin") or string.find(nm,"cash") or string.find(nm,"money") then
-								tryCoin(o)
-							elseif o:IsA("Folder") then
-								for _,c2 in ipairs(o:GetChildren()) do
-									local n2=string.lower(c2.Name)
-									if string.find(n2,"coin") or string.find(n2,"cash") or string.find(n2,"money") then
-										tryCoin(c2)
-									end
-								end
+							local pnm=string.lower(o.Parent.Name or "")
+							if string.find(nm,"coin") or string.find(nm,"cash") or string.find(nm,"money") or string.find(nm,"gold") or string.find(pnm,"coin") then
+								local d=(o.Position-hr.Position).Magnitude
+								if d<bd then bd=d best=o end
 							end
 						end
 					end
@@ -911,33 +915,21 @@ task.spawn(function()
 					end
 				end)
 			end
-			if AU.GunPick then
+						if AU.GunPick then
 				pcall(function()
-					local gunPart=nil
-					local function tryGun(o)
-						if not o or not o.Parent or gunPart then return end
-						local part=nil
-						if o:IsA("Tool") then part=o:FindFirstChild("Handle") or o.PrimaryPart
-						elseif o:IsA("BasePart") then part=o
-						elseif o:IsA("Model") then part=o.PrimaryPart or o:FindFirstChildWhichIsA("BasePart") end
-						if part then gunPart=part end
-					end
+					if os.clock()-gpT<1 then return end
+					local hit=nil
 					for _,o in ipairs(workspace:GetChildren()) do
-						if o.Parent then
-							local nm=string.lower(o.Name)
-							if string.find(nm,"gun") then
-								tryGun(o)
-							elseif o:IsA("Folder") then
-								for _,c2 in ipairs(o:GetChildren()) do
-									if string.find(string.lower(c2.Name),"gun") then tryGun(c2) end
-								end
-							end
+						if o:IsA("Tool") and o.Parent==workspace and string.find(string.lower(o.Name),"gun") then
+							hit=o:FindFirstChild("Handle") or o.PrimaryPart
+							if hit then break end
 						end
 					end
-					if gunPart then
+					if hit then
+						gpT=os.clock()
 						local origin=hr.CFrame
-						hr.CFrame=CFrame.new(gunPart.Position+Vector3.new(0,1,0))
-						task.wait(0.25)
+						hr.CFrame=CFrame.new(hit.Position+Vector3.new(0,1.5,0))
+						task.wait(0.35)
 						hr.CFrame=origin
 					end
 				end)
