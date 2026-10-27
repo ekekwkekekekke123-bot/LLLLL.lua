@@ -340,9 +340,9 @@ local function mk(p)
 		d.hl=nil
 	DD[p]=d
 end
-	end                                    ← 342 行（mk 函数结束）
+	end                                    
 
-local function setP(d,ch,on,col)       ← 从这里开始插入
+local function setP(d,ch,on,col)       
 	if not on then
 		if d.hl then d.hl:Destroy() d.hl=nil end
 		return
