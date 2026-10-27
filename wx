@@ -337,16 +337,39 @@ local function mk(p)
 	d.al=rg(B("Frame",{Size=UDim2.fromOffset(20,2),AnchorPoint=Vector2.new(1,0.5),Position=UDim2.new(0.5,0,0.5,0),Rotation=135,BorderSizePixel=0,ZIndex=900,Parent=d.a}))
 	d.ar=rg(B("Frame",{Size=UDim2.fromOffset(20,2),AnchorPoint=Vector2.new(0,0.5),Position=UDim2.new(0.5,0,0.5,0),Rotation=-135,BorderSizePixel=0,ZIndex=900,Parent=d.a}))
 	d.at=rg(B("Frame",{Size=UDim2.fromOffset(3,3),AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.new(0.5,0,0.5,0),BackgroundColor3=W,BorderSizePixel=0,ZIndex=901,Parent=d.a}))
-	d.hl=rg(B("Highlight",{Adornee=ch,DepthMode=Enum.HighlightDepthMode.AlwaysOnTop,Enabled=false,FillTransparency=0.6,Parent=ch}))
+		d.hl=nil
 	DD[p]=d
 end
+	end                                    ← 342 行（mk 函数结束）
+
+local function setP(d,ch,on,col)       ← 从这里开始插入
+	if not on then
+		if d.hl then d.hl:Destroy() d.hl=nil end
+		return
+	end
+	if not ch then return end
+	if not d.hl or not d.hl.Parent then
+		local h=Instance.new("Highlight")
+		h.Name="wxhl"
+		h.Adornee=ch
+		h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
+		h.FillTransparency=0.6
+		h.Parent=ch
+		d.hl=h
+	end
+	d.hl.Enabled=true
+	d.hl.FillColor=col
+	d.hl.OutlineColor=col
+end
+
+local function drawP(p,cam,vp)         ← 343 行（这一行原封不动，往下挪）
 local function drawP(p,cam,vp)
 	local ch=p.Character if not ch then return end
 	local hu=ch:FindFirstChildOfClass("Humanoid")
 	local hd=ch:FindFirstChild("Head") local rt=ch:FindFirstChild("HumanoidRootPart") or ch:FindFirstChild("Torso")
 	if not hu or hu.Health<=0 or not hd or not rt then
 		local d=DD[p]
-		if d then d.n.Visible=false d.h.Visible=false d.d.Visible=false d.b.Visible=false d.a.Visible=false d.t.Visible=false if d.hl then d.hl.Enabled=false end end
+			if d.hl then d.hl:Destroy() d.hl=nil end
 		return
 	end
 	local d=DD[p]
@@ -428,13 +451,14 @@ local function drawP(p,cam,vp)
 		end
 	else d.a.Visible=false end
 	local isTgt=(S.Lock~="无" and p.Name==S.Lock) or (aimPart~=nil and aimPart.Parent==ch)
-	if S.AiHl and isTgt then
-		local hc=S.HlC.Col
-		d.hl.Enabled=true d.hl.FillColor=hc d.hl.OutlineColor=hc
+		if S.AiHl and isTgt then
+		setP(d,ch,true,S.HlC.Col)
 	elseif ES.Hl.On then
 		local hc=(ES.Hl.Rain and Color3.fromHSV(hue,1,1)) or ES.Hl.Col
-		d.hl.Enabled=true d.hl.FillColor=hc d.hl.OutlineColor=hc
-	else d.hl.Enabled=false end
+		setP(d,ch,true,hc)
+	else
+		setP(d,ch,false)
+	end
 end
 local function esp()
 	local cam=workspace.CurrentCamera if not cam then return end local vp=cam.ViewportSize
