@@ -734,36 +734,50 @@ task.spawn(function()
 					anyW=true break
 				end
 			end
+						local killerP,policeP={},{}
+			for _,pl in ipairs(P:GetPlayers()) do
+				local c=pl.Character
+				if c then
+					if c:FindFirstChild("Knife") or (pl.Backpack and pl.Backpack:FindFirstChild("Knife")) then
+						killerP[pl]=true
+					elseif c:FindFirstChild("Gun") or (pl.Backpack and pl.Backpack:FindFirstChild("Gun")) then
+						policeP[pl]=true
+					end
+				end
+			end
 			local li=0
+			local myHR=LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+			local myPos=myHR and myHR.Position
 			for _,pl in ipairs(P:GetPlayers()) do
 				local c=pl.Character
 				if c and c:FindFirstChildOfClass("Humanoid") then
-					local hasKnife=(c:FindFirstChild("Knife")~=nil) or (pl.Backpack and pl.Backpack:FindFirstChild("Knife"))
-					local hasGun=(c:FindFirstChild("Gun")~=nil) or (pl.Backpack and pl.Backpack:FindFirstChild("Gun"))
 					local col=nil
 					if not anyW then
 						col=CLR.Civ
 						hl(c,CLR.Civ,ES.Civ)
-					elseif hasKnife then
-						sawRole=true col=CLR.Killer
+					elseif killerP[pl] then
+						col=CLR.Killer
 						hl(c,CLR.Killer,ES.Killer)
-					elseif hasGun then
-						sawRole=true col=CLR.Police
+					elseif policeP[pl] then
+						col=CLR.Police
 						hl(c,CLR.Police,ES.Police)
-					elseif sawRole and pl~=LP then
+					else
 						col=CLR.Civ
 						hl(c,CLR.Civ,ES.Civ)
-					else
-						hl(c,CLR.Civ,false)
 					end
+					local hr=c:FindFirstChild("HumanoidRootPart")
+					local far=(hr and myPos) and ((hr.Position-myPos).Magnitude>1500) or false
 					if pl~=LP and col then
-						li=li+1
-						local hr=c:FindFirstChild("HumanoidRootPart")
-						if hr and ES.Line then
-							local sp,onv=cam:WorldToViewportPoint(hr.Position)
-							drawLine(li,fromP,Vector2.new(sp.X,sp.Y),col,onv)
+						if far then
+							hl(c,col,false)
 						else
-							drawLine(li,fromP,fromP,col,false)
+							li=li+1
+							if hr and ES.Line then
+								local sp,onv=cam:WorldToViewportPoint(hr.Position)
+								drawLine(li,fromP,Vector2.new(sp.X,sp.Y),col,onv)
+							else
+								drawLine(li,fromP,fromP,col,false)
+							end
 						end
 					end
 				end
