@@ -83,10 +83,47 @@ B("UIStroke",{Color=Color3.fromRGB(150,140,128),Transparency=0.4,Parent=pRow})
 B("TextLabel",{Size=UDim2.new(1,-56,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text="射线位置",Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=131,Parent=pRow})
 local pVal=B("TextLabel",{Size=UDim2.new(0,52,1,0),Position=UDim2.new(1,-58,0,0),BackgroundTransparency=1,Text=posV,Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=C.accent,TextXAlignment=Enum.TextXAlignment.Right,ZIndex=131,Parent=pRow})
 yv=yv+32
-pRow.MouseButton1Click:Connect(function()
-	posV=(posV=="顶部") and "底部" or "顶部"
-	pVal.Text=posV
-end)
+
+local pickGui=B("ScreenGui",{Name="mm2_pick",IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=9000,Enabled=false,Parent=SP()})
+gui.Destroying:Connect(function() pcall(function() pickGui:Destroy() end) end)
+local shade=B("TextButton",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="",AutoButtonColor=false,ZIndex=1,Parent=pickGui})
+local box=B("Frame",{Size=UDim2.fromOffset(120,120),Position=UDim2.fromScale(0.5,0.5),AnchorPoint=Vector2.new(0.5,0.5),BackgroundColor3=C.bg,BackgroundTransparency=1,BorderSizePixel=0,Active=true,ZIndex=2,Parent=pickGui})
+B("UIStroke",{Color=Color3.fromRGB(150,140,128),Transparency=0.35,Parent=box})
+local optBtns={}
+local closePick
+local function openPick()
+	pickGui.Enabled=true
+	box.Size=UDim2.fromOffset(70,70)
+	for _,b in ipairs(optBtns) do b.BackgroundTransparency=1 b.TextTransparency=1 end
+	TS:Create(box,TweenInfo.new(0.26,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.fromOffset(120,120),BackgroundTransparency=0.03}):Play()
+	task.delay(0.05,function()
+		for _,b in ipairs(optBtns) do
+			TS:Create(b,TweenInfo.new(0.2),{BackgroundTransparency=0,TextTransparency=0}):Play()
+		end
+	end)
+end
+closePick=function()
+	TS:Create(box,TweenInfo.new(0.15,Enum.EasingStyle.Quad,Enum.EasingDirection.In),{Size=UDim2.fromOffset(70,70),BackgroundTransparency=1}):Play()
+	for _,b in ipairs(optBtns) do
+		TS:Create(b,TweenInfo.new(0.13),{BackgroundTransparency=1,TextTransparency=1}):Play()
+	end
+	task.delay(0.15,function() pickGui.Enabled=false end)
+end
+local function mkOpt(name,val,order)
+	local b=B("TextButton",{Size=UDim2.new(1,-16,0,44),Position=UDim2.fromOffset(8,order*50+8),BackgroundColor3=C.row,BorderSizePixel=0,Text=name,Font=Enum.Font.GothamMedium,TextSize=12,TextColor3=(posV==val) and C.accent or C.txt,AutoButtonColor=false,BackgroundTransparency=1,TextTransparency=1,ZIndex=3,Parent=box})
+	B("UIStroke",{Color=Color3.fromRGB(150,140,128),Transparency=0.4,Parent=b})
+	table.insert(optBtns,b)
+	b.MouseButton1Click:Connect(function()
+		posV=val
+		pVal.Text=posV
+		for _,o in ipairs(optBtns) do o.TextColor3=(o==b) and C.accent or C.txt end
+		closePick()
+	end)
+end
+mkOpt("顶部","顶部",0)
+mkOpt("底部","底部",1)
+shade.MouseButton1Click:Connect(function() closePick() end)
+pRow.MouseButton1Click:Connect(function() openPick() end)
 local function mmToast(msg)
 	local g=B("ScreenGui",{IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=7000,Parent=SP()})
 	local f=B("Frame",{Size=UDim2.fromOffset(168,28),Position=UDim2.new(1,-180,0,58),BackgroundColor3=C.bg,BackgroundTransparency=1,ZIndex=10,Parent=g})
