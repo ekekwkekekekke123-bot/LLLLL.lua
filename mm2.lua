@@ -825,7 +825,7 @@ task.spawn(function()
 						end
 						if not txt then
 							if anyW and rStart>0 then
-								local left=math.max(0,180-math.floor(os.clock()-rStart))
+							    								local left=math.max(0,math.ceil(180-(os.clock()-rStart)))
 								txt=string.format("%d:%02d",math.floor(left/60),left%60)
 							else
 								txt="0:00"
