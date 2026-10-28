@@ -519,7 +519,7 @@ local function as(dt)
 		if not S.AiOn then fov.Visible=false inf.Visible=false tline.Visible=false aimPart=nil if aimBB then aimBB.Enabled=false end if hdB then hdB.Enabled=false end if RT.aimHL then pcall(function() RT.aimHL:Destroy() end) RT.aimHL=nil end return end
 	fov.Visible=S.FovOn fov.Position=UDim2.fromOffset(cx,cy) fov.Size=UDim2.fromOffset(S.FovR*2,S.FovR*2) fs.Color=(S.RainOn and Color3.fromHSV(hue,1,1)) or S.TgtC.Col
 	local best=pick(cam,cx,cy)
-		if best and S.AiVis and best.ch~=lastVisCh then
+				if best and S.AiVis and not S.AiWall then
 		local part=S.aiPart(best.ch) or best.ch:FindFirstChild("HumanoidRootPart")
 		if part and not see(cam,part,best.ch) then best=nil end
 	end
@@ -598,12 +598,17 @@ local function hookSilent()
 														if not S.AiOn then return old(self,...) end
 if aimPart and aimPart.Parent then
 								local cp=workspace.CurrentCamera.CFrame.Position local ap=aimPart.Position if S.PredOn and S.PredVal>0 then local v=aimPart.AssemblyLinearVelocity local d=(ap-cp).Magnitude ap=ap+v*(d/1200)*(S.PredVal/100) end local tg=(ap-cp).Unit*1000
-			local blocked=false
+				local WXW=getgenv().WXWALL
+	if not WXW then WXW={c=nil,b=false,t=0,rp=RaycastParams.new()} WXW.rp.FilterType=Enum.RaycastFilterType.Exclude getgenv().WXWALL=WXW end
 	if not S.AiWall then
-		local rp2=RaycastParams.new() rp2.FilterType=Enum.RaycastFilterType.Exclude rp2.FilterDescendantsInstances={aimPart.Parent,LP.Character,workspace.CurrentCamera}
-		blocked=(workspace:Raycast(cp,(ap-cp),rp2)~=nil)
-	end
-	if blocked then return old(self,...) end		
+		local now=os.clock()
+		if WXW.c~=aimPart or now-WXW.t>0.35 then
+			WXW.c=aimPart WXW.t=now
+			WXW.rp.FilterDescendantsInstances={aimPart.Parent,LP.Character,workspace.CurrentCamera}
+			WXW.b=(workspace:Raycast(cp,(ap-cp),WXW.rp)~=nil)
+		end
+		if WXW.b then return old(self,...) end
+	end		
 if (S.SilentMode=="Raycast" or S.SilentMode=="双通道") and m=="Raycast" then
 					local a={...} local n=#a local pi=nil
 					for i=1,n do if typeof(a[i])=="RaycastParams" then pi=i end end
