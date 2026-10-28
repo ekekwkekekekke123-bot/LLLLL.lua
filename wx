@@ -3029,3 +3029,43 @@ do
 		warn("[WX] 美化页找不到，pgB 是空的")
 	end
 end
+--===== WX 屏幕日志 =====
+do
+	local SP0
+	local ok,h=pcall(function() return gethui() end)
+	if ok and typeof(h)=="Instance" then SP0=h else SP0=game:GetService("CoreGui") end
+	local sg=Instance.new("ScreenGui")
+	sg.Name="wx_log"
+	sg.ResetOnSpawn=false
+	sg.IgnoreGuiInset=true
+	sg.DisplayOrder=9999
+	pcall(function() sg.Parent=SP0 end)
+	local fr=Instance.new("Frame")
+	fr.Size=UDim2.fromOffset(260,112)
+	fr.Position=UDim2.fromOffset(8,88)
+	fr.BackgroundColor3=Color3.fromRGB(20,20,24)
+	fr.BackgroundTransparency=0.2
+	fr.BorderSizePixel=0
+	fr.Parent=sg
+	local lay=Instance.new("UIListLayout")
+	lay.Padding=UDim.new(0,1)
+	lay.Parent=fr
+	local pad=Instance.new("UIPadding")
+	pad.PaddingLeft=UDim.new(0,6) pad.PaddingTop=UDim.new(0,4)
+	pad.Parent=fr
+	local msg={}
+	function _G.WXLOG(s)
+		local l=Instance.new("TextLabel")
+		l.Size=UDim2.new(1,0,0,14)
+		l.BackgroundTransparency=1
+		l.Text=tostring(s)
+		l.TextColor3=Color3.fromRGB(175,255,180)
+		l.Font=Enum.Font.Code
+		l.TextSize=10
+		l.TextXAlignment=Enum.TextXAlignment.Left
+		l.Parent=fr
+		msg[#msg+1]=l
+		while #msg>6 do local o=table.remove(msg,1) if o then o:Destroy() end end
+	end
+	_G.WXLOG("日志窗口已就绪")
+end
