@@ -2932,7 +2932,7 @@ do
 			local org=(hd and hd.Position) or (hrp and hrp.Position) or cam.CFrame.Position
 			local dir=cam.CFrame.LookVector
 			rp.FilterDescendantsInstances={ch,cam}
-			local ok2,res=pcall(function() return workspace:Raycast(org,dir*5000,rp) end)
+			local ok2,res=pcall(function() return workspace:Raycast(cam.CFrame.Postion,dir*5000,rp) end)
 			local fin=(ok2 and res and res.Position) or (org+dir*5000)
 			return org,fin,(ok2 and res) or nil
 		end
@@ -3001,7 +3001,7 @@ do
 			if g then return end
 			if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
 				local ch=LP.Character
-				fire(ch and ch:FindFirstChildOfClass("Tool"),false)
+				fire(ch and ch:FindFirstChildOfClass("Tool"),true)
 			end
 		end)
 		local b1,t1,k1=row("击杀残留",1)
