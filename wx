@@ -2717,7 +2717,7 @@ S.fcProxy={Col=Color3.new(1,1,1)}
 local fcRow=B("TextButton",{Size=UDim2.new(1,0,0,26),BackgroundColor3=C.row,Text="",AutoButtonColor=false,Active=true,ZIndex=200,Parent=pgM})
 R(fcRow,7)
 fcRow.LayoutOrder=nxt()
-local fcTxt=B("TextLabel",{Size=UDim2.new(0.6,0,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text="FOV颜色",Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,Parent=fcRow})
+			local fcTxt=B("TextLabel",{Size=UDim2.new(0.6,0,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text="FOV颜色",Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=201,Parent=fcRow})
 local fcSw=B("TextButton",{Size=UDim2.fromOffset(34,16),Position=UDim2.new(1,-44,0.5,0),AnchorPoint=Vector2.new(0,0.5),BackgroundColor3=S.fcProxy.Col,Text="",AutoButtonColor=false,ZIndex=201,Parent=fcRow})
 R(fcSw,4)
 SK(fcSw,Color3.fromRGB(120,120,120),0.3)
@@ -2882,11 +2882,11 @@ do
 		local function B(c,p) local o=Instance.new(c) for k,v in pairs(p) do if k~="Parent" then o[k]=v end end if p.Parent then o.Parent=p.Parent end return o end
 		local function R(o,r) local u=Instance.new("UICorner") u.CornerRadius=(r>1) and UDim.new(0,r) or UDim.new(r,0) u.Parent=o end
 		local function SK(o,c,t) local s=Instance.new("UIStroke") s.Color=c s.Thickness=1 s.Transparency=t or 0 s.Parent=o return s end
-		local function row(txt,ord)
-			local r=B("TextButton",{Size=UDim2.new(1,0,0,30),BackgroundColor3=C.row,BorderSizePixel=0,Text="",AutoButtonColor=false,LayoutOrder=ord,Parent=pgB})
+				local function row(txt,ord)
+			local r=B("TextButton",{Size=UDim2.new(1,0,0,30),BackgroundColor3=C.row,BorderSizePixel=0,Text="",AutoButtonColor=false,LayoutOrder=ord,ZIndex=25,Parent=pgB})
 			R(r,8) SK(r,C.off,0.35)
-			B("TextLabel",{Size=UDim2.new(1,-70,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text=txt,Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,Parent=r})
-			local v=B("TextLabel",{Size=UDim2.fromOffset(56,20),Position=UDim2.new(1,-62,0.5,-10),BackgroundColor3=C.off,BorderSizePixel=0,Text="关",Font=Enum.Font.GothamBold,TextSize=10,TextColor3=Color3.new(1,1,1),Parent=r})
+			B("TextLabel",{Size=UDim2.new(1,-70,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text=txt,Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=26,Parent=r})
+			local v=B("TextLabel",{Size=UDim2.fromOffset(56,20),Position=UDim2.new(1,-62,0.5,-10),BackgroundColor3=C.off,BorderSizePixel=0,Text="关",Font=Enum.Font.GothamBold,TextSize=10,TextColor3=Color3.new(1,1,1),ZIndex=26,Parent=r})
 			R(v,6) return r,v
 		end
 		local st={on=false,dur=2,live={},seen=setmetatable({},{__mode="k"})}
