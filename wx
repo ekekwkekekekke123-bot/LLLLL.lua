@@ -3002,7 +3002,8 @@ do
 				hit(res)
 			end
 		end
-			if not t:IsA("Tool") then return end
+					local function hookTool(t)
+if not t:IsA("Tool") then return end
 			t.Activated:Connect(function() fire(t,true) end)
 			local function hs(s)
 				if s:IsA("Sound") then
