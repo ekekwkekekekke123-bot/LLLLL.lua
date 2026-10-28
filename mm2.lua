@@ -552,18 +552,11 @@ do
 			for i = 1, #args do
 				local a = args[i]
 				local t = typeof(a)
-				if t == "CFrame" then
-					args[i] = CFrame.lookAt(a.Position, head.Position)
-				elseif t == "Vector3" then
-					local mg = a.Magnitude
-					if mg >= 50 then
-						args[i] = dir * mg
-					elseif mg > 0.01 and mg < 2 then
-						args[i] = dir
+		   					if t == "CFrame" then
+						args[i] = CFrame.lookAt(a.Position, head.Position)
+					elseif t == "Vector3" and a.Magnitude >= 50 then
+						args[i] = dir * a.Magnitude
 					end
-				elseif t == "Vector2" and on then
-					args[i] = Vector2.new(sp.X, sp.Y)
-				end
 			end
 		end)
 		if DBG then dlog("AIM " .. tostring(self.Name) .. " → " .. tostring(shTgt and shTgt.Name)) end
@@ -787,11 +780,12 @@ task.spawn(function()
 			local myHRg=LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
 			for _,o in ipairs(workspace:GetChildren()) do
 				local nm=string.lower(o.Name)
-				if o:IsA("Tool") and string.find(nm,"gun") then
+								if (o:IsA("Tool") or o:IsA("Model") or o:IsA("BasePart")) and string.find(nm,"gun") then
 					gunOn=true
 					hl(o,CLR.Gun,ES.Gun)
 					if ES.Gun then
-						local hd=o:FindFirstChild("Handle")
+												local hd=o:FindFirstChild("Handle")
+						if not hd and o:IsA("BasePart") then hd=o end
 						if hd then
 							local bg=hd:FindFirstChild("mm2_gdist")
 							if not bg then
@@ -805,7 +799,13 @@ task.spawn(function()
 							end
 						end
 					end
-				elseif string.find(nm,"trap") or string.find(nm,"beartrap") then
+								elseif string.find(nm,"trap") or string.find(nm,"beartrap") then
+					if ES.Trap then
+						for _,d in ipairs(o:GetDescendants()) do
+							if d:IsA("BasePart") then d.Transparency=0 d.CanCollide=false end
+						end
+						if o:IsA("BasePart") then o.Transparency=0 end
+					end
 					hl(o,CLR.Trap,ES.Trap)
 				end
 			end
