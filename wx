@@ -2978,19 +2978,20 @@ do
 				if c and inst:IsDescendantOf(c) then char=c break end
 			end
 			if not char or char==LP.Character then
-				if WXLOG then WXLOG("命中但不是玩家："..tostring(inst.Name)) end
+								if _G.WXLOG then _G.WXLOG("命中但不是玩家："..tostring(inst.Name)) end
 				return
 			end
 			local t=os.clock()
 			if st.last[char] and t-st.last[char]<0.6 then return end
 			st.last[char]=t
-			if WXLOG then WXLOG("命中残影："..char.Name) end
+						if _G.WXLOG then _G.WXLOG("命中残影："..char.Name) end
 			ghost(char)
 		end
 		local cd=0
 		local function fire(tool,doHit)
 			if not tr.on and not st.on then return end
-			local now=os.clock()
+						if _G.WXLOG then _G.WXLOG("fire tr="..tostring(tr.on).." st="..tostring(st.on).." tool="..tostring(tool~=nil)) end
+local now=os.clock()
 			if now-cd<0.07 then return end
 			cd=now
 			local org,fin,res=castRay(tool)
