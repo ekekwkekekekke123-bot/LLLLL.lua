@@ -2969,23 +2969,33 @@ do
 				pcall(function() car:Destroy() end)
 			end)
 		end
-				local function hit(res)
-			if not res or not res.Instance then return end
-			local inst=res.Instance
-			local char=nil
+						local function hit()
+			if not st.on then return end
+			local cam=workspace.CurrentCamera
+			if not cam then return end
+			local cx=cam.ViewportSize.X/2
+			local cy=cam.ViewportSize.Y/2
+			local best,bestD=nil,80
 			for _,p in ipairs(P:GetPlayers()) do
 				local c=p.Character
-				if c and inst:IsDescendantOf(c) then char=c break end
+				if c and c~=LP.Character then
+					local hum=c:FindFirstChildOfClass("Humanoid")
+					local hrp=c:FindFirstChild("HumanoidRootPart") or c.PrimaryPart
+					if hum and hum.Health>0 and hrp then
+						local sp,onS=cam:WorldToViewportPoint(hrp.Position)
+						if onS then
+							local d=(Vector2.new(sp.X,sp.Y)-Vector2.new(cx,cy)).Magnitude
+							if d<bestD then bestD=d best=c end
+						end
+					end
+				end
 			end
-			if not char or char==LP.Character then
-								if _G.WXLOG then _G.WXLOG("命中但不是玩家："..tostring(inst.Name)) end
-				return
-			end
+			if not best then return end
 			local t=os.clock()
-			if st.last[char] and t-st.last[char]<0.6 then return end
-			st.last[char]=t
-						if _G.WXLOG then _G.WXLOG("命中残影："..char.Name) end
-			ghost(char)
+			if st.last[best] and t-st.last[best]<0.6 then return end
+			st.last[best]=t
+			if _G.WXLOG then _G.WXLOG("残影："..best.Name.." 准星偏差"..math.floor(bestD)) end
+			ghost(best)
 		end
 		local cd=0
 				local function fire(tool,doHit)
@@ -2997,7 +3007,7 @@ do
 			local org,fin,res=castRay(tool)
 			if not org then return end
 			if tr.on then line(org,fin) end
-			if doHit and st.on then
+						if doHit and st.on then hit() end
 				if _G.WXLOG then _G.WXLOG("res="..tostring(res and res.Instance and res.Instance.Name)) end
 				hit(res)
 			end
