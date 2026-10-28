@@ -2871,14 +2871,12 @@ bt(pgSv,"MM2",function()
 	dead=true
 end)
 end _main()
-
 --===== WX 美化模块（独立块）=====
 do
 	local pgB=_G.wxB
 	if pgB then
 		local P=game:GetService("Players")
 		local TS=game:GetService("TweenService")
-		local UI=game:GetService("UserInputService")
 		local RSv=game:GetService("ReplicatedStorage")
 		local LP=P.LocalPlayer
 		local C={row=Color3.fromRGB(246,241,232),off=Color3.fromRGB(212,204,191),accent=Color3.fromRGB(190,74,64),txt=Color3.fromRGB(38,38,38)}
@@ -2886,20 +2884,22 @@ do
 		local function R(o,r) local u=Instance.new("UICorner") u.CornerRadius=(r>1) and UDim.new(0,r) or UDim.new(r,0) u.Parent=o end
 		local function SK(o,c,t) local s=Instance.new("UIStroke") s.Color=c s.Thickness=1 s.Transparency=t or 0 s.Parent=o return s end
 		local function row(txt,ord)
-			local r=B("TextButton",{Size=UDim2.new(1,0,0,32),BackgroundColor3=C.row,BorderSizePixel=0,Text="",AutoButtonColor=false,LayoutOrder=ord,ZIndex=25,Parent=pgB})
+			local r=B("TextButton",{Size=UDim2.new(1,0,0,30),BackgroundColor3=C.row,BorderSizePixel=0,Text="",AutoButtonColor=false,LayoutOrder=ord,ZIndex=25,Parent=pgB})
 			R(r,8) SK(r,C.off,0.4)
-			B("TextLabel",{Size=UDim2.new(1,-70,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text=txt,Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=26,Parent=r})
-			local trk=B("Frame",{Size=UDim2.fromOffset(40,20),Position=UDim2.new(1,-50,0.5,-10),BackgroundColor3=C.off,BorderSizePixel=0,ZIndex=26,Parent=r})
-			R(trk,10) SK(trk,C.off,0.5)
-			local kn=B("Frame",{Size=UDim2.fromOffset(16,16),Position=UDim2.fromOffset(2,2),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=27,Parent=trk})
-			R(kn,8)
+			B("TextLabel",{Size=UDim2.new(1,-64,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text=txt,Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=26,Parent=r})
+			local trk=B("Frame",{Size=UDim2.fromOffset(34,18),Position=UDim2.new(1,-44,0.5,-9),BackgroundColor3=C.off,BorderSizePixel=0,ZIndex=26,Parent=r})
+			R(trk,9) SK(trk,C.off,0.5)
+			local kn=B("Frame",{Size=UDim2.fromOffset(14,14),Position=UDim2.fromOffset(2,2),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=27,Parent=trk})
+			R(kn,7)
 			return r,trk,kn
 		end
 		local function flip(trk,kn,on)
 			TS:Create(trk,TweenInfo.new(0.18),{BackgroundColor3=on and C.accent or C.off}):Play()
-			TS:Create(kn,TweenInfo.new(0.18),{Position=on and UDim2.fromOffset(22,2) or UDim2.fromOffset(2,2)}):Play()
+			TS:Create(kn,TweenInfo.new(0.18),{Position=on and UDim2.fromOffset(18,2) or UDim2.fromOffset(2,2)}):Play()
 		end
 		local st={on=false,dur=2,live={},seen=setmetatable({},{__mode="k"}),pre=setmetatable({},{__mode="k"}),pos=setmetatable({},{__mode="k"})}
+		local boundP=setmetatable({},{__mode="k"})
+		local boundC=setmetatable({},{__mode="k"})
 		local function strip(m)
 			local bin={}
 			for _,d in ipairs(m:GetDescendants()) do
@@ -2942,8 +2942,8 @@ do
 			if ok and m then strip(m) m.Parent=RSv st.pre[ch]=m end
 		end
 		local function watch(ch)
-			if not ch or ch:GetAttribute("wx_w2") then return end
-			ch:SetAttribute("wx_w2",true)
+			if not ch or boundC[ch] then return end
+			boundC[ch]=true
 			local hum=ch:FindFirstChildOfClass("Humanoid") or ch:WaitForChild("Humanoid",5)
 			if hum then
 				hum.HealthChanged:Connect(function(h) if h<=0 then trySnap(ch) end end)
@@ -2954,8 +2954,8 @@ do
 			if st.on then task.defer(function() preOf(ch) end) end
 		end
 		local function bind(p)
-			if p==LP or p:GetAttribute("wx_b2") then return end
-			p:SetAttribute("wx_b2",true)
+			if p==LP or boundP[p] then return end
+			boundP[p]=true
 			p.CharacterAdded:Connect(watch)
 			if p.Character then watch(p.Character) end
 		end
@@ -3010,21 +3010,27 @@ do
 				pcall(function() car:Destroy() end)
 			end)
 		end
+		local function hookTool(t)
+			if not t:IsA("Tool") then return end
+			t.Activated:Connect(function() shot(t) end)
+			local function hs(s)
+				if s:IsA("Sound") then
+					s:GetPropertyChangedSignal("Playing"):Connect(function()
+						if s.Playing then shot(t) end
+					end)
+				end
+			end
+			for _,d in ipairs(t:GetDescendants()) do hs(d) end
+			t.DescendantAdded:Connect(hs)
+		end
 		local function tch(ch)
 			if not ch then return end
-			local function hk(t) if t:IsA("Tool") then t.Activated:Connect(function() shot(t) end) end end
+			local function hk(t) hookTool(t) end
 			for _,d in ipairs(ch:GetDescendants()) do hk(d) end
 			ch.DescendantAdded:Connect(hk)
 		end
 		if LP.Character then tch(LP.Character) end
 		LP.CharacterAdded:Connect(tch)
-		UI.InputBegan:Connect(function(i,g)
-			if g then return end
-			if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
-				local ch=LP.Character
-				shot(ch and ch:FindFirstChildOfClass("Tool"))
-			end
-		end)
 		local b1,t1,k1=row("击杀残留",1)
 		b1.MouseButton1Click:Connect(function()
 			st.on=not st.on flip(t1,k1,st.on)
