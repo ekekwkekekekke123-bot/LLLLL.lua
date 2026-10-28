@@ -1089,7 +1089,8 @@ local pgP=spage(true) local pgE=spage(false) local pgM=spage(false) local pgA=sp
                         local tabs={sb[1],sb[2],sb[3],sb[4],sb[5],sb[6],sb[7],sb[8],sb[9],sb[10],sb[11]} local pages={pgP,pgE,pgM,pgA,pgI,pgN,pgV,pgW,pgS,pgSv,pgB}
 local function selp(i) for k=1,#tabs do pages[k].Visible=(k==i) tabs[k].BackgroundColor3=(k==i) and C.accent or Color3.fromRGB(246,241,231) tabs[k].TextColor3=(k==i) and Color3.new(0,0,0) or C.txt end end
 for k=1,#tabs do tabs[k].MouseButton1Click:Connect(function() selp(k) end) end
-	--===== 美化页 · 击杀残留 =====
+		local function WXBeauty()
+--===== 美化页 · 击杀残留 =====
 	local bOn=false local bDur=2 local bLive={} local bSeen=setmetatable({},{__mode="k"})
 	local function bWipe() for i=#bLive,1,-1 do pcall(function() bLive[i]:Destroy() end) bLive[i]=nil end end
 	local function bSnap(root)
@@ -1200,6 +1201,8 @@ for k=1,#tabs do tabs[k].MouseButton1Click:Connect(function() selp(k) end) end
 		if not tOn then for i=#tParts,1,-1 do pcall(function() tParts[i]:Destroy() end) tParts[i]=nil end end
 	end)
 	--===== 子弹踪迹结束 =====
+	end
+	WXBeauty()
 --===== 美化页结束 =====
 function wxInitFX()
 	function fxGlitch(dur)
