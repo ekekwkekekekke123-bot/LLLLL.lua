@@ -2988,20 +2988,20 @@ do
 			ghost(char)
 		end
 		local cd=0
-		local function fire(tool,doHit)
+				local function fire(tool,doHit)
 			if not tr.on and not st.on then return end
-						if _G.WXLOG then _G.WXLOG("fire tr="..tostring(tr.on).." st="..tostring(st.on).." tool="..tostring(tool~=nil)) end
-local now=os.clock()
+			if _G.WXLOG then _G.WXLOG("fire tr="..tostring(tr.on).." st="..tostring(st.on).." tool="..tostring(tool~=nil)) end
+			local now=os.clock()
 			if now-cd<0.07 then return end
 			cd=now
 			local org,fin,res=castRay(tool)
 			if not org then return end
 			if tr.on then line(org,fin) end
-						if doHit and st.on then
+			if doHit and st.on then
 				if _G.WXLOG then _G.WXLOG("res="..tostring(res and res.Instance and res.Instance.Name)) end
 				hit(res)
 			end
-		local function hookTool(t)
+		end
 			if not t:IsA("Tool") then return end
 			t.Activated:Connect(function() fire(t,true) end)
 			local function hs(s)
