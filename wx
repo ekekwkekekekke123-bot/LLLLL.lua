@@ -1083,12 +1083,71 @@ local side=B("ScrollingFrame",{Size=UDim2.new(0,74,1,-33),Position=UDim2.fromOff
 B("UIListLayout",{Padding=UDim.new(0,3),SortOrder=Enum.SortOrder.LayoutOrder,Parent=side})
 B("UIPadding",{PaddingLeft=UDim.new(0,6),PaddingRight=UDim.new(0,6),PaddingTop=UDim.new(0,5),Parent=side})
 local function sideBtn(t,i) local b=B("TextButton",{Size=UDim2.new(1,0,0,24),BackgroundColor3=Color3.fromRGB(246,241,232),Text=t,Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=Color3.fromRGB(255,255,230),AutoButtonColor=false,LayoutOrder=i,ZIndex=16,Parent=side}) R(b,7) return b end
-local sb={} for i,nm in ipairs({"玩家功能","透视功能","自瞄","子弹追踪","互动功能","NPC","画面功能","危险","配置","服务器"}) do sb[i]=sideBtn(nm,i) end
+local sb={} for i,nm in ipairs({"玩家功能","透视功能","自瞄","子弹追踪","互动功能","NPC","画面功能","危险","配置","服务器","美化"}) do sb[i]=sideBtn(nm,i) end
 local function spage(v) local f=B("ScrollingFrame",{Size=UDim2.new(1,-80,1,-37),Position=UDim2.fromOffset(76,35),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=2,ScrollBarImageColor3=C.off,AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollingDirection=Enum.ScrollingDirection.Y,Visible=v,ZIndex=14,Parent=pn}) B("UIListLayout",{Padding=UDim.new(0,4),SortOrder=Enum.SortOrder.LayoutOrder,Parent=f}) B("UIPadding",{PaddingBottom=UDim.new(0,8),PaddingRight=UDim.new(0,4),Parent=f}) return f end
-local pgP=spage(true) local pgE=spage(false) local pgM=spage(false) local pgA=spage(false) local pgI=spage(false) local pgN=spage(false) local pgV=spage(false) local pgW=spage(false) local pgS=spage(false) pgSv=spage(false)
-            local tabs={sb[1],sb[2],sb[3],sb[4],sb[5],sb[6],sb[7],sb[8],sb[9],sb[10]} local pages={pgP,pgE,pgM,pgA,pgI,pgN,pgV,pgW,pgS,pgSv}
+local pgP=spage(true) local pgE=spage(false) local pgM=spage(false) local pgA=spage(false) local pgI=spage(false) local pgN=spage(false) local pgV=spage(false) local pgW=spage(false) local pgS=spage(false) pgSv=spage(false) local pgB=spage(false)
+                        local tabs={sb[1],sb[2],sb[3],sb[4],sb[5],sb[6],sb[7],sb[8],sb[9],sb[10],sb[11]} local pages={pgP,pgE,pgM,pgA,pgI,pgN,pgV,pgW,pgS,pgSv,pgB}
 local function selp(i) for k=1,#tabs do pages[k].Visible=(k==i) tabs[k].BackgroundColor3=(k==i) and C.accent or Color3.fromRGB(246,241,231) tabs[k].TextColor3=(k==i) and Color3.new(0,0,0) or C.txt end end
 for k=1,#tabs do tabs[k].MouseButton1Click:Connect(function() selp(k) end) end
+	--===== 美化页 · 击杀残留 =====
+	local bOn=false local bDur=2 local bLive={} local bSeen=setmetatable({},{__mode="k"})
+	local function bWipe() for i=#bLive,1,-1 do pcall(function() bLive[i]:Destroy() end) bLive[i]=nil end end
+	local function bSnap(root)
+		if not root or not root.Parent then return end
+		local ok,m=pcall(function() return root:Clone() end)
+		if not ok or not m then return end
+		local bin={}
+		for _,d in ipairs(m:GetDescendants()) do
+			if d:IsA("BasePart") then d.Anchored=true d.CanCollide=false d.CanTouch=false d.CanQuery=false d.Massless=true
+			elseif d:IsA("Humanoid") or d:IsA("BaseScript") or d:IsA("Sound") or d:IsA("BillboardGui") or d:IsA("SurfaceGui") or d:IsA("Highlight") or d:IsA("ParticleEmitter") or d:IsA("Trail") or d:IsA("Beam") or d:IsA("Decal") or d:IsA("Texture") then bin[#bin+1]=d end
+		end
+		for _,d in ipairs(bin) do pcall(function() d:Destroy() end) end
+		pcall(function() m:PivotTo(root:GetPivot()) end)
+		m.Parent=workspace bLive[#bLive+1]=m
+		while #bLive>6 do local o=table.remove(bLive,1) if o then pcall(function() o:Destroy() end) end end
+		local ti=TweenInfo.new(bDur,Enum.EasingStyle.Quad,Enum.EasingDirection.Out)
+		for _,d in ipairs(m:GetDescendants()) do
+			if d:IsA("BasePart") and d.Transparency<1 then pcall(function() TS:Create(d,ti,{Color=Color3.new(1,1,1),Transparency=1}):Play() end) end
+		end
+		task.delay(bDur+0.1,function()
+			for i,v in ipairs(bLive) do if v==m then table.remove(bLive,i) break end end
+			pcall(function() m:Destroy() end)
+		end)
+	end
+	local function bWatch(ch)
+		if not ch or ch:GetAttribute("wx_watch") then return end
+		local hum=ch:FindFirstChildOfClass("Humanoid") or ch:WaitForChild("Humanoid",5)
+		if not hum then return end
+		ch:SetAttribute("wx_watch",true)
+		hum.HealthChanged:Connect(function(h)
+			if not bOn or h>0 or bSeen[ch] then return end
+			bSeen[ch]=true bSnap(ch)
+		end)
+	end
+	local function bBind(p)
+		if p==LP or p:GetAttribute("wx_bind") then return end
+		p:SetAttribute("wx_bind",true)
+		p.CharacterAdded:Connect(bWatch)
+		if p.Character then bWatch(p.Character) end
+	end
+	for _,p in ipairs(P:GetPlayers()) do bBind(p) end
+	P.PlayerAdded:Connect(bBind)
+	local function bRow(txt,ord)
+		local r=B("TextButton",{Size=UDim2.new(1,0,0,30),BackgroundColor3=C.row,BorderSizePixel=0,Text="",AutoButtonColor=false,LayoutOrder=ord,Parent=pgB})
+		R(r,8) SK(r,C.off,0.35)
+		B("TextLabel",{Size=UDim2.new(1,-70,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text=txt,Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,Parent=r})
+		local v=B("TextLabel",{Size=UDim2.fromOffset(56,20),Position=UDim2.new(1,-62,0.5,-10),BackgroundColor3=C.off,BorderSizePixel=0,Text="关",Font=Enum.Font.GothamBold,TextSize=10,TextColor3=Color3.new(1,1,1),Parent=r})
+		R(v,6)
+		return r,v
+	end
+	local bBtn,bVal=bRow("击杀残留",1)
+	bBtn.MouseButton1Click:Connect(function()
+		bOn=not bOn
+		bVal.Text=bOn and "开" or "关"
+		bVal.BackgroundColor3=bOn and C.accent or C.off
+		if not bOn then bWipe() end
+	end)
+	--===== 美化页结束 =====
 function wxInitFX()
 	function fxGlitch(dur)
 		dur=dur or 0.3
