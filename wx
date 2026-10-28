@@ -2926,23 +2926,27 @@ do
 			TS:Create(tk,TweenInfo.new(0.18),{BackgroundColor3=on and C.accent or C.off}):Play()
 			TS:Create(kn,TweenInfo.new(0.18),{Position=on and UDim2.fromOffset(14,2) or UDim2.fromOffset(2,2)}):Play()
 		end
-		local st={on=false,dur=1,live={},last=setmetatable({},{__mode="k"})}
+		local st={on=false,dur=2.25,live={},last=setmetatable({},{__mode="k"})}
 		local tr={on=false,parts={}}
-		local function ghost(root)
+			local function ghost(root)
 			local ok,m=pcall(function() return root:Clone() end)
 			if not ok or not m then return end
 			local bin={}
 			for _,d in ipairs(m:GetDescendants()) do
-				if d:IsA("BasePart") then d.Anchored=true d.CanCollide=false d.CanTouch=false d.CanQuery=false
+				if d:IsA("BasePart") then
+					d.Anchored=true d.CanCollide=false d.CanTouch=false d.CanQuery=false d.Massless=true
+					d.Material=Enum.Material.Neon
+					d.Color=Color3.new(1,1,1)
+					if d:IsA("MeshPart") then pcall(function() d.TextureID="" end) end
 				elseif d:IsA("Humanoid") or d:IsA("BaseScript") or d:IsA("Sound") or d:IsA("BillboardGui") or d:IsA("SurfaceGui") or d:IsA("Highlight") or d:IsA("ParticleEmitter") or d:IsA("Trail") or d:IsA("Beam") or d:IsA("Decal") or d:IsA("Texture") or d:IsA("AnimationController") then bin[#bin+1]=d end
 			end
 			for _,d in ipairs(bin) do pcall(function() d:Destroy() end) end
 			m.Parent=workspace
 			st.live[#st.live+1]=m
 			while #st.live>6 do local o=table.remove(st.live,1) if o then pcall(function() o:Destroy() end) end end
-			local ti=TweenInfo.new(st.dur,Enum.EasingStyle.Quad,Enum.EasingDirection.Out)
+			local ti=TweenInfo.new(st.dur,Enum.EasingStyle.Linear)
 			for _,d in ipairs(m:GetDescendants()) do
-				if d:IsA("BasePart") and d.Transparency<1 then pcall(function() TS:Create(d,ti,{Color=Color3.new(1,1,1),Transparency=1}):Play() end) end
+				if d:IsA("BasePart") then pcall(function() TS:Create(d,ti,{Transparency=1}):Play() end) end
 			end
 			task.delay(st.dur+0.05,function()
 				for i,v in ipairs(st.live) do if v==m then table.remove(st.live,i) break end end
@@ -2955,7 +2959,7 @@ do
 			if not cam then return end
 			local cx=cam.ViewportSize.X/2
 			local cy=cam.ViewportSize.Y/2
-			local best,bestD=nil,80
+			local best,bestD=nil,9999
 			for _,p in ipairs(P:GetPlayers()) do
 				local c=p.Character
 				if c and c~=LP.Character then
