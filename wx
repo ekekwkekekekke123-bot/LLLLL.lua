@@ -2884,34 +2884,17 @@ bt(pgSv,"MM2",function()
 end)
 end _main()
 
---===== WX 美化模块（独立块）=====
+--===== WX 美化模块 =====
 do
 	local pgB=_G.wxB
 	if pgB then
 		local P=game:GetService("Players")
 		local TS=game:GetService("TweenService")
-		local UI=game:GetService("UserInputService")
 		local LP=P.LocalPlayer
 		local C={row=Color3.fromRGB(246,241,232),off=Color3.fromRGB(212,204,191),accent=Color3.fromRGB(190,74,64),txt=Color3.fromRGB(38,38,38)}
 		local function B(c,p) local o=Instance.new(c) for k,v in pairs(p) do if k~="Parent" then o[k]=v end end if p.Parent then o.Parent=p.Parent end return o end
 		local function R(o,r) local u=Instance.new("UICorner") u.CornerRadius=(r>1) and UDim.new(0,r) or UDim.new(r,0) u.Parent=o end
 		local function SK(o,c,t) local s=Instance.new("UIStroke") s.Color=c s.Thickness=1 s.Transparency=t or 0 s.Parent=o return s end
-		local lsp
-		do
-			local ok,h=pcall(function() return gethui() end)
-			if ok and typeof(h)=="Instance" then lsp=h else lsp=game:GetService("CoreGui") end
-		end
-		local lgu=B("ScreenGui",{Name="wx_log",ResetOnSpawn=false,IgnoreGuiInset=true,DisplayOrder=9999,Parent=lsp})
-		local lfr=B("Frame",{Size=UDim2.fromOffset(250,104),Position=UDim2.fromOffset(8,88),BackgroundColor3=Color3.fromRGB(20,20,24),BackgroundTransparency=0.2,BorderSizePixel=0,Parent=lgu})
-		B("UIListLayout",{Padding=UDim.new(0,1),Parent=lfr})
-		B("UIPadding",{PaddingLeft=UDim.new(0,6),PaddingTop=UDim.new(0,4),Parent=lfr})
-		local lmsg={}
-		local function LOG(s)
-			local l=B("TextLabel",{Size=UDim2.new(1,0,0,14),BackgroundTransparency=1,Text=tostring(s),TextColor3=Color3.fromRGB(175,255,180),Font=Enum.Font.Code,TextSize=10,TextXAlignment=Enum.TextXAlignment.Left,Parent=lfr})
-			lmsg[#lmsg+1]=l
-			while #lmsg>6 do local o=table.remove(lmsg,1) if o then o:Destroy() end end
-		end
-		LOG("美化已加载")
 		local function row(txt,ord)
 			local r=B("TextButton",{Size=UDim2.new(1,0,0,28),BackgroundColor3=C.row,BorderSizePixel=0,Text="",AutoButtonColor=false,LayoutOrder=ord,ZIndex=25,Parent=pgB})
 			R(r,8) SK(r,C.off,0.4)
@@ -2927,14 +2910,16 @@ do
 			TS:Create(kn,TweenInfo.new(0.18),{Position=on and UDim2.fromOffset(14,2) or UDim2.fromOffset(2,2)}):Play()
 		end
 		local st={on=false,dur=2.25,live={},last=setmetatable({},{__mode="k"})}
-		local tr={on=false,parts={}}
-					local function ghost(root)
+		local tr={on=false}
+		local function ghost(root)
 			local ok,m=pcall(function() return root:Clone() end)
 			if not ok or not m then return end
 			local bin={}
 			for _,d in ipairs(m:GetDescendants()) do
 				if d:IsA("BasePart") then
 					d.Anchored=true d.CanCollide=false d.CanTouch=false d.CanQuery=false d.Massless=true
+					d.Transparency=0
+					pcall(function() d.LocalTransparencyModifier=0 end)
 					d.Material=Enum.Material.Neon
 					d.Color=Color3.new(1,1,1)
 					if d:IsA("MeshPart") then pcall(function() d.TextureID="" end) end
@@ -2949,17 +2934,6 @@ do
 			hl.OutlineTransparency=0
 			hl.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
 			hl.Parent=m
-			local core=m:FindFirstChild("HumanoidRootPart") or m.PrimaryPart or m:FindFirstChild("Torso") or m:FindFirstChild("UpperTorso")
-			if core then
-				pcall(function()
-					local pl=Instance.new("PointLight")
-					pl.Color=Color3.new(1,1,1)
-					pl.Range=14
-					pl.Brightness=3
-					pl.Parent=core
-					TS:Create(pl,TweenInfo.new(st.dur,Enum.EasingStyle.Linear),{Brightness=0}):Play()
-				end)
-			end
 			st.live[#st.live+1]=m
 			while #st.live>6 do local o=table.remove(st.live,1) if o then pcall(function() o:Destroy() end) end end
 			local ti=TweenInfo.new(st.dur,Enum.EasingStyle.Linear)
@@ -2972,88 +2946,60 @@ do
 				pcall(function() m:Destroy() end)
 			end)
 		end
-		local function hit()
+		workspace.DescendantAdded:Connect(function(o)
+			if not tr.on then return end
+			local nm=string.lower(o.Name)
+			if o:IsA("MeshPart") and (string.find(nm,"bullet") or string.find(nm,"trac")) then
+				pcall(function()
+					o.Color=Color3.new(0,0,0)
+					o.Material=Enum.Material.Neon
+					o.Reflectance=0
+				end)
+			elseif o:IsA("Trail") then
+				pcall(function()
+					o.Color=ColorSequence.new(Color3.new(0,0,0))
+					o.LightEmission=0
+					o.WidthScale=NumberSequence.new(1.8)
+					o.Lifetime=0.5
+				end)
+			elseif o:IsA("Beam") then
+				pcall(function()
+					o.Color=ColorSequence.new(Color3.new(0,0,0))
+					o.LightInfluence=0
+					if o.Width0<0.06 then o.Width0=0.08 end
+				end)
+			end
+		end)
+		local lastFire=0
+		workspace.DescendantAdded:Connect(function(o)
 			if not st.on then return end
-			local cam=workspace.CurrentCamera
-			if not cam then return end
-			local cx=cam.ViewportSize.X/2
-			local cy=cam.ViewportSize.Y/2
-			local best,bestD=nil,9999
-			for _,p in ipairs(P:GetPlayers()) do
-				local c=p.Character
-				if c and c~=LP.Character then
-					local hum=c:FindFirstChildOfClass("Humanoid")
-					local hrp=c:FindFirstChild("HumanoidRootPart") or c.PrimaryPart
-					if hum and hum.Health>0 and hrp then
-						local sp,onS=cam:WorldToViewportPoint(hrp.Position)
-						if onS then
-							local d=(Vector2.new(sp.X,sp.Y)-Vector2.new(cx,cy)).Magnitude
-							if d<bestD then bestD=d best=c end
-						end
-					end
-				end
+			local nm=string.lower(o.Name)
+			if nm=="flash" or nm=="muzzle" then
+				local ch=LP.Character
+				if ch and o:IsDescendantOf(ch) then lastFire=os.clock() end
 			end
-			if not best then return end
+		end)
+		workspace.DescendantAdded:Connect(function(o)
+			if not st.on then return end
+			if o.Name~="HitBy" then return end
+			if os.clock()-lastFire>0.7 then return end
+			local m=o.Parent
+			if not m or m==LP.Character then return end
+			local p=P:GetPlayerFromCharacter(m)
+			if not p or p==LP then return end
 			local t=os.clock()
-			if st.last[best] and t-st.last[best]<0.6 then return end
-			st.last[best]=t
-			LOG("残影:"..best.Name.." 偏差"..math.floor(bestD))
-			ghost(best)
-		end
-		local function line(org,fin)
-			local car=Instance.new("Part")
-			car.Anchored=true car.CanCollide=false car.CanTouch=false car.CanQuery=false
-			car.Transparency=1 car.Size=Vector3.new(0.1,0.1,0.1) car.CFrame=CFrame.new(org)
-			car.Parent=workspace
-			local a0=Instance.new("Attachment") a0.Parent=car a0.Position=Vector3.zero
-			local a1=Instance.new("Attachment") a1.Parent=car a1.Position=fin-org
-			local bm=Instance.new("Beam")
-			bm.Attachment0=a0 bm.Attachment1=a1
-			bm.Width0=0.07 bm.Width1=0.03
-			bm.Color=ColorSequence.new(Color3.fromRGB(0,0,0))
-			bm.LightInfluence=0 bm.FaceCamera=true
-			bm.Transparency=NumberSequence.new(0)
-			bm.Parent=car
-			tr.parts[#tr.parts+1]=car
-			while #tr.parts>12 do local o=table.remove(tr.parts,1) if o then pcall(function() o:Destroy() end) end end
-			pcall(function() TS:Create(bm,TweenInfo.new(2.25,Enum.EasingStyle.Linear),{Transparency=NumberSequence.new(1)}):Play() end)
-			task.delay(2.3,function()
-				for i,v in ipairs(tr.parts) do if v==car then table.remove(tr.parts,i) break end end
-				pcall(function() car:Destroy() end)
-			end)
-		end
-		local cd=0
-		local function fire(doHit)
-			if not tr.on and not st.on then return end
-			local now=os.clock()
-			if now-cd<0.07 then return end
-			cd=now
-			if doHit and st.on then hit() end
-			if tr.on then
-				local cam=workspace.CurrentCamera
-				if cam then
-					local org=cam.CFrame.Position
-					line(org,org+cam.CFrame.LookVector*3000)
-				end
-			end
-		end
-		UI.InputBegan:Connect(function(i,g)
-			if g then return end
-			if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
-				fire(true)
-			end
+			if st.last[m] and t-st.last[m]<0.4 then return end
+			st.last[m]=t
+			ghost(m)
 		end)
 		local b1,t1,k1=row("击杀残留",1)
 		b1.MouseButton1Click:Connect(function()
 			st.on=not st.on flip(t1,k1,st.on)
-			LOG(st.on and "击杀残留 开" or "击杀残留 关")
 			if not st.on then for i=#st.live,1,-1 do pcall(function() st.live[i]:Destroy() end) st.live[i]=nil end end
 		end)
 		local b2,t2,k2=row("子弹踪迹",2)
 		b2.MouseButton1Click:Connect(function()
 			tr.on=not tr.on flip(t2,k2,tr.on)
-			LOG(tr.on and "子弹踪迹 开" or "子弹踪迹 关")
-			if not tr.on then for i=#tr.parts,1,-1 do pcall(function() tr.parts[i]:Destroy() end) tr.parts[i]=nil end end
 		end)
 	else
 		warn("[WX] 美化页找不到")
