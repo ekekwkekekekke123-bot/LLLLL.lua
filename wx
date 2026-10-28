@@ -2997,8 +2997,10 @@ local now=os.clock()
 			local org,fin,res=castRay(tool)
 			if not org then return end
 			if tr.on then line(org,fin) end
-			if doHit and st.on then hit(res) end
-		end
+						if doHit and st.on then
+				if _G.WXLOG then _G.WXLOG("res="..tostring(res and res.Instance and res.Instance.Name)) end
+				hit(res)
+			end
 		local function hookTool(t)
 			if not t:IsA("Tool") then return end
 			t.Activated:Connect(function() fire(t,true) end)
