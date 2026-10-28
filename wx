@@ -2846,7 +2846,6 @@ RS:BindToRenderStep("wxAim",Enum.RenderPriority.Camera.Value+1,function()
 	end)
 end)
 hd(pgSv,"服务器")
-hd(pgSv,"服务器")
 bt(pgSv,"MM2",function()
 	local ok=pcall(function()
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/ekekwkekekekke123-bot/LLLLL.lua/main/mm2.lua?v="..os.time()))()
@@ -2873,6 +2872,7 @@ bt(pgSv,"MM2",function()
 	dead=true
 end)
 end _main()
+
 --===== WX 美化模块（独立块）=====
 do
 	local pgB=_G.wxB
@@ -2880,37 +2880,38 @@ do
 		local P=game:GetService("Players")
 		local TS=game:GetService("TweenService")
 		local UI=game:GetService("UserInputService")
-		local RSv=game:GetService("ReplicatedStorage")
 		local LP=P.LocalPlayer
 		local C={row=Color3.fromRGB(246,241,232),off=Color3.fromRGB(212,204,191),accent=Color3.fromRGB(190,74,64),txt=Color3.fromRGB(38,38,38)}
 		local function B(c,p) local o=Instance.new(c) for k,v in pairs(p) do if k~="Parent" then o[k]=v end end if p.Parent then o.Parent=p.Parent end return o end
 		local function R(o,r) local u=Instance.new("UICorner") u.CornerRadius=(r>1) and UDim.new(0,r) or UDim.new(r,0) u.Parent=o end
 		local function SK(o,c,t) local s=Instance.new("UIStroke") s.Color=c s.Thickness=1 s.Transparency=t or 0 s.Parent=o return s end
 		local function row(txt,ord)
-			local r=B("TextButton",{Size=UDim2.new(1,0,0,30),BackgroundColor3=C.row,BorderSizePixel=0,Text="",AutoButtonColor=false,LayoutOrder=ord,ZIndex=25,Parent=pgB})
+			local r=B("TextButton",{Size=UDim2.new(1,0,0,28),BackgroundColor3=C.row,BorderSizePixel=0,Text="",AutoButtonColor=false,LayoutOrder=ord,ZIndex=25,Parent=pgB})
 			R(r,8) SK(r,C.off,0.4)
-			B("TextLabel",{Size=UDim2.new(1,-64,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text=txt,Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=26,Parent=r})
-			local trk=B("Frame",{Size=UDim2.fromOffset(34,18),Position=UDim2.new(1,-44,0.5,-9),BackgroundColor3=C.off,BorderSizePixel=0,ZIndex=26,Parent=r})
-			R(trk,9) SK(trk,C.off,0.5)
-			local kn=B("Frame",{Size=UDim2.fromOffset(14,14),Position=UDim2.fromOffset(2,2),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=27,Parent=trk})
-			R(kn,7)
-			return r,trk,kn
+			B("TextLabel",{Size=UDim2.new(1,-56,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text=txt,Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=26,Parent=r})
+			local tk=B("Frame",{Size=UDim2.fromOffset(28,16),Position=UDim2.new(1,-38,0.5,-8),BackgroundColor3=C.off,BorderSizePixel=0,ZIndex=26,Parent=r})
+			R(tk,8) SK(tk,C.off,0.5)
+			local kn=B("Frame",{Size=UDim2.fromOffset(12,12),Position=UDim2.fromOffset(2,2),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=27,Parent=tk})
+			R(kn,6)
+			return r,tk,kn
 		end
-		local function flip(trk,kn,on)
-			TS:Create(trk,TweenInfo.new(0.18),{BackgroundColor3=on and C.accent or C.off}):Play()
-			TS:Create(kn,TweenInfo.new(0.18),{Position=on and UDim2.fromOffset(18,2) or UDim2.fromOffset(2,2)}):Play()
+		local function flip(tk,kn,on)
+			TS:Create(tk,TweenInfo.new(0.18),{BackgroundColor3=on and C.accent or C.off}):Play()
+			TS:Create(kn,TweenInfo.new(0.18),{Position=on and UDim2.fromOffset(14,2) or UDim2.fromOffset(2,2)}):Play()
 		end
-		local st={on=false,dur=2,live={},seen=setmetatable({},{__mode="k"}),pre=setmetatable({},{__mode="k"}),pos=setmetatable({},{__mode="k"})}
-		local boundC=setmetatable({},{__mode="k"})
-		local function strip(m)
+		local st={on=false,dur=1,live={},last=setmetatable({},{__mode="k"})}
+		local tr={on=false,parts={}}
+		local rp=RaycastParams.new()
+		pcall(function() rp.FilterType=Enum.RaycastFilterType.Exclude end)
+		local function ghost(root)
+			local ok,m=pcall(function() return root:Clone() end)
+			if not ok or not m then return end
 			local bin={}
 			for _,d in ipairs(m:GetDescendants()) do
-				if d:IsA("BasePart") then d.Anchored=true d.CanCollide=false d.CanTouch=false d.CanQuery=false d.Massless=true
+				if d:IsA("BasePart") then d.Anchored=true d.CanCollide=false d.CanTouch=false d.CanQuery=false
 				elseif d:IsA("Humanoid") or d:IsA("BaseScript") or d:IsA("Sound") or d:IsA("BillboardGui") or d:IsA("SurfaceGui") or d:IsA("Highlight") or d:IsA("ParticleEmitter") or d:IsA("Trail") or d:IsA("Beam") or d:IsA("Decal") or d:IsA("Texture") or d:IsA("AnimationController") then bin[#bin+1]=d end
 			end
 			for _,d in ipairs(bin) do pcall(function() d:Destroy() end) end
-		end
-		local function fade(m)
 			m.Parent=workspace
 			st.live[#st.live+1]=m
 			while #st.live>6 do local o=table.remove(st.live,1) if o then pcall(function() o:Destroy() end) end end
@@ -2918,84 +2919,14 @@ do
 			for _,d in ipairs(m:GetDescendants()) do
 				if d:IsA("BasePart") and d.Transparency<1 then pcall(function() TS:Create(d,ti,{Color=Color3.new(1,1,1),Transparency=1}):Play() end) end
 			end
-			task.delay(st.dur+0.1,function()
+			task.delay(st.dur+0.05,function()
 				for i,v in ipairs(st.live) do if v==m then table.remove(st.live,i) break end end
 				pcall(function() m:Destroy() end)
 			end)
 		end
-		local function trySnap(root)
-			if not st.on or not root or st.seen[root] then return end
-			st.seen[root]=true
-			print("[WX] 击杀残留触发")
-			local m=nil
-			if root.Parent then
-				local ok,c=pcall(function() return root:Clone() end)
-				if ok and c then m=c end
-			end
-			if not m then m=st.pre[root] st.pre[root]=nil end
-			if not m then return end
-			strip(m)
-			if not root.Parent and st.pos[root] then pcall(function() m:PivotTo(st.pos[root]) end) end
-			fade(m)
-		end
-		local function preOf(ch)
-			if st.pre[ch] then return end
-			local ok,m=pcall(function() return ch:Clone() end)
-			if ok and m then strip(m) m.Parent=RSv st.pre[ch]=m end
-		end
-		local function watch(ch)
-			if not ch or boundC[ch] then return end
-			boundC[ch]=true
-			local hum=ch:FindFirstChildOfClass("Humanoid") or ch:WaitForChild("Humanoid",5)
-			if hum then
-				hum.HealthChanged:Connect(function(h) if h<=0 then trySnap(ch) end end)
-				pcall(function() hum.Died:Connect(function() trySnap(ch) end) end)
-				hum.StateChanged:Connect(function(_,s) if s==Enum.HumanoidStateType.Dead then trySnap(ch) end end)
-			end
-			ch.AncestryChanged:Connect(function(_,par) if not par then trySnap(ch) end end)
-			if st.on then task.defer(function() preOf(ch) end) end
-		end
-		local function scanAll()
-			for _,d in ipairs(workspace:GetDescendants()) do
-				if d:IsA("Humanoid") then
-					local m=d.Parent
-					if m and m:IsA("Model") and m~=LP.Character then
-						watch(m)
-						if st.on then task.defer(function() preOf(m) end) end
-					end
-				end
-			end
-		end
-		workspace.DescendantAdded:Connect(function(d)
-			if d:IsA("Humanoid") then
-				local m=d.Parent
-				if m and m:IsA("Model") and m~=LP.Character then
-					watch(m)
-					if st.on then task.defer(function() preOf(m) end) end
-				end
-			end
-		end)
-		task.spawn(function()
-			while true do
-				task.wait(0.25)
-				if st.on then
-					for ch in pairs(st.pre) do
-						local ok,pv=pcall(function() return ch:GetPivot() end)
-						if ok and pv then st.pos[ch]=pv end
-					end
-				end
-			end
-		end)
-		local tr={on=false,parts={},cd=0}
-		local rp=RaycastParams.new()
-		pcall(function() rp.FilterType=Enum.RaycastFilterType.Exclude end)
-		local function shot(tool)
-			if not tr.on then return end
-			local now=os.clock()
-			if now-tr.cd<0.07 then return end
-			tr.cd=now
+		local function castRay(tool)
 			local ch=LP.Character local cam=workspace.CurrentCamera
-			if not ch or not cam then return end
+			if not ch or not cam then return nil end
 			local hrp=ch:FindFirstChild("HumanoidRootPart")
 			local hd=tool and tool:FindFirstChild("Handle")
 			local org=(hd and hd.Position) or (hrp and hrp.Position) or cam.CFrame.Position
@@ -3003,6 +2934,9 @@ do
 			rp.FilterDescendantsInstances={ch,cam}
 			local ok2,res=pcall(function() return workspace:Raycast(org,dir*5000,rp) end)
 			local fin=(ok2 and res and res.Position) or (org+dir*5000)
+			return org,fin,(ok2 and res) or nil
+		end
+		local function line(org,fin)
 			local car=Instance.new("Part")
 			car.Anchored=true car.CanCollide=false car.CanTouch=false car.CanQuery=false
 			car.Transparency=1 car.Size=Vector3.new(0.1,0.1,0.1) car.CFrame=CFrame.new(org)
@@ -3024,12 +2958,33 @@ do
 				pcall(function() car:Destroy() end)
 			end)
 		end
+		local function hit(res)
+			if not res or not res.Instance then return end
+			local m=res.Instance:FindFirstAncestorOfClass("Model")
+			if not m or m==LP.Character then return end
+			if not m:FindFirstChildOfClass("Humanoid") then return end
+			local t=os.clock()
+			if st.last[m] and t-st.last[m]<0.6 then return end
+			st.last[m]=t
+			ghost(m)
+		end
+		local cd=0
+		local function fire(tool,doHit)
+			if not tr.on and not st.on then return end
+			local now=os.clock()
+			if now-cd<0.07 then return end
+			cd=now
+			local org,fin,res=castRay(tool)
+			if not org then return end
+			if tr.on then line(org,fin) end
+			if doHit and st.on then hit(res) end
+		end
 		local function hookTool(t)
 			if not t:IsA("Tool") then return end
-			t.Activated:Connect(function() shot(t) end)
+			t.Activated:Connect(function() fire(t,true) end)
 			local function hs(s)
 				if s:IsA("Sound") then
-					s:GetPropertyChangedSignal("Playing"):Connect(function() if s.Playing then shot(t) end end)
+					s:GetPropertyChangedSignal("Playing"):Connect(function() if s.Playing then fire(t,true) end end)
 				end
 			end
 			for _,d in ipairs(t:GetDescendants()) do hs(d) end
@@ -3046,18 +3001,13 @@ do
 			if g then return end
 			if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
 				local ch=LP.Character
-				shot(ch and ch:FindFirstChildOfClass("Tool"))
+				fire(ch and ch:FindFirstChildOfClass("Tool"),false)
 			end
 		end)
 		local b1,t1,k1=row("击杀残留",1)
 		b1.MouseButton1Click:Connect(function()
 			st.on=not st.on flip(t1,k1,st.on)
-			if st.on then
-				task.defer(scanAll)
-			else
-				for ch,m in pairs(st.pre) do st.pre[ch]=nil pcall(function() m:Destroy() end) end
-				for i=#st.live,1,-1 do pcall(function() st.live[i]:Destroy() end) st.live[i]=nil end
-			end
+			if not st.on then for i=#st.live,1,-1 do pcall(function() st.live[i]:Destroy() end) st.live[i]=nil end end
 		end)
 		local b2,t2,k2=row("子弹踪迹",2)
 		b2.MouseButton1Click:Connect(function()
