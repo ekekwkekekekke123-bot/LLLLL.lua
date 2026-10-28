@@ -2969,15 +2969,23 @@ do
 				pcall(function() car:Destroy() end)
 			end)
 		end
-		local function hit(res)
+				local function hit(res)
 			if not res or not res.Instance then return end
-			local m=res.Instance:FindFirstAncestorOfClass("Model")
-			if not m or m==LP.Character then return end
-			if not m:FindFirstChildOfClass("Humanoid") then return end
+			local inst=res.Instance
+			local char=nil
+			for _,p in ipairs(P:GetPlayers()) do
+				local c=p.Character
+				if c and inst:IsDescendantOf(c) then char=c break end
+			end
+			if not char or char==LP.Character then
+				if WXLOG then WXLOG("命中但不是玩家："..tostring(inst.Name)) end
+				return
+			end
 			local t=os.clock()
-			if st.last[m] and t-st.last[m]<0.6 then return end
-			st.last[m]=t
-			ghost(m)
+			if st.last[char] and t-st.last[char]<0.6 then return end
+			st.last[char]=t
+			if WXLOG then WXLOG("命中残影："..char.Name) end
+			ghost(char)
 		end
 		local cd=0
 		local function fire(tool,doHit)
