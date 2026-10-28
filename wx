@@ -519,7 +519,7 @@ local function as(dt)
 		if not S.AiOn then fov.Visible=false inf.Visible=false tline.Visible=false aimPart=nil if aimBB then aimBB.Enabled=false end if hdB then hdB.Enabled=false end if RT.aimHL then pcall(function() RT.aimHL:Destroy() end) RT.aimHL=nil end return end
 	fov.Visible=S.FovOn fov.Position=UDim2.fromOffset(cx,cy) fov.Size=UDim2.fromOffset(S.FovR*2,S.FovR*2) fs.Color=(S.RainOn and Color3.fromHSV(hue,1,1)) or S.TgtC.Col
 	local best=pick(cam,cx,cy)
-				if best and S.AiVis and not S.AiWall then
+						if best and S.AiVis and not S.AiWall and best.ch~=lastVisCh then
 		local part=S.aiPart(best.ch) or best.ch:FindFirstChild("HumanoidRootPart")
 		if part and not see(cam,part,best.ch) then best=nil end
 	end
