@@ -2924,20 +2924,20 @@ do
 		end
 		local st={on=false,dur=2.25,live={},last=setmetatable({},{__mode="k"}),col=Color3.new(1,1,1)}
 		local tr={on=false,col=Color3.new(0,0,0)}
-		local cpG=B("ScreenGui",{Name="wx_cp",ResetOnSpawn=false,IgnoreGuiInset=true,DisplayOrder=8000,Parent=sp2})
-		local cpF=B("Frame",{Size=UDim2.fromOffset(304,200),Position=UDim2.new(0.5,-152,0.5,-100),BackgroundColor3=Color3.fromRGB(22,22,26),BorderSizePixel=0,Visible=false,Active=true,ZIndex=5,Parent=cpG})
-		R(cpF,12) SK(cpF,Color3.fromRGB(78,72,94))
+				local cpG=B("ScreenGui",{Name="wx_cp",ResetOnSpawn=false,IgnoreGuiInset=true,DisplayOrder=8000,Parent=sp2})
+		local cpF=B("Frame",{Size=UDim2.fromOffset(304,234),Position=UDim2.new(0.5,-152,0.5,-117),BackgroundColor3=Color3.fromRGB(22,22,26),BorderSizePixel=0,Visible=false,Active=true,ZIndex=5,Parent=cpG})
+		R(cpF,14) SK(cpF,Color3.fromRGB(78,72,94))
 		B("TextLabel",{Size=UDim2.new(1,-24,0,24),Position=UDim2.fromOffset(12,4),BackgroundTransparency=1,Text="高亮颜色",Font=Enum.Font.GothamBold,TextSize=12,TextColor3=Color3.new(1,1,1),TextXAlignment=Enum.TextXAlignment.Left,ZIndex=6,Parent=cpF})
 		local sv=B("Frame",{Size=UDim2.fromOffset(164,128),Position=UDim2.fromOffset(12,32),BackgroundColor3=Color3.new(1,0,0),BorderSizePixel=0,ClipsDescendants=true,ZIndex=6,Parent=cpF})
-		R(sv,6)
+		R(sv,8)
 		local sat=B("Frame",{Size=UDim2.fromScale(1,1),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=7,Parent=sv})
 		B("UIGradient",{Transparency=NumberSequence.new{NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(1,1)},Parent=sat})
 		local vdk=B("Frame",{Size=UDim2.fromScale(1,1),BackgroundColor3=Color3.new(0,0,0),BorderSizePixel=0,ZIndex=8,Parent=sv})
 		B("UIGradient",{Rotation=90,Transparency=NumberSequence.new{NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(1,0)},Parent=vdk})
-		local dot=B("Frame",{Size=UDim2.fromOffset(12,12),AnchorPoint=Vector2.new(0.5,0.5),BackgroundTransparency=1,ZIndex=9,Parent=sv})
+		local dot=B("Frame",{Size=UDim2.fromOffset(14,14),AnchorPoint=Vector2.new(0.5,0.5),BackgroundTransparency=1,ZIndex=9,Parent=sv})
 		SK(dot,Color3.new(1,1,1),0).Thickness=2
-		local hb=B("Frame",{Size=UDim2.fromOffset(20,128),Position=UDim2.fromOffset(184,32),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ClipsDescendants=true,ZIndex=6,Parent=cpF})
-		R(hb,6)
+		local hb=B("Frame",{Size=UDim2.fromOffset(18,128),Position=UDim2.fromOffset(184,32),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ClipsDescendants=true,ZIndex=6,Parent=cpF})
+		R(hb,9)
 		B("UIGradient",{Rotation=90,Color=ColorSequence.new{
 			ColorSequenceKeypoint.new(0,Color3.fromRGB(255,0,0)),
 			ColorSequenceKeypoint.new(0.17,Color3.fromRGB(255,255,0)),
@@ -2948,14 +2948,27 @@ do
 			ColorSequenceKeypoint.new(1,Color3.fromRGB(255,0,0))},Parent=hb})
 		local hd=B("Frame",{Size=UDim2.new(1,0,0,4),AnchorPoint=Vector2.new(0,0.5),BackgroundColor3=Color3.new(1,1,1),ZIndex=9,Parent=hb})
 		SK(hd,Color3.fromRGB(40,40,46),0.2)
-		local hexL=B("TextLabel",{Size=UDim2.fromOffset(72,18),Position=UDim2.fromOffset(212,32),BackgroundColor3=Color3.fromRGB(34,34,40),Text="",Font=Enum.Font.Code,TextSize=9,TextColor3=Color3.new(1,1,1),ZIndex=7,Parent=cpF})
-		R(hexL,4)
-		local rgbL=B("TextLabel",{Size=UDim2.fromOffset(72,52),Position=UDim2.fromOffset(212,54),BackgroundColor3=Color3.fromRGB(34,34,40),Text="",Font=Enum.Font.Code,TextSize=9,TextColor3=Color3.fromRGB(210,210,220),TextYAlignment=Enum.TextYAlignment.Top,ZIndex=7,Parent=cpF})
-		R(rgbL,4)
-		local cB=B("TextButton",{Size=UDim2.fromOffset(136,26),Position=UDim2.fromOffset(12,166),BackgroundColor3=Color3.fromRGB(44,42,52),BorderSizePixel=0,Text="Cancel",Font=Enum.Font.GothamBold,TextSize=10,TextColor3=Color3.fromRGB(225,225,235),AutoButtonColor=false,ZIndex=7,Parent=cpF})
-		R(cB,6)
-		local aB=B("TextButton",{Size=UDim2.fromOffset(136,26),Position=UDim2.fromOffset(156,166),BackgroundColor3=C.accent,BorderSizePixel=0,Text="Apply",Font=Enum.Font.GothamBold,TextSize=10,TextColor3=Color3.new(1,1,1),AutoButtonColor=false,ZIndex=7,Parent=cpF})
-		R(aB,6)
+		local function nval(y,txt)
+			local a=B("TextLabel",{Size=UDim2.fromOffset(54,18),Position=UDim2.fromOffset(210,y),BackgroundColor3=Color3.fromRGB(34,34,40),Text=txt,Font=Enum.Font.Code,TextSize=9,TextColor3=Color3.new(1,1,1),ZIndex=7,Parent=cpF})
+			R(a,4)
+			return a
+		end
+		local function nlab(y,txt)
+			B("TextLabel",{Size=UDim2.fromOffset(36,18),Position=UDim2.fromOffset(266,y),BackgroundTransparency=1,Text=txt,Font=Enum.Font.Code,TextSize=8,TextColor3=Color3.fromRGB(145,145,158),TextXAlignment=Enum.TextXAlignment.Left,ZIndex=7,Parent=cpF})
+		end
+		local vHex=nval(32,"#000000") nlab(32,"Hex")
+		local vR=nval(54,"0") nlab(54,"Red")
+		local vG=nval(76,"0") nlab(76,"Green")
+		local vB=nval(98,"0") nlab(98,"Blue")
+		local vA=nval(120,"100%") nlab(120,"Alpha")
+		local pvNew=B("Frame",{Size=UDim2.fromOffset(66,22),Position=UDim2.fromOffset(12,166),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=7,Parent=cpF})
+		R(pvNew,5) SK(pvNew,Color3.fromRGB(90,84,100),0.4)
+		local pvOld=B("Frame",{Size=UDim2.fromOffset(66,22),Position=UDim2.fromOffset(86,166),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=7,Parent=cpF})
+		R(pvOld,5) SK(pvOld,Color3.fromRGB(90,84,100),0.4)
+		local cB=B("TextButton",{Size=UDim2.fromOffset(136,26),Position=UDim2.fromOffset(12,196),BackgroundColor3=Color3.fromRGB(44,42,52),BorderSizePixel=0,Text="Cancel",Font=Enum.Font.GothamBold,TextSize=10,TextColor3=Color3.fromRGB(225,225,235),AutoButtonColor=false,ZIndex=7,Parent=cpF})
+		R(cB,7)
+		local aB=B("TextButton",{Size=UDim2.fromOffset(136,26),Position=UDim2.fromOffset(156,196),BackgroundColor3=C.accent,BorderSizePixel=0,Text="▸  Apply",Font=Enum.Font.GothamBold,TextSize=10,TextColor3=Color3.new(1,1,1),AutoButtonColor=false,ZIndex=7,Parent=cpF})
+		R(aB,7)
 		local hV,sV,vV=0,1,1
 		local cpT=nil
 		local ghBlk,trBlk
@@ -2965,8 +2978,12 @@ do
 			sv.BackgroundColor3=Color3.fromHSV(hV,1,1)
 			dot.Position=UDim2.new(sV,0,1-vV,0)
 			hd.Position=UDim2.new(0,0,hV,0)
-			hexL.Text=string.format("#%02x%02x%02x",math.floor(col.R*255),math.floor(col.G*255),math.floor(col.B*255))
-			rgbL.Text="R "..math.floor(col.R*255).."\nG "..math.floor(col.G*255).."\nB "..math.floor(col.B*255)
+			pvNew.BackgroundColor3=col
+			vHex.Text=string.format("#%02x%02x%02x",math.floor(col.R*255),math.floor(col.G*255),math.floor(col.B*255))
+			vR.Text=tostring(math.floor(col.R*255))
+			vG.Text=tostring(math.floor(col.G*255))
+			vB.Text=tostring(math.floor(col.B*255))
+			vA.Text="100%"
 			if cpT=="ghost" then
 				st.col=col
 				if ghBlk then ghBlk.BackgroundColor3=col end
@@ -2979,6 +2996,7 @@ do
 			cpT=t
 			local col=(t=="ghost") and st.col or tr.col
 			oldC=col
+			pvOld.BackgroundColor3=col
 			hV,sV,vV=Color3.toHSV(col)
 			cpF.Visible=true
 			sync()
