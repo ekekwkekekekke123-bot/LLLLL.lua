@@ -668,6 +668,14 @@ local timeLbl=B("TextLabel",{Size=UDim2.fromOffset(200,26),Position=UDim2.new(0.
 local roundEnd=0
 local lastGun=false
 local rStart=0 local wasW=false local gpT=0 local lastLookup=0 local coinCache={} local lastScan=0 local lastTp=0
+local function wxCoin(o)
+	if not o:IsA("BasePart") then return false end
+	local nm=string.lower(o.Name)
+	local pnm=string.lower((o.Parent and o.Parent.Name) or "")
+	return (string.find(nm,"coin") or string.find(nm,"cash") or string.find(nm,"money") or string.find(nm,"gold") or string.find(pnm,"coin"))~=nil
+end
+for _,o in ipairs(workspace:GetDescendants()) do if wxCoin(o) then table.insert(coinCache,o) end end
+workspace.DescendantAdded:Connect(function(o) if wxCoin(o) then table.insert(coinCache,o) end end)
 local timerLabel=nil
 local function findTimerLabel()
 	local pg=LP:FindFirstChild("PlayerGui")
@@ -948,17 +956,10 @@ task.spawn(function()
 									if AU.Coin then
 				pcall(function()
 					local now=os.clock()
-					if now-lastScan>1.2 or #coinCache==0 then
-						lastScan=now
-						coinCache={}
-						for _,o in ipairs(workspace:GetDescendants()) do
-							if o:IsA("BasePart") and o.Parent then
-								local nm=string.lower(o.Name)
-								local pnm=string.lower(o.Parent.Name or "")
-								if string.find(nm,"coin") or string.find(nm,"cash") or string.find(nm,"money") or string.find(nm,"gold") or string.find(pnm,"coin") then
-									table.insert(coinCache,o)
-								end
-							end
+										for i=#coinCache,1,-1 do
+						local c=coinCache[i]
+						if not c or not c.Parent then table.remove(coinCache,i) end
+					end
 						end
 					end
 					if now-lastTp>=0.5 and #coinCache>0 then
