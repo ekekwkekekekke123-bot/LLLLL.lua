@@ -2846,17 +2846,19 @@ RS:BindToRenderStep("wxAim",Enum.RenderPriority.Camera.Value+1,function()
 	end)
 end)
 hd(pgSv,"服务器")
+hd(pgSv,"服务器")
 bt(pgSv,"MM2",function()
-	TS:Create(pn,TweenInfo.new(0.22,Enum.EasingStyle.Quart,Enum.EasingDirection.In),{BackgroundTransparency=1}):Play()
-	task.wait(0.26)
 	local ok=pcall(function()
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/ekekwkekekekke123-bot/LLLLL.lua/main/mm2.lua?v="..os.time()))()
 	end)
 	if not ok then
-		wxToast("MM2 加载失败")
+		wxToast("加载失败 · 请到对应的服务器")
 		return
 	end
-	task.wait(0.1)
+	wxToast("加载成功")
+	task.wait(0.85)
+	TS:Create(pn,TweenInfo.new(0.22,Enum.EasingStyle.Quart,Enum.EasingDirection.In),{BackgroundTransparency=1}):Play()
+	task.wait(0.28)
 	for k,v in pairs(S) do
 		if type(v)=="boolean" then S[k]=false end
 	end
@@ -2877,6 +2879,7 @@ do
 	if pgB then
 		local P=game:GetService("Players")
 		local TS=game:GetService("TweenService")
+		local UI=game:GetService("UserInputService")
 		local RSv=game:GetService("ReplicatedStorage")
 		local LP=P.LocalPlayer
 		local C={row=Color3.fromRGB(246,241,232),off=Color3.fromRGB(212,204,191),accent=Color3.fromRGB(190,74,64),txt=Color3.fromRGB(38,38,38)}
@@ -2898,7 +2901,6 @@ do
 			TS:Create(kn,TweenInfo.new(0.18),{Position=on and UDim2.fromOffset(18,2) or UDim2.fromOffset(2,2)}):Play()
 		end
 		local st={on=false,dur=2,live={},seen=setmetatable({},{__mode="k"}),pre=setmetatable({},{__mode="k"}),pos=setmetatable({},{__mode="k"})}
-		local boundP=setmetatable({},{__mode="k"})
 		local boundC=setmetatable({},{__mode="k"})
 		local function strip(m)
 			local bin={}
@@ -2953,14 +2955,26 @@ do
 			ch.AncestryChanged:Connect(function(_,par) if not par then trySnap(ch) end end)
 			if st.on then task.defer(function() preOf(ch) end) end
 		end
-		local function bind(p)
-			if p==LP or boundP[p] then return end
-			boundP[p]=true
-			p.CharacterAdded:Connect(watch)
-			if p.Character then watch(p.Character) end
+		local function scanAll()
+			for _,d in ipairs(workspace:GetDescendants()) do
+				if d:IsA("Humanoid") then
+					local m=d.Parent
+					if m and m:IsA("Model") and m~=LP.Character then
+						watch(m)
+						if st.on then task.defer(function() preOf(m) end) end
+					end
+				end
+			end
 		end
-		for _,p in ipairs(P:GetPlayers()) do bind(p) end
-		P.PlayerAdded:Connect(bind)
+		workspace.DescendantAdded:Connect(function(d)
+			if d:IsA("Humanoid") then
+				local m=d.Parent
+				if m and m:IsA("Model") and m~=LP.Character then
+					watch(m)
+					if st.on then task.defer(function() preOf(m) end) end
+				end
+			end
+		end)
 		task.spawn(function()
 			while true do
 				task.wait(0.25)
@@ -3015,9 +3029,7 @@ do
 			t.Activated:Connect(function() shot(t) end)
 			local function hs(s)
 				if s:IsA("Sound") then
-					s:GetPropertyChangedSignal("Playing"):Connect(function()
-						if s.Playing then shot(t) end
-					end)
+					s:GetPropertyChangedSignal("Playing"):Connect(function() if s.Playing then shot(t) end end)
 				end
 			end
 			for _,d in ipairs(t:GetDescendants()) do hs(d) end
@@ -3025,22 +3037,23 @@ do
 		end
 		local function tch(ch)
 			if not ch then return end
-			local function hk(t) hookTool(t) end
-			for _,d in ipairs(ch:GetDescendants()) do hk(d) end
-			ch.DescendantAdded:Connect(hk)
+			for _,d in ipairs(ch:GetDescendants()) do hookTool(d) end
+			ch.DescendantAdded:Connect(hookTool)
 		end
 		if LP.Character then tch(LP.Character) end
 		LP.CharacterAdded:Connect(tch)
+		UI.InputBegan:Connect(function(i,g)
+			if g then return end
+			if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
+				local ch=LP.Character
+				shot(ch and ch:FindFirstChildOfClass("Tool"))
+			end
+		end)
 		local b1,t1,k1=row("击杀残留",1)
 		b1.MouseButton1Click:Connect(function()
 			st.on=not st.on flip(t1,k1,st.on)
 			if st.on then
-				for _,p in ipairs(P:GetPlayers()) do
-					if p~=LP and p.Character then
-						local c=p.Character
-						task.defer(function() preOf(c) end)
-					end
-				end
+				task.defer(scanAll)
 			else
 				for ch,m in pairs(st.pre) do st.pre[ch]=nil pcall(function() m:Destroy() end) end
 				for i=#st.live,1,-1 do pcall(function() st.live[i]:Destroy() end) st.live[i]=nil end
