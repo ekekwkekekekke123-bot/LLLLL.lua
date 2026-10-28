@@ -1147,7 +1147,60 @@ for k=1,#tabs do tabs[k].MouseButton1Click:Connect(function() selp(k) end) end
 		bVal.BackgroundColor3=bOn and C.accent or C.off
 		if not bOn then bWipe() end
 	end)
-	--===== 美化页结束 =====
+		-- 子弹踪迹
+	local tOn=false local tParts={}
+	local rpTrace=RaycastParams.new()
+	pcall(function() rpTrace.FilterType=Enum.RaycastFilterType.Exclude end)
+	local function tFire(tool)
+		local ch=LP.Character local cam=workspace.CurrentCamera
+		if not ch or not cam then return end
+		local hrp=ch:FindFirstChild("HumanoidRootPart")
+		local hd=tool:FindFirstChild("Handle")
+		local org=(hd and hd.Position) or (hrp and hrp.Position) or cam.CFrame.Position
+		local dir=cam.CFrame.LookVector
+		rpTrace.FilterDescendantsInstances={ch,cam}
+		local ok,res=pcall(function() return workspace:Raycast(org,dir*800,rpTrace) end)
+		local fin=(ok and res and res.Position) or (org+dir*800)
+		local car=Instance.new("Part")
+		car.Anchored=true car.CanCollide=false car.CanTouch=false car.CanQuery=false
+		car.Transparency=1 car.Size=Vector3.new(0.1,0.1,0.1) car.CFrame=CFrame.new(org)
+		car.Parent=workspace
+		local a0=Instance.new("Attachment") a0.Parent=car a0.Position=Vector3.zero
+		local a1=Instance.new("Attachment") a1.Parent=car a1.Position=fin-org
+		local bm=Instance.new("Beam")
+		bm.Attachment0=a0 bm.Attachment1=a1
+		bm.Width0=0.09 bm.Width1=0.03
+		bm.Color=ColorSequence.new(Color3.fromRGB(255,245,200))
+		bm.LightInfluence=0 bm.FaceCamera=true
+		bm.Transparency=NumberSequence.new(0)
+		bm.Parent=car
+		tParts[#tParts+1]=car
+		while #tParts>12 do local o=table.remove(tParts,1) if o then pcall(function() o:Destroy() end) end end
+		pcall(function() TS:Create(bm,TweenInfo.new(0.35,Enum.EasingStyle.Linear),{Transparency=NumberSequence.new(1)}):Play() end)
+		task.delay(0.4,function()
+			for i,v in ipairs(tParts) do if v==car then table.remove(tParts,i) break end end
+			pcall(function() car:Destroy() end)
+		end)
+	end
+	local function tWatch(ch)
+		if not ch then return end
+		local function hook(t)
+			if t:IsA("Tool") then t.Activated:Connect(function() if tOn then tFire(t) end end) end
+		end
+		for _,d in ipairs(ch:GetDescendants()) do hook(d) end
+		ch.DescendantAdded:Connect(hook)
+	end
+	if LP.Character then tWatch(LP.Character) end
+	LP.CharacterAdded:Connect(tWatch)
+	local tBtn,tVal=bRow("子弹踪迹",2)
+	tBtn.MouseButton1Click:Connect(function()
+		tOn=not tOn
+		tVal.Text=tOn and "开" or "关"
+		tVal.BackgroundColor3=tOn and C.accent or C.off
+		if not tOn then for i=#tParts,1,-1 do pcall(function() tParts[i]:Destroy() end) tParts[i]=nil end end
+	end)
+	--===== 子弹踪迹结束 =====
+--===== 美化页结束 =====
 function wxInitFX()
 	function fxGlitch(dur)
 		dur=dur or 0.3
