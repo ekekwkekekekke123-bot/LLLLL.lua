@@ -960,8 +960,6 @@ task.spawn(function()
 						local c=coinCache[i]
 						if not c or not c.Parent then table.remove(coinCache,i) end
 					end
-						end
-					end
 					if now-lastTp>=0.5 and #coinCache>0 then
 						local best,bd=nil,300
 						for _,o in ipairs(coinCache) do
