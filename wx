@@ -2880,11 +2880,10 @@ bt(pgSv,"MM2",function()
 			if g:IsA("ScreenGui") and g.Name:sub(1,3)=="wx_" then g:Destroy() end
 		end
 	end)
-	dead=true
+		dead=true
 end)
 end _main()
 
---===== WX 美化模块 =====
 do
 	local pgB=_G.wxB
 	if pgB then
@@ -2926,74 +2925,107 @@ do
 		local st={on=false,dur=2.25,live={},last=setmetatable({},{__mode="k"}),col=Color3.new(1,1,1)}
 		local tr={on=false,col=Color3.new(0,0,0)}
 		local cpG=B("ScreenGui",{Name="wx_cp",ResetOnSpawn=false,IgnoreGuiInset=true,DisplayOrder=8000,Parent=sp2})
-		local cpF=B("Frame",{Size=UDim2.fromOffset(212,104),Position=UDim2.new(0.5,-106,0.42,-52),BackgroundColor3=Color3.fromRGB(24,24,30),BorderSizePixel=0,Visible=false,Active=true,ZIndex=5,Parent=cpG})
-		R(cpF,10) SK(cpF,Color3.fromRGB(90,80,110))
-		local pv=B("Frame",{Size=UDim2.fromOffset(38,38),Position=UDim2.fromOffset(10,12),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=6,Parent=cpF})
-		R(pv,6) SK(pv,Color3.fromRGB(120,110,140))
-		local hue=B("Frame",{Size=UDim2.fromOffset(142,18),Position=UDim2.fromOffset(58,14),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=6,Parent=cpF})
-		R(hue,9)
-		B("UIGradient",{Color=ColorSequence.new{
+		local cpF=B("Frame",{Size=UDim2.fromOffset(304,200),Position=UDim2.new(0.5,-152,0.5,-100),BackgroundColor3=Color3.fromRGB(22,22,26),BorderSizePixel=0,Visible=false,Active=true,ZIndex=5,Parent=cpG})
+		R(cpF,12) SK(cpF,Color3.fromRGB(78,72,94))
+		B("TextLabel",{Size=UDim2.new(1,-24,0,24),Position=UDim2.fromOffset(12,4),BackgroundTransparency=1,Text="高亮颜色",Font=Enum.Font.GothamBold,TextSize=12,TextColor3=Color3.new(1,1,1),TextXAlignment=Enum.TextXAlignment.Left,ZIndex=6,Parent=cpF})
+		local sv=B("Frame",{Size=UDim2.fromOffset(164,128),Position=UDim2.fromOffset(12,32),BackgroundColor3=Color3.new(1,0,0),BorderSizePixel=0,ClipsDescendants=true,ZIndex=6,Parent=cpF})
+		R(sv,6)
+		local sat=B("Frame",{Size=UDim2.fromScale(1,1),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=7,Parent=sv})
+		B("UIGradient",{Transparency=NumberSequence.new{NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(1,1)},Parent=sat})
+		local vdk=B("Frame",{Size=UDim2.fromScale(1,1),BackgroundColor3=Color3.new(0,0,0),BorderSizePixel=0,ZIndex=8,Parent=sv})
+		B("UIGradient",{Rotation=90,Transparency=NumberSequence.new{NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(1,0)},Parent=vdk})
+		local dot=B("Frame",{Size=UDim2.fromOffset(12,12),AnchorPoint=Vector2.new(0.5,0.5),BackgroundTransparency=1,ZIndex=9,Parent=sv})
+		SK(dot,Color3.new(1,1,1),0).Thickness=2
+		local hb=B("Frame",{Size=UDim2.fromOffset(20,128),Position=UDim2.fromOffset(184,32),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ClipsDescendants=true,ZIndex=6,Parent=cpF})
+		R(hb,6)
+		B("UIGradient",{Rotation=90,Color=ColorSequence.new{
 			ColorSequenceKeypoint.new(0,Color3.fromRGB(255,0,0)),
 			ColorSequenceKeypoint.new(0.17,Color3.fromRGB(255,255,0)),
 			ColorSequenceKeypoint.new(0.33,Color3.fromRGB(0,255,0)),
 			ColorSequenceKeypoint.new(0.5,Color3.fromRGB(0,255,255)),
 			ColorSequenceKeypoint.new(0.67,Color3.fromRGB(0,0,255)),
 			ColorSequenceKeypoint.new(0.83,Color3.fromRGB(255,0,255)),
-			ColorSequenceKeypoint.new(1,Color3.fromRGB(255,0,0))},Parent=hue})
-		local val=B("Frame",{Size=UDim2.fromOffset(142,10),Position=UDim2.fromOffset(58,42),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=6,Parent=cpF})
-		R(val,5)
-		B("UIGradient",{Color=ColorSequence.new(Color3.fromRGB(0,0,0),Color3.new(1,1,1)),Parent=val})
-		local hsel=B("Frame",{Size=UDim2.fromOffset(3,22),Position=UDim2.fromOffset(0,-2),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=7,Parent=hue})
-		local vsel=B("Frame",{Size=UDim2.fromOffset(3,14),Position=UDim2.fromOffset(0,-2),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=7,Parent=val})
-		local closeB=B("TextButton",{Size=UDim2.fromOffset(52,22),Position=UDim2.fromOffset(150,68),BackgroundColor3=C.accent,BorderSizePixel=0,Text="关闭",Font=Enum.Font.GothamBold,TextSize=10,TextColor3=Color3.new(1,1,1),AutoButtonColor=false,ZIndex=7,Parent=cpF})
-		R(closeB,6)
-		local hueV,valV,cpTgt=0,1,nil
+			ColorSequenceKeypoint.new(1,Color3.fromRGB(255,0,0))},Parent=hb})
+		local hd=B("Frame",{Size=UDim2.new(1,0,0,4),AnchorPoint=Vector2.new(0,0.5),BackgroundColor3=Color3.new(1,1,1),ZIndex=9,Parent=hb})
+		SK(hd,Color3.fromRGB(40,40,46),0.2)
+		local hexL=B("TextLabel",{Size=UDim2.fromOffset(72,18),Position=UDim2.fromOffset(212,32),BackgroundColor3=Color3.fromRGB(34,34,40),Text="",Font=Enum.Font.Code,TextSize=9,TextColor3=Color3.new(1,1,1),ZIndex=7,Parent=cpF})
+		R(hexL,4)
+		local rgbL=B("TextLabel",{Size=UDim2.fromOffset(72,52),Position=UDim2.fromOffset(212,54),BackgroundColor3=Color3.fromRGB(34,34,40),Text="",Font=Enum.Font.Code,TextSize=9,TextColor3=Color3.fromRGB(210,210,220),TextYAlignment=Enum.TextYAlignment.Top,ZIndex=7,Parent=cpF})
+		R(rgbL,4)
+		local cB=B("TextButton",{Size=UDim2.fromOffset(136,26),Position=UDim2.fromOffset(12,166),BackgroundColor3=Color3.fromRGB(44,42,52),BorderSizePixel=0,Text="Cancel",Font=Enum.Font.GothamBold,TextSize=10,TextColor3=Color3.fromRGB(225,225,235),AutoButtonColor=false,ZIndex=7,Parent=cpF})
+		R(cB,6)
+		local aB=B("TextButton",{Size=UDim2.fromOffset(136,26),Position=UDim2.fromOffset(156,166),BackgroundColor3=C.accent,BorderSizePixel=0,Text="Apply",Font=Enum.Font.GothamBold,TextSize=10,TextColor3=Color3.new(1,1,1),AutoButtonColor=false,ZIndex=7,Parent=cpF})
+		R(aB,6)
+		local hV,sV,vV=0,1,1
+		local cpT=nil
 		local ghBlk,trBlk
-		local function apply()
-			local col=Color3.fromHSV(hueV,1,valV)
-			pv.BackgroundColor3=col
-			if cpTgt=="ghost" then
+		local oldC=Color3.new(1,1,1)
+		local function sync()
+			local col=Color3.fromHSV(hV,sV,vV)
+			sv.BackgroundColor3=Color3.fromHSV(hV,1,1)
+			dot.Position=UDim2.new(sV,0,1-vV,0)
+			hd.Position=UDim2.new(0,0,hV,0)
+			hexL.Text=string.format("#%02x%02x%02x",math.floor(col.R*255),math.floor(col.G*255),math.floor(col.B*255))
+			rgbL.Text="R "..math.floor(col.R*255).."\nG "..math.floor(col.G*255).."\nB "..math.floor(col.B*255)
+			if cpT=="ghost" then
 				st.col=col
 				if ghBlk then ghBlk.BackgroundColor3=col end
-			elseif cpTgt=="tracer" then
+			elseif cpT=="tracer" then
 				tr.col=col
 				if trBlk then trBlk.BackgroundColor3=col end
 			end
 		end
 		local function openCp(t)
-			cpTgt=t
-			cpF.Visible=true
+			cpT=t
 			local col=(t=="ghost") and st.col or tr.col
-			local hh,ss,vv=Color3.toHSV(col)
-			hueV=hh valV=(vv<0.15) and 1 or vv
-			hsel.Position=UDim2.new(hueV,-1,0,-2)
-			vsel.Position=UDim2.new(0,0,0,-2)
-			apply()
+			oldC=col
+			hV,sV,vV=Color3.toHSV(col)
+			cpF.Visible=true
+			sync()
 		end
-		local function pickOn(bar,sel,isHue)
-			local drag=false
-			local function upd(x)
-				local p=math.clamp((x-bar.AbsolutePosition.X)/math.max(bar.AbsoluteSize.X,1),0,1)
-				sel.Position=UDim2.new(p,-1,0,-2)
-				if isHue then hueV=p else valV=p end
-				apply()
-			end
-			bar.InputBegan:Connect(function(i)
+		do
+			local d1,d2=false,false
+			sv.InputBegan:Connect(function(i)
 				if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
-					drag=true
-					upd(i.Position.X)
+					d1=true
+					sV=math.clamp((i.Position.X-sv.AbsolutePosition.X)/sv.AbsoluteSize.X,0,1)
+					vV=math.clamp(1-(i.Position.Y-sv.AbsolutePosition.Y)/sv.AbsoluteSize.Y,0,1)
+					sync()
+				end
+			end)
+			hb.InputBegan:Connect(function(i)
+				if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
+					d2=true
+					hV=math.clamp((i.Position.Y-hb.AbsolutePosition.Y)/hb.AbsoluteSize.Y,0,1)
+					sync()
 				end
 			end)
 			UI.InputChanged:Connect(function(i)
-				if drag and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then
-					upd(i.Position.X)
+				if i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch then
+					if d1 then
+						sV=math.clamp((i.Position.X-sv.AbsolutePosition.X)/sv.AbsoluteSize.X,0,1)
+						vV=math.clamp(1-(i.Position.Y-sv.AbsolutePosition.Y)/sv.AbsoluteSize.Y,0,1)
+						sync()
+					end
+					if d2 then
+						hV=math.clamp((i.Position.Y-hb.AbsolutePosition.Y)/hb.AbsoluteSize.Y,0,1)
+						sync()
+					end
 				end
 			end)
-			UI.InputEnded:Connect(function() drag=false end)
+			UI.InputEnded:Connect(function() d1=false d2=false end)
 		end
-		pickOn(hue,hsel,true)
-		pickOn(val,vsel,false)
-		closeB.MouseButton1Click:Connect(function() cpF.Visible=false end)
+		cB.MouseButton1Click:Connect(function()
+			if cpT=="ghost" then
+				st.col=oldC
+				if ghBlk then ghBlk.BackgroundColor3=oldC end
+			elseif cpT=="tracer" then
+				tr.col=oldC
+				if trBlk then trBlk.BackgroundColor3=oldC end
+			end
+			cpF.Visible=false
+		end)
+		aB.MouseButton1Click:Connect(function() cpF.Visible=false end)
 		local function ghost(root)
 			local ok,m=pcall(function() return root:Clone() end)
 			if not ok or not m then return end
@@ -3082,7 +3114,7 @@ do
 			core.Parent=car
 			local glow=Instance.new("Beam")
 			glow.Attachment0=a0 glow.Attachment1=a1
-			glow.Width0=0.42 glow.Width1=0.18
+			glow.Width0=0.44 glow.Width1=0.18
 			glow.Color=ColorSequence.new(tr.col)
 			glow.LightInfluence=0 glow.FaceCamera=true
 			glow.Transparency=NumberSequence.new(0.82)
@@ -3108,9 +3140,7 @@ do
 			end
 		end)
 		UI.InputEnded:Connect(function(i)
-			if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
-				holding=false
-			end
+			if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then holding=false end
 		end)
 		task.spawn(function()
 			while true do
@@ -3126,7 +3156,7 @@ do
 					o.Color=tr.col
 					o.Material=Enum.Material.Neon
 					o.Reflectance=0
-					if o:IsA("MeshPart") then o.TextureID="" end
+					o.TextureID=""
 				end)
 			elseif o:IsA("Trail") then
 				pcall(function()
