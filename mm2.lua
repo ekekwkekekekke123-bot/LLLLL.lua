@@ -831,7 +831,13 @@ task.spawn(function()
 					if not hd and o:IsA("BasePart") then hd=o end
 					local vis=false
 					if hd then vis=(hd.Transparency<0.95 and hd.LocalTransparencyModifier<0.95) end
-					if vis then
+										if hd and not onP then
+						for _,pl2 in ipairs(P:GetPlayers()) do
+							local hr2 = pl2.Character and pl2.Character:FindFirstChild("HumanoidRootPart")
+							if hr2 and (hr2.Position - hd.Position).Magnitude < 3 then onP=true break end
+						end
+					end
+							if vis then
 						if not onP then gunOn=true end
 						hl(o,CLR.Gun,ES.Gun and not onP)
 						if hd then
