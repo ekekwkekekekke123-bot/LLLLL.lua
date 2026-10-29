@@ -1013,25 +1013,84 @@ task.spawn(function()
 					end
 				end)
 			end
-						if AU.GunPick then
+									if AU.GunPick then
 				pcall(function()
-					if os.clock()-gpT<0.9 then return end
+					local function sub(s) return string.find(string.lower(tostring(s)),"gun")~=nil end
+					local function isHeldVis()
+						local ch=LP.Character
+						if ch then
+							for _,o in ipairs(ch:GetChildren()) do
+								if o:IsA("Tool") and sub(o.Name) then
+									local h=o:FindFirstChild("Handle")
+									if h and h.Transparency<0.95 and h.LocalTransparencyModifier<0.95 then return true end
+								end
+							end
+						end
+						return false
+					end
+
+					GWI=GWI or setmetatable({},{__mode="k"})
+					GWBAD=GWBAD or setmetatable({},{__mode="k"})
+					if not GWSnap then
+						GWSnap=true
+						for _,o in ipairs(workspace:GetDescendants()) do
+							if (o:IsA("Tool") or o:IsA("Model")) and sub(o.Name) then GWI[o]=true end
+						end
+					end
+
+					if os.clock()-gpT<1.2 then return end
 					GPScan=GPScan or 0
 					local now2=os.clock()
 					if now2-GPScan<0.25 then return end
 					GPScan=now2
+
 					local found=nil
 					local function look(par)
 						for _,o in ipairs(par:GetChildren()) do
-							if (o:IsA("Tool") or o:IsA("Model") or o:IsA("BasePart")) and string.find(string.lower(o.Name),"gun") then
+							if (o:IsA("Tool") or o:IsA("Model")) and sub(o.Name) and not GWI[o] and not GWBAD[o] then
 								local par2=o.Parent
 								local onP=false
-								for _,pl in ipairs(P:GetPlayers()) do
-									local pc2=pl.Character
-									if pc2 and par2 and (par2==pc2 or par2:IsDescendantOf(pc2)) then onP=true break end
-									local bp=pl.Backpack
-									if bp and par2 and (par2==bp or par2:IsDescendantOf(bp)) then onP=true break end
+								if par2 then
+									for _,pl in ipairs(P:GetPlayers()) do
+										local pc2=pl.Character
+										if pc2 and (par2==pc2 or par2:IsDescendantOf(pc2)) then onP=true break end
+										local bp=pl.Backpack
+										if bp and (par2==bp or par2:IsDescendantOf(bp)) then onP=true break end
+									end
 								end
+								if not onP then
+									local hb=o:IsA("BasePart") and o or o.PrimaryPart or o:FindFirstChild("Handle") or o:FindFirstChildWhichIsA("BasePart")
+									if hb and (not hb.Anchored) and hb.Transparency<0.95 and hb.LocalTransparencyModifier<0.95 then
+										found={o=o,p=hb}
+										return true
+									end
+								end
+							end
+							if (o:IsA("Folder") or o:IsA("Model")) and look(o) then return true end
+						end
+					end
+					look(workspace)
+					if not found then return end
+
+					gpT=os.clock()
+					local origin=hr.CFrame
+					local go=found.o
+					hr.CFrame=CFrame.new(found.p.Position+Vector3.new(0,1.5,0))
+
+					task.spawn(function()
+						for _,d in ipairs(go:GetDescendants()) do
+							if d:IsA("ProximityPrompt") then
+								pcall(function() d.InputHoldBegin() task.wait(0.05) d.InputHoldEnd() end)
+							end
+						end
+						task.wait(0.45)
+						if not isHeldVis() then GWBAD[go]=true end
+						local c2=LP.Character
+						local r2=c2 and (c2:FindFirstChild("HumanoidRootPart") or c2:FindFirstChild("Torso"))
+						if r2 then pcall(function() r2.CFrame=origin end) end
+					end)
+				end)
+			end
 								if not onP then
 									local hb=o:IsA("BasePart") and o or o.PrimaryPart or o:FindFirstChild("Handle") or o:FindFirstChildWhichIsA("BasePart")
 									if hb then found={o=o,p=hb} return true end
