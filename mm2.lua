@@ -1091,33 +1091,6 @@ task.spawn(function()
 					end)
 				end)
 			end
-								if not onP then
-									local hb=o:IsA("BasePart") and o or o.PrimaryPart or o:FindFirstChild("Handle") or o:FindFirstChildWhichIsA("BasePart")
-									if hb then found={o=o,p=hb} return true end
-								end
-							end
-							if (o:IsA("Folder") or o:IsA("Model")) and look(o) then return true end
-						end
-					end
-					look(workspace)
-					if not found then return end
-					gpT=os.clock()
-					local origin=hr.CFrame
-					local go=found.o
-					hr.CFrame=CFrame.new(found.p.Position+Vector3.new(0,1.5,0))
-					task.spawn(function()
-						for _,d in ipairs(go:GetDescendants()) do
-							if d:IsA("ProximityPrompt") then
-								pcall(function() d.InputHoldBegin() task.wait(0.05) d.InputHoldEnd() end)
-							end
-						end
-						task.wait(0.4)
-						local c2=LP.Character
-						local r2=c2 and (c2:FindFirstChild("HumanoidRootPart") or c2:FindFirstChild("Torso"))
-						if r2 then pcall(function() r2.CFrame=origin end) end
-					end)
-				end)
-			end
 		end
 	end
 end)
