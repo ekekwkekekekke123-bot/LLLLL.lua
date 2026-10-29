@@ -446,50 +446,50 @@ local function flingSheriff()
 	flingOne(pl, "警长")
 end
 
--- ---------- 5. 修改飞刀范围（放大目标·隐藏·开关可恢复） ----------
-local HIDE = true
+-- ---------- 5. 飞刀范围：隐形判定盒（原部件不动） ----------
 local KN = {}
-local function knRestore()
-	for p, o in pairs(KN) do
-		if p and p.Parent then
-			pcall(function()
-				p.Size = o.s
-				p.Transparency = o.t
-				p.CanCollide = o.c
-			end)
-		end
+local function knClear()
+	for _, p in pairs(KN) do
+		if p then pcall(function() p:Destroy() end) end
 	end
 	KN = {}
 end
 local function knApply()
-	local range = math.clamp(tonumber(CFG.KnR) or 20, 10, 60)
-	local mult = math.max(1, range / 4)
+	local s = math.clamp(tonumber(CFG.KnR) or 20, 10, 60) / 4 * 6
+	for pl, box in pairs(KN) do
+		if not pl.Character or not pl.Character.Parent or not box.Parent then
+			if box then pcall(function() box:Destroy() end) end
+			KN[pl] = nil
+		end
+	end
 	for _, pl in ipairs(P:GetPlayers()) do
 		if pl ~= LP and pl.Character then
-			for _, d in ipairs(pl.Character:GetDescendants()) do
-				if d:IsA("BasePart") and d.Name ~= "HumanoidRootPart" and KN[d] == nil then
-					KN[d] = {s = d.Size, t = d.Transparency, c = d.CanCollide}
-					d.Size = d.Size * mult
-					if HIDE then d.Transparency = 1 end
-					d.CanCollide = false
-					d.CanTouch = true
+			local hr = pl.Character:FindFirstChild("HumanoidRootPart")
+			if hr then
+				local box = KN[pl]
+				if not box or not box.Parent then
+					box = Instance.new("Part")
+					box.Name = "wx_hitbox"
+					box.Transparency = 1
+					box.CanCollide = false
+					box.CanTouch = true
+					box.CanQuery = false
+					box.Massless = true
+					box.Anchored = true
+					box.Parent = pl.Character
+					KN[pl] = box
 				end
+				box.Size = Vector3.new(s, s, s)
+				box.CFrame = hr.CFrame
 			end
 		end
 	end
 end
 local function knifeRangeSet()
-	knRestore()
-	if CFG.KnOn then knApply() end
+	if not CFG.KnOn then knClear() else knApply() end
 end
-local knT = 0
-RS.Heartbeat:Connect(function()
-	if not CFG.KnOn then return end
-	local now = os.clock()
-	if now - knT > 0.4 then
-		knT = now
-		knApply()
-	end
+RS.RenderStepped:Connect(function()
+	if CFG.KnOn then knApply() end
 end)
 
 -- ---------- 统一 namecall hook（已修复语法错误） ----------
