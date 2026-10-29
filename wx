@@ -1862,7 +1862,22 @@ hd(pgV,"画面") T(pgV,"普通夜视","NV",false) T(pgV,"铺设光源（测试�
 hd(pgW,"危险")
 bt(pgW,"自杀",function() local _,h=chr() if h then pcall(function() h.Health=0 end) end end)
 bt(pgW,"退出服务器",function() pcall(function() game:Shutdown() end) task.wait(0.4) pcall(function() LP:Kick("已退出") end) end)
-bt(pgW,"重新进入服务器",function() local TPS=game:GetService("TeleportService") pcall(function() TPS:TeleportToPlaceInstance(game.PlaceId,game.JobId,LP) end) end)
+bt(pgW,"重新进入服务器",function()
+	local TPS=game:GetService("TeleportService")
+	local pid=game.PlaceId
+	local jid=game.JobId
+	local ok=false
+	local err=nil
+	if jid and jid~="" then
+		ok,err=pcall(function() TPS:TeleportToPlaceInstance(pid,jid,LP) end)
+	end
+	if not ok then
+		ok,err=pcall(function() TPS:Teleport(pid,LP) end)
+	end
+	if not ok then
+		wxCue("重进失败：该服务器可能已满人")
+	end
+end)
 selp(1)
                                                                                function wxInitIntro()
 	local Drawing=rawget(getfenv(),"Drawing") or Drawing
