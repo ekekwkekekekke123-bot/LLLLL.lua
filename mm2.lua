@@ -541,7 +541,7 @@ pcall(function()
 					end
 				end
 			end
-			if CFG.KnOn and (m == "FireServer" or m == "InvokeServer") then
+			if CFG.KnAim and m == "FireServer" then
 				local nm = string.lower(self.Name or "")
 				if string.find(nm, "throw") or string.find(nm, "knife") or string.find(nm, "blade") then
 					local range = math.clamp(tonumber(CFG.KnR) or 20, 10, 60)
