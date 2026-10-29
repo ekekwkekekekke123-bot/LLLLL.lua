@@ -690,15 +690,16 @@ end
 local function npcTick(cam,vp)
 		if not S.NpcOn then for m,d in pairs(ND) do d.b.Visible=false d.n.Visible=false d.d.Visible=false d.h.Visible=false end return end
 	local seen={}
-	for _,m in ipairs(workspace:GetChildren()) do
+		for _,m in ipairs(workspace:GetDescendants()) do
 		if m:IsA("Model") and not P:GetPlayerFromCharacter(m) then
 			local hu=m:FindFirstChildOfClass("Humanoid")
-			if hu and hu.Health>0 then
+						if (not hu) or hu.Health>0 then
 				seen[m]=true
 				local d=ND[m] if not d then npcMk(m) d=ND[m] end
 				if d then
 					local hd=m:FindFirstChild("Head") local hrp=m:FindFirstChild("HumanoidRootPart") or m:FindFirstChild("Torso") or m:FindFirstChild("UpperTorso")
-					if hd and hrp then
+							if not hd or not hrp then hd=m.PrimaryPart or m:FindFirstChildWhichIsA("BasePart") hrp=hd end
+if hd and hrp then
 						local dist=(cam.CFrame.Position-hrp.Position).Magnitude
 						d.n.Visible=S.NpcNm d.n.Text=m.Name
 						d.d.Visible=S.NpcDs
