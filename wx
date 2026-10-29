@@ -2675,7 +2675,7 @@ local function wxCfgSave()
 		writefile("wx_cfg.json",game:GetService("HttpService"):JSONEncode(d))
 	end)
 end
-local function wxCfgLoad()
+local function wxCfgLoad() do return end
 	if not (isfile and readfile) then return end
 	pcall(function()
 		if not isfile("wx_cfg.json") then return end
