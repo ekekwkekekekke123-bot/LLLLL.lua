@@ -446,7 +446,7 @@ local function flingSheriff()
 	flingOne(pl, "警长")
 end
 
--- ---------- 5. 飞刀范围：隐形判定盒（原部件不动） ----------
+-- ---------- 5. 飞刀范围：隐形判定球（焊接跟随·可关） ----------
 local KN = {}
 local function knClear()
 	for _, p in pairs(KN) do
@@ -470,17 +470,24 @@ local function knApply()
 				if not box or not box.Parent then
 					box = Instance.new("Part")
 					box.Name = "wx_hitbox"
+					box.Shape = Enum.PartType.Ball
 					box.Transparency = 1
 					box.CanCollide = false
 					box.CanTouch = true
 					box.CanQuery = false
 					box.Massless = true
-					box.Anchored = true
+					box.Anchored = false
+					box.Size = Vector3.new(s, s, s)
+					box.CFrame = hr.CFrame
 					box.Parent = pl.Character
+					local wc = Instance.new("WeldConstraint")
+					wc.Part0 = box
+					wc.Part1 = hr
+					wc.Parent = box
 					KN[pl] = box
+				else
+					box.Size = Vector3.new(s, s, s)
 				end
-				box.Size = Vector3.new(s, s, s)
-				box.CFrame = hr.CFrame
 			end
 		end
 	end
@@ -488,7 +495,7 @@ end
 local function knifeRangeSet()
 	if not CFG.KnOn then knClear() else knApply() end
 end
-RS.RenderStepped:Connect(function()
+RS.Heartbeat:Connect(function()
 	if CFG.KnOn then knApply() end
 end)
 
