@@ -815,28 +815,39 @@ task.spawn(function()
 				gList[#gList+1]=o
 				for _,c in ipairs(o:GetChildren()) do gList[#gList+1]=c end
 			end
-			for _,o in ipairs(gList) do
+						for _,o in ipairs(gList) do
 				local nm=string.lower(o.Name)
 				if (o:IsA("Tool") or o:IsA("Model") or o:IsA("BasePart")) and string.find(nm,"gun") then
+					local par=o.Parent
+					local onP=false
+					if par then
+						for _,pl in ipairs(P:GetPlayers()) do
+							local c=pl.Character
+							if c and (par==c or par:IsDescendantOf(c)) then onP=true break end
+							if pl.Backpack and (par==pl.Backpack or par:IsDescendantOf(pl.Backpack)) then onP=true break end
+						end
+					end
 					local hd=o:FindFirstChild("Handle")
 					if not hd and o:IsA("BasePart") then hd=o end
 					local vis=false
-					if hd then
-						vis=(hd.Transparency<0.95 and hd.LocalTransparencyModifier<0.95)
-					end
+					if hd then vis=(hd.Transparency<0.95 and hd.LocalTransparencyModifier<0.95) end
 					if vis then
-						gunOn=true
-						hl(o,CLR.Gun,ES.Gun)
-						if ES.Gun and hd then
+						if not onP then gunOn=true end
+						hl(o,CLR.Gun,ES.Gun and not onP)
+						if hd then
 							local bg=hd:FindFirstChild("mm2_gdist")
-							if not bg then
-								bg=B("BillboardGui",{Name="mm2_gdist",Size=UDim2.fromOffset(70,18),StudsOffset=Vector3.new(0,1.8,0),AlwaysOnTop=true,Parent=hd})
-								B("TextLabel",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="",Font=Enum.Font.GothamBold,TextSize=11,TextColor3=CLR.Gun,Parent=bg})
-							end
-							bg.Enabled=true
-							local tl=bg:FindFirstChildOfClass("TextLabel")
-							if tl and myHRg then
-								tl.Text=math.floor((hd.Position-myHRg.Position).Magnitude).."m"
+							if ES.Gun and not onP then
+								if not bg then
+									bg=B("BillboardGui",{Name="mm2_gdist",Size=UDim2.fromOffset(70,18),StudsOffset=Vector3.new(0,1.8,0),AlwaysOnTop=true,Parent=hd})
+									B("TextLabel",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="",Font=Enum.Font.GothamBold,TextSize=11,TextColor3=CLR.Gun,Parent=bg})
+								end
+								bg.Enabled=true
+								local tl=bg:FindFirstChildOfClass("TextLabel")
+								if tl and myHRg then
+									tl.Text=math.floor((hd.Position-myHRg.Position).Magnitude).."m"
+								end
+							elseif bg then
+								bg.Enabled=false
 							end
 						end
 					end
