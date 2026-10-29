@@ -446,56 +446,49 @@ local function flingSheriff()
 	flingOne(pl, "警长")
 end
 
--- ---------- 5. 修改飞刀范围 ----------
+-- ---------- 5. 修改飞刀范围（放大目标·隐藏·开关可恢复） ----------
+local HIDE = true
 local KN = {}
-local function knifeRangeSet()
-	if not CFG.KnOn then
-		for p, o in pairs(KN) do
-			if p and p.Parent then pcall(function() p.Size = o end) end
+local function knRestore()
+	for p, o in pairs(KN) do
+		if p and p.Parent then
+			pcall(function()
+				p.Size = o.s
+				p.Transparency = o.t
+				p.CanCollide = o.c
+			end)
 		end
-		KN = {}
-		return
 	end
+	KN = {}
+end
+local function knApply()
 	local range = math.clamp(tonumber(CFG.KnR) or 20, 10, 60)
 	local mult = math.max(1, range / 4)
-	local function blow(t)
-		if not t then return end
-		for _, d in ipairs(t:GetDescendants()) do
-			if d:IsA("BasePart") and KN[d] == nil then
-				KN[d] = d.Size
-				d.Size = d.Size * mult
-				d.CanTouch = true
+	for _, pl in ipairs(P:GetPlayers()) do
+		if pl ~= LP and pl.Character then
+			for _, d in ipairs(pl.Character:GetDescendants()) do
+				if d:IsA("BasePart") and d.Name ~= "HumanoidRootPart" and KN[d] == nil then
+					KN[d] = {s = d.Size, t = d.Transparency, c = d.CanCollide}
+					d.Size = d.Size * mult
+					if HIDE then d.Transparency = 1 end
+					d.CanCollide = false
+					d.CanTouch = true
+				end
 			end
-		end
-	end
-	blow(myKnife())
-	local cc = LP.Character
-	if cc then
-		for _, d in ipairs(cc:GetDescendants()) do
-			if d:IsA("Tool") then blow(d) end
-		end
-	end
-	local bp = LP:FindFirstChild("Backpack")
-	if bp then
-		for _, d in ipairs(bp:GetChildren()) do
-			if d:IsA("Tool") then blow(d) end
 		end
 	end
 end
-workspace.DescendantAdded:Connect(function(d)
-	if not (CFG.KnOn and CFG.KnR) then return end
-	if not d:IsA("BasePart") then return end
-	local nm = string.lower(d.Name or "")
-	if string.find(nm, "knife") or string.find(nm, "blade") or string.find(nm, "throw") then
-		task.delay(0.15, function()
-			if not CFG.KnOn then return end
-			if KN[d] == nil and d.Parent then
-				KN[d] = d.Size
-				local range = math.clamp(tonumber(CFG.KnR) or 20, 10, 60)
-				d.Size = Vector3.new(range * 0.5, range * 0.5, range * 0.5)
-				d.CanTouch = true
-			end
-		end)
+local function knifeRangeSet()
+	knRestore()
+	if CFG.KnOn then knApply() end
+end
+local knT = 0
+RS.Heartbeat:Connect(function()
+	if not CFG.KnOn then return end
+	local now = os.clock()
+	if now - knT > 0.4 then
+		knT = now
+		knApply()
 	end
 end)
 
