@@ -812,15 +812,29 @@ task.spawn(function()
 			for i=li+1,#LN do if LN[i] then LN[i].Visible=false end end
 			local gunOn=false
 			local myHRg=LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+						local gList={}
+			for _,pl in ipairs(P:GetPlayers()) do
+				local ch=pl.Character
+				if ch then for _,c in ipairs(ch:GetChildren()) do gList[#gList+1]=c end end
+				if pl.Backpack then for _,c in ipairs(pl.Backpack:GetChildren()) do gList[#gList+1]=c end end
+			end
 			for _,o in ipairs(workspace:GetChildren()) do
+				gList[#gList+1]=o
+				for _,c in ipairs(o:GetChildren()) do gList[#gList+1]=c end
+			end
+			for _,o in ipairs(gList) do
 				local nm=string.lower(o.Name)
 				if (o:IsA("Tool") or o:IsA("Model") or o:IsA("BasePart")) and string.find(nm,"gun") then
-					gunOn=true
-					hl(o,CLR.Gun,ES.Gun)
-					if ES.Gun then
-						local hd=o:FindFirstChild("Handle")
-						if not hd and o:IsA("BasePart") then hd=o end
-						if hd then
+					local hd=o:FindFirstChild("Handle")
+					if not hd and o:IsA("BasePart") then hd=o end
+					local vis=false
+					if hd then
+						vis=(hd.Transparency<0.95 and hd.LocalTransparencyModifier<0.95)
+					end
+					if vis then
+						gunOn=true
+						hl(o,CLR.Gun,ES.Gun)
+						if ES.Gun and hd then
 							local bg=hd:FindFirstChild("mm2_gdist")
 							if not bg then
 								bg=B("BillboardGui",{Name="mm2_gdist",Size=UDim2.fromOffset(70,18),StudsOffset=Vector3.new(0,1.8,0),AlwaysOnTop=true,Parent=hd})
