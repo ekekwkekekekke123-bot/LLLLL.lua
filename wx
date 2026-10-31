@@ -478,7 +478,10 @@ local function drawP(p,cam,vp)
 	local isTgt=(S.Lock~="无" and p.Name==S.Lock) or (aimPart~=nil and aimPart.Parent==ch)
 		if S.AiHl and isTgt then
 		setP(d,ch,true,S.HlC.Col)
-	else
+	elseif ES.Hl.On then
+	local hc=(ES.Hl.Rain and Color3.fromHSV(hue,1,1)) or ES.Hl.Col
+	setP(d,ch,true,hc)
+else
 		setP(d,ch,false)
 	end
 end
