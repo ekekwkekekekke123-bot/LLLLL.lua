@@ -1810,7 +1810,7 @@ function apK(k)
 		elseif k=="FC" then fcSet()
 	elseif k=="SpinOn" or k=="SpinV" then spinSet()
 	elseif k=="TwOn" then twSet()
-						elseif k=="TpOn" then tpSet() elseif k=="RevOn" then wxRev() elseif k=="AutoJp" then wxAutoJump() elseif k=="AimOn" then S.FovOn=S.AimOn or S.FovOn S.FovR=55 elseif k=="XrOn" or k=="XrV" then xrSet() end
+						elseif k=="TpOn" then tpSet() elseif k=="RevOn" then wxRev() elseif k=="AutoJp" then wxAutoJump() elseif k=="AimOn" then S.FovOn=S.AimOn or S.FovOn S.FovR=55 elseif k=="XrOn" or k=="XrV" then wxXRSet(S) end
 end
 local function T(par,l,k,dv) TGS=TGS or {} local rw,pl,kn,set2=tg(par,l,dv,function(v) S[k]=v apK(k) end) TGS[k]=set2 end
 local function N(par,l,k,mn,mx) nb(par,l,k,S[k],tostring(mn).."-"..tostring(mx),mn,mx) end
