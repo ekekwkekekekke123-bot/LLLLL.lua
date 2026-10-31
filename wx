@@ -75,6 +75,35 @@ do
 	wxlog(string.format("兼容层OK | genv=%s gethui=%s hookmm=%s namecall=%s fpp=%s Drawing=%s",
 		tostring(R.genv),tostring(R.gethui),tostring(R.hookmm),tostring(R.namecall),tostring(R.fpp),tostring(R.draw)))
 end
+XRBOX = {}
+function wxXRIsChar(p, pls)
+	for _,pl in ipairs(pls) do
+		local c=pl.Character
+		if c and p:IsDescendantOf(c) then return true end
+	end
+	return false
+end
+function wxXRSet(st)
+	if not st.XrOn then
+		for p,o in pairs(XRBOX) do
+			if p and p.Parent then pcall(function() p.Transparency=o end) end
+		end
+		XRBOX={}
+		return
+	end
+	local v=math.clamp(tonumber(st.XrV) or 55,0,100)/100
+	if next(XRBOX)==nil then
+		local pls=game:GetService("Players"):GetPlayers()
+		for _,p in ipairs(workspace:GetDescendants()) do
+			if p:IsA("BasePart") and not wxXRIsChar(p,pls) then
+				XRBOX[p]=p.Transparency
+			end
+		end
+	end
+	for p,o in pairs(XRBOX) do
+		if p and p.Parent then pcall(function() p.Transparency=v end) end
+	end
+end
 local function _main()
 local P=game:GetService("Players") local RS=game:GetService("RunService") local UI=game:GetService("UserInputService") local TS=game:GetService("TweenService") local LP=P.LocalPlayer
 local PG0=LP:WaitForChild("PlayerGui")
@@ -1736,43 +1765,6 @@ local function xrIsChar(p)
 	return false
 end
 local function xrSet()
-	if not S.XrOn then
-		for p,o in pairs(XR) do
-			if p and p.Parent then pcall(function() p.Transparency=o.t end) end
-		end
-		XR={}
-		return
-	end
-	local v=math.clamp(tonumber(S.XrV) or 55,0,100)/100
-	if next(XR)==nil then
-		for _,p in ipairs(workspace:GetDescendants()) do
-			if p:IsA("BasePart") and not xrIsChar(p) then
-				XR[p]={t=p.Transparency}
-			end
-		end
-	end
-	for p,o in pairs(XR) do
-		if p and p.Parent then pcall(function() p.Transparency=v end) end
-	end
-end
-workspace.DescendantAdded:Connect(function(p)
-	if not S.XrOn then return end
-	if p:IsA("BasePart") and not xrIsChar(p) and not XR[p] then
-		XR[p]={t=p.Transparency}
-		p.Transparency=math.clamp(tonumber(S.XrV) or 55,0,100)/100
-	end
-end)
-S.XrOn = S.XrOn == true
-S.XrV = S.XrV or 55
-XR = XR or {}
-function xrIsChar(p)
-	for _,pl in ipairs(P:GetPlayers()) do
-		local c=pl.Character
-		if c and p:IsDescendantOf(c) then return true end
-	end
-	return false
-end
-function xrSet()
 	if not S.XrOn then
 		for p,o in pairs(XR) do
 			if p and p.Parent then pcall(function() p.Transparency=o.t end) end
