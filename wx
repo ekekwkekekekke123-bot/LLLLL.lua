@@ -1764,15 +1764,15 @@ workspace.DescendantAdded:Connect(function(p)
 end)
 S.XrOn = S.XrOn == true
 S.XrV = S.XrV or 55
-local XR={}
-local function xrIsChar(p)
+XR = XR or {}
+function xrIsChar(p)
 	for _,pl in ipairs(P:GetPlayers()) do
 		local c=pl.Character
 		if c and p:IsDescendantOf(c) then return true end
 	end
 	return false
 end
-local function xrSet()
+function xrSet()
 	if not S.XrOn then
 		for p,o in pairs(XR) do
 			if p and p.Parent then pcall(function() p.Transparency=o.t end) end
