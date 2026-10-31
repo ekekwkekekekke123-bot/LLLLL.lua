@@ -1529,7 +1529,32 @@ local function sg(par,t,opts,dv,cb)
 	end)
 	return h2
 end
-local function bt(par,t,cb) local b=B("TextButton",{Size=UDim2.new(1,0,0,24),BackgroundColor3=C.row,BackgroundTransparency=0.3,Text=t,Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.txt,AutoButtonColor=false,LayoutOrder=nxt(),ZIndex=15,Parent=par}) R(b,8) b.MouseButton1Click:Connect(cb) end
+WMG = B("ScreenGui",{Name="wx_msg",IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=99999,Parent=safeParent()})
+WMF = B("Frame",{Size=UDim2.fromOffset(230,54),Position=UDim2.new(0.5,0,0.78,0),AnchorPoint=Vector2.new(0.5,0),BackgroundColor3=Color3.fromRGB(246,241,232),BackgroundTransparency=1,BorderSizePixel=0,Visible=false,ZIndex=999,Parent=WMG})
+R(WMF,12)
+WMS = B("UIStroke",{Color=C.accent,Transparency=0.6,Parent=WMF})
+WM1 = B("TextLabel",{Size=UDim2.new(1,-16,0,20),Position=UDim2.fromOffset(8,8),BackgroundTransparency=1,Text="",Font=Enum.Font.GothamBold,TextSize=11,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Center,Parent=WMF})
+WM2 = B("TextLabel",{Size=UDim2.new(1,-16,0,18),Position=UDim2.fromOffset(8,28),BackgroundTransparency=1,Text="",Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.dim,TextXAlignment=Enum.TextXAlignment.Center,Parent=WMF})
+WMBUSY = false
+function WM(a,b,okc)
+	if WMBUSY then return end
+	WMBUSY=true
+	WM1.Text=tostring(a or "")
+	WM2.Text=tostring(b or "")
+	WMS.Color=(okc==false) and Color3.fromRGB(200,90,70) or C.accent
+	WMF.Visible=true
+	WMF.Position=UDim2.new(0.5,0,0.80,0)
+	WMF.BackgroundTransparency=1
+	TS:Create(WMF,TweenInfo.new(0.22,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundTransparency=0.02,Position=UDim2.new(0.5,0,0.78,0)}):Play()
+	task.delay(1.6,function()
+		local tw=TS:Create(WMF,TweenInfo.new(0.3,Enum.EasingStyle.Quad,Enum.EasingDirection.In),{BackgroundTransparency=1,Position=UDim2.new(0.5,0,0.76,0)})
+		tw:Play()
+		tw.Completed:Wait()
+		WMF.Visible=false
+		WMBUSY=false
+	end)
+end
+local function bt(par,t,cb) local b=B("TextButton",{Size=UDim2.new(1,0,0,24),BackgroundColor3=C.row,BackgroundTransparency=0.3,Text=t,Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.txt,AutoButtonColor=false,LayoutOrder=nxt(),ZIndex=15,Parent=par}) R(b,8) b.MouseButton1Click:Connect(function() local ok=pcall(cb) if ok then WM(t,"已生效",true) else WM(t,"执行失败",false) end end) end
 local apK
 local function nb(par,l,k,dv,ph,mn,mx)
 	local lo=mn or 1 local hi=mx or 500
