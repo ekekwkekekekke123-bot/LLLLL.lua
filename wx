@@ -653,20 +653,6 @@ if (S.SilentMode=="Raycast" or S.SilentMode=="双通道") and m=="Raycast" then
 	end)
 end
                            NESP=nil
-task.delay(3,function()
-	pcall(function()
-		local ok,lib=pcall(function()
-			return loadstring(game:HttpGet("https://raw.githubusercontent.com/Unwalker1337/SwagModeESPlibrary/main/init.lua?t="..tostring(os.time())))()
-		end)
-	if not ok or not lib then return end
-	local e=lib.new({
-		TeamCheck=false,
-		MaxDistance=S.ESMax,
-	})
-	e:Start()
-	NESP=e
-	end)
-end)
 
 function nespApply()
 	if not NESP then return end
