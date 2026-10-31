@@ -1762,6 +1762,43 @@ workspace.DescendantAdded:Connect(function(p)
 		p.Transparency=math.clamp(tonumber(S.XrV) or 55,0,100)/100
 	end
 end)
+S.XrOn = S.XrOn == true
+S.XrV = S.XrV or 55
+local XR={}
+local function xrIsChar(p)
+	for _,pl in ipairs(P:GetPlayers()) do
+		local c=pl.Character
+		if c and p:IsDescendantOf(c) then return true end
+	end
+	return false
+end
+local function xrSet()
+	if not S.XrOn then
+		for p,o in pairs(XR) do
+			if p and p.Parent then pcall(function() p.Transparency=o.t end) end
+		end
+		XR={}
+		return
+	end
+	local v=math.clamp(tonumber(S.XrV) or 55,0,100)/100
+	if next(XR)==nil then
+		for _,p in ipairs(workspace:GetDescendants()) do
+			if p:IsA("BasePart") and not xrIsChar(p) then
+				XR[p]={t=p.Transparency}
+			end
+		end
+	end
+	for p,o in pairs(XR) do
+		if p and p.Parent then pcall(function() p.Transparency=v end) end
+	end
+end
+workspace.DescendantAdded:Connect(function(p)
+	if not S.XrOn then return end
+	if p:IsA("BasePart") and not xrIsChar(p) and not XR[p] then
+		XR[p]={t=p.Transparency}
+		p.Transparency=math.clamp(tonumber(S.XrV) or 55,0,100)/100
+	end
+end)
 function apK(k)
 	if k=="SpOn" or k=="SpV" then walk()
 	elseif k=="JpOn" or k=="JpInf" or k=="JpH" then jump()
