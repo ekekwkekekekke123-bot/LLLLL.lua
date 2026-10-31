@@ -662,17 +662,6 @@ task.delay(3,function()
 	local e=lib.new({
 		TeamCheck=false,
 		MaxDistance=S.ESMax,
-		Name={Enabled=true},
-		Distance={Enabled=true},
-		Box={Enabled=true,Mode="3D",Color=Color3.fromRGB(255,255,255),SecondaryColor=Color3.fromRGB(255,255,255),Thickness=1.5,Transparency=0.9},
-		HealthBar={Enabled=true,Width=3,HighColor=Color3.fromRGB(0,255,120),LowColor=Color3.fromRGB(255,40,40)},
-		HeadDot={Enabled=true,Size=5},
-		Tracers={Enabled=false},
-		OffscreenArrows={Enabled=false},
-		Skeleton={Enabled=false,Color=Color3.fromRGB(255,255,255)},
-		ToolESP={Enabled=true,Color=Color3.fromRGB(255,220,50),Size=12},
-		ToolHighlight={Enabled=true,FillColor=Color3.fromRGB(255,220,50),FillTransparency=0.5},
-		Chams={Enabled=false,FillColor=Color3.fromRGB(255,255,255),OutlineColor=Color3.fromRGB(255,255,255),FillTransparency=0.6},
 	})
 	e:Start()
 	NESP=e
