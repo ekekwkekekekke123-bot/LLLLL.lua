@@ -505,7 +505,14 @@ local dmgLbl=B("TextLabel",{Size=UDim2.fromOffset(90,20),BackgroundTransparency=
 local aimBB,aimTG=nil,nil local hdB,hdT1,hdT2=nil,nil,nil local silentOn=false
 local lastVisCh=nil
 local function see(cam,part,ch) local rp=RaycastParams.new() rp.FilterType=Enum.RaycastFilterType.Exclude rp.FilterDescendantsInstances={LP.Character,ch} local hd=LP.Character and LP.Character:FindFirstChild("Head") local o=hd and hd.Position or cam.CFrame.Position if (o-part.Position).Magnitude<2 then return true end return workspace:Raycast(o,part.Position-o,rp)==nil end
-S.aiPart=function(ch) local a=S.AiPart if a=="Chest" then return ch:FindFirstChild("UpperTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("Head") end if a=="Legs" then return ch:FindFirstChild("LowerTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("Head") end return ch:FindFirstChild("Head") or ch:FindFirstChild("Torso") end
+S.aiPart=function(ch)
+	local a=S.AiPart
+	if a=="HumanoidRootPart" then return ch:FindFirstChild("HumanoidRootPart") or ch:FindFirstChild("Head") end
+	if a=="Torso" then return ch:FindFirstChild("UpperTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("HumanoidRootPart") end
+	if a=="Chest" then return ch:FindFirstChild("UpperTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("HumanoidRootPart") end
+	if a=="Legs" then return ch:FindFirstChild("LowerTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("HumanoidRootPart") end
+	return ch:FindFirstChild("Head") or ch:FindFirstChild("HumanoidRootPart")
+end
 S.aimPartOf=function(ch) local a=S.AimPart if a=="Chest" then return ch:FindFirstChild("UpperTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("Head") end if a=="Legs" then return ch:FindFirstChild("LowerTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("Head") end return ch:FindFirstChild("Head") or ch:FindFirstChild("Torso") end
 local function pick(cam,cx,cy)
 	local best,bv=nil,nil
@@ -624,7 +631,7 @@ local function hookSilent()
 		local old
 		old=hookmetamethod(game,"__namecall",function(self,...)
 			local m=getnamecallmethod()
-														if not S.AiOn then return old(self,...) end
+			if not S.AiOn then return old(self,...) end
 			if aimPart and aimPart.Parent then
 				local cp=workspace.CurrentCamera.CFrame.Position
 				local ap=aimPart.Position
@@ -655,6 +662,10 @@ local function hookSilent()
 					if n>=2 and typeof(a[n-1])=="Vector3" and typeof(a[n])=="Vector3" then a[n-1]=cp a[n]=tg return old(self,table.unpack(a)) end
 				end
 			end
+			return old(self,...)
+		end)
+		silentOn=true
+	end)
 end
                            NESP=nil
 
@@ -1944,7 +1955,7 @@ bt(pgW,"重新进入服务器",function()
 		ok,err=pcall(function() TPS:Teleport(pid,LP) end)
 	end
 	if not ok then
-		wxCue("重进失败：该服务器可能已满人")
+		wxToast ("重进失败：该服务器可能已满人")
 	end
 end)
 selp(1)
