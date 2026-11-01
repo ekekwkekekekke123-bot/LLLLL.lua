@@ -625,27 +625,36 @@ local function hookSilent()
 		old=hookmetamethod(game,"__namecall",function(self,...)
 			local m=getnamecallmethod()
 														if not S.AiOn then return old(self,...) end
-if aimPart and aimPart.Parent then
-	local cp=workspace.CurrentCamera.CFrame.Position
-	local ap=aimPart.Position
-	if S.PredOn and S.PredVal>0 then local v=aimPart.AssemblyLinearVelocity local d=(ap-cp).Magnitude ap=ap+v*(d/1200)*(S.PredVal/100) end
-	local tg=(ap-cp).Unit*1000
-	local WXW=getgenv().WXWALL
-	if not WXW then WXW={c=nil,b=false,t=0,rp=RaycastParams.new()} WXW.rp.FilterType=Enum.RaycastFilterType.Exclude getgenv().WXWALL=WXW end
-	if not S.AiWall then
-		local now=os.clock()
-		if WXW.c~=aimPart or now-WXW.t>0.05 then
-			WXW.c=aimPart WXW.t=now
-			local fl={aimPart.Parent,LP.Character,workspace.CurrentCamera}
-			for _,pl in ipairs(game:GetService("Players"):GetPlayers()) do
-				if pl~=LP and pl.Character then table.insert(fl,pl.Character) end
+			if aimPart and aimPart.Parent then
+				local cp=workspace.CurrentCamera.CFrame.Position
+				local ap=aimPart.Position
+				if S.PredOn and S.PredVal>0 then local v=aimPart.AssemblyLinearVelocity local d=(ap-cp).Magnitude ap=ap+v*(d/1200)*(S.PredVal/100) end
+				local tg=(ap-cp).Unit*1000
+				local WXW=getgenv().WXWALL
+				if not WXW then WXW={c=nil,b=false,t=0,rp=RaycastParams.new()} WXW.rp.FilterType=Enum.RaycastFilterType.Exclude getgenv().WXWALL=WXW end
+				if not S.AiWall then
+					local now=os.clock()
+					if WXW.c~=aimPart or now-WXW.t>0.05 then
+						WXW.c=aimPart WXW.t=now
+						local fl={aimPart.Parent,LP.Character,workspace.CurrentCamera}
+						for _,pl in ipairs(game:GetService("Players"):GetPlayers()) do
+							if pl.Character then table.insert(fl,pl.Character) end
+						end
+						WXW.rp.FilterDescendantsInstances=fl
+						WXW.b=(workspace:Raycast(cp,(ap-cp),WXW.rp)~=nil)
+					end
+					if WXW.b then return old(self,...) end
+				end
+				if (S.SilentMode=="Raycast" or S.SilentMode=="双通道") and m=="Raycast" then
+					local a={...} local n=#a local pi=nil
+					for i=1,n do if typeof(a[i])=="RaycastParams" then pi=i end end
+					if S.AiWall and pi then local rp=RaycastParams.new() rp.FilterType=Enum.RaycastFilterType.Include rp.FilterDescendantsInstances={aimPart.Parent} a[pi]=rp end
+					if n>=2 and typeof(a[2])=="Vector3" then a[1]=cp a[2]=tg return old(self,table.unpack(a)) end
+				elseif (S.SilentMode=="FireServer" or S.SilentMode=="双通道") and m=="FireServer" then
+					local a={...} local n=#a
+					if n>=2 and typeof(a[n-1])=="Vector3" and typeof(a[n])=="Vector3" then a[n-1]=cp a[n]=tg return old(self,table.unpack(a)) end
+				end
 			end
-			WXW.rp.FilterDescendantsInstances=fl
-			WXW.b=(workspace:Raycast(cp,(ap-cp),WXW.rp)~=nil)
-		end
-		if WXW.b then return old(self,...) end
-	end
-	end)
 end
                            NESP=nil
 
