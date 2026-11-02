@@ -127,7 +127,7 @@ local C={
  txt=Color3.fromRGB(38,38,38),
  dim=Color3.fromRGB(108,103,95)
 }
-local S={SpOn=false,SpV=50,JpOn=false,JpInf=false,JpH=50,FlOn=false,FlV=35,FlMd="物理",NcOn=false,ESMax=5000,TrPos="顶部",AiOn=false,AiTeam=true,AiVis=true,AiWall=false,AiMiss=false,AiAcc=100,AiType="玩家",AiPart="Head",AiPrio="准星最近",AiMax=500,SilentMode="Raycast",AiSilent=true,FovOn=true,FovR=55,FovFixed=true,ShowT=true,TgtC={Col=Color3.fromRGB(60,90,255),Rain=false},RainOn=false,RainSpd=1,InfoStyle="独立面板",ShowName=true,ShowHp=true,ShowDist=true,ShowType=true,AiHl=false,ArR=0,BoxMd="2D",HlC={Col=W,Rain=false},HlRain=false,DmgOn=false,HitSnd="关闭",TLine=false,TrC={Col=YEL,Rain=false},Lock="无",NameHunt=false,NameInput="",SecOn=false,AutoOn=false,IRange=false,IVal=20,NpcOn=false,NpcHl=false,NpcBx=false,NpcNm=false,NpcHp=false,NpcDs=false,NV=false,LPlOn=false,NoFog=false,NoShake=false,FC=false,FCSpd=1,ESPInt=false,GravOn=false,GravV=196.2,InvisOn=false}
+local S={SpOn=false,SpV=50,JpOn=false,JpInf=false,JpH=50,FlOn=false,FlV=35,FlMd="物理",NcOn=false,ESMax=5000,TrPos="顶部",AiOn=false,AiTeam=false,AiVis=false,AiWall=false,AiMiss=false,AiAcc=100,AiType="玩家",AiPart="Head",AiPrio="准星最近",AiMax=500,SilentMode="Raycast",AiSilent=true,FovOn=true,FovR=55,FovFixed=true,ShowT=true,TgtC={Col=Color3.fromRGB(60,90,255),Rain=false},RainOn=false,RainSpd=1,InfoStyle="独立面板",ShowName=true,ShowHp=true,ShowDist=true,ShowType=true,AiHl=false,ArR=0,BoxMd="2D",HlC={Col=W,Rain=false},HlRain=false,DmgOn=false,HitSnd="关闭",TLine=false,TrC={Col=YEL,Rain=false},Lock="无",NameHunt=false,NameInput="",SecOn=false,AutoOn=false,IRange=false,IVal=20,NpcOn=false,NpcHl=false,NpcBx=false,NpcNm=false,NpcHp=false,NpcDs=false,NV=false,LPlOn=false,NoFog=false,NoShake=false,FC=false,FCSpd=1,ESPInt=false,GravOn=false,GravV=196.2,InvisOn=false}
 -- [反检测伪装层参数]
 S.SafeOn   = false   -- 伪装总开关（关闭）
 S.SafeSpd  = S.SafeSpd  or 20                     -- 移动伪装速度上限
@@ -456,7 +456,15 @@ local function drawP(p,cam,vp)
 		end
 	else d.b.Visible=false end
 	if ES.Tr.On then
-		local pos,on=cam:WorldToViewportPoint(rt.Position) local sx=vp.X/2 local sy=(S.TrPos=="底部") and vp.Y or 0
+				local pos,on=cam:WorldToViewportPoint(rt.Position)
+		local sx,sy=vp.X/2,0
+		if S.TrPos=="底部" then sy=vp.Y
+		elseif S.TrPos=="头部" then
+			local hh=LP.Character and LP.Character:FindFirstChild("Head")
+			if hh then local hp=cam:WorldToViewportPoint(hh.Position) sx=hp.X sy=hp.Y end
+		elseif S.TrPos=="跟随" then
+			if _G.WXFT then sx=_G.WXFT.X sy=_G.WXFT.Y end
+		end
 		if on then
 			local ex,ey=pos.X,pos.Y
 			d.t.Size=UDim2.new(0,math.sqrt((ex-sx)^2+(ey-sy)^2),0,1.5) d.t.Position=UDim2.new(0,(sx+ex)/2,0,(sy+ey)/2)
@@ -2113,10 +2121,10 @@ for _,t in ipairs(EIT) do
 		sw.MouseButton1Click:Connect(function() cpt=c cps=sw swA.BackgroundColor3=c.Col cpH,cpS,cpV=c.Col:ToHSV() cpA=1 cpTitle.Text="ESP · "..nm cpSync() cpv.Visible=true end)
 	end
 	if k=="Bx" then sg(pgE,"方框模式",{"2D","3D"},S.BoxMd,function(v) S.BoxMd=v nespApply() end) end
-	if k=="Tr" then sg(pgE,"射线位置",{"顶部","底部"},S.TrPos,function(v) S.TrPos=v end) end
+		if k=="Tr" then sg(pgE,"射线位置",{"顶部","底部","头部","跟随"},S.TrPos,function(v) S.TrPos=v end) end
 	if k=="Ar" then nb(pgE,"箭头半径","ArR",S.ArR,"0-175 (0=默认)",0,175) end
 end
-hd(pgA,"基础") T(pgA,"启用","AiOn",false) T(pgA,"队伍检查","AiTeam",true) T(pgA,"可见性检查","AiVis",true) T(pgA,"穿墙（静默穿透）","AiWall",false) T(pgA,"漏打模式","AiMiss",false) N(pgA,"命中率","AiAcc",0,100)                    
+hd(pgA,"基础") T(pgA,"启用","AiOn",false) T(pgA,"队伍检查","AiTeam",false) T(pgA,"可见性检查","AiVis",false) T(pgA,"穿墙（静默穿透）","AiWall",false) T(pgA,"漏打模式","AiMiss",false) N(pgA,"命中率","AiAcc",0,100)                    
 hd(pgA,"目标") selrow(pgA,"目标种类",{"玩家","NPC","全部"},"AiType") selrow(pgA,"目标部位",{"Head","HumanoidRootPart","Torso"},"AiPart") selrow(pgA,"优先模式",{"准星最近","距离最近","血量最少"},"AiPrio") N(pgA,"最大距离","AiMax",50,1000) selrow(pgA,"静默瞄准方式",{"Raycast","FireServer","双通道"},"SilentMode")
 hd(pgA,"准星") T(pgA,"显示FOV圈","FovOn",true) cr(pgA,"FOV圈颜色",S.TgtC) N(pgA,"FOV圈半径","FovR",20,200) T(pgA,"固定FOV","FovFixed",true) T(pgA,"启用彩虹色","RainOn",false) N(pgA,"颜色变换速度","RainSpd",1,10)
 hd(pgA,"信息") selrow(pgA,"信息显示样式",{"名称头顶","独立面板"},"InfoStyle") T(pgA,"显示目标名字","ShowName",true) T(pgA,"显示目标血量","ShowHp",true) T(pgA,"显示目标距离","ShowDist",true) T(pgA,"显示目标类别","ShowType",true)
