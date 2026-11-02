@@ -968,7 +968,7 @@ end
 		if S.FC then
 			if FC.on or not cam then return end
 			FC.on=true FC.yaw=0 FC.pitch=0 FC.mx=0 FC.my=0 FC.vy=0 fknSet(0,0)
-			if h then FC.ow=h.WalkSpeed FC.oj=h.JumpPower h.WalkSpeed=0 h.JumpPower=0 end
+			if h then FC.ow=h.WalkSpeed FC.oj=h.JumpPower end
 			FCG.Enabled=true cam.CameraType=Enum.CameraType.Scriptable
 		else
 			if not FC.on then return end
@@ -1931,7 +1931,7 @@ task.spawn(function()
 		local function txSpot()
 			local h=txHrp(LP.Character)
 			if not h then return nil end
-			local d=math.clamp(tonumber(S.TxDist) or 6,1,50)
+			local d=math.clamp(tonumber(S.TxDist) or 6,0,25)
 			if S.TxPos=="身后" then return h.CFrame*CFrame.new(0,0,d) end
 			if S.TxPos=="头顶" then return h.CFrame*CFrame.new(0,3,0) end
 			return h.CFrame*CFrame.new(0,0,-d)
@@ -1979,7 +1979,7 @@ task.spawn(function()
 			if txPull(ch) then wxToast("已把目标吸到身边") else wxToast("没找到目标角色") end
 		end)
 		tg(pgT,"循环吸人(本地)",false,function(v) S.TxLoop=v end)
-		nb(pgT,"吸人距离","TxDist",6,"格",1,50)
+		nb(pgT,"吸人距离","TxDist",6,"格",0,25)
 		tg(pgT,"观战玩家",false,function(v) S.SpecOn=v end)
 		bt(pgT,"甩飞一次",function()
 			local ch=txChar()
