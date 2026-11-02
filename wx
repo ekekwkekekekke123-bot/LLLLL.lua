@@ -1917,9 +1917,16 @@ task.spawn(function()
 			if #t==0 then t[1]="无其他玩家" end
 			return t
 		end
-		local function txChar()
+				local function txChar()
+			local nm=S.TxName
+			if nm==nil or nm=="" or nm=="无其他玩家" then
+				for _,pl in ipairs(P:GetPlayers()) do
+					if pl~=LP and pl.Character then S.TxName=pl.Name return pl.Character end
+				end
+				return nil
+			end
 			for _,pl in ipairs(P:GetPlayers()) do
-				if pl.Name==S.TxName and pl.Character then return pl.Character end
+				if pl.Name==nm and pl.Character then return pl.Character end
 			end
 			return nil
 		end
