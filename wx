@@ -1917,7 +1917,7 @@ task.spawn(function()
 
 		local selRow=nil
 		local txBuild=nil
-
+        		local txCache={}
 		hd(pgT,"传送")
 		bt(pgT,"刷新玩家列表",function()
 			if txBuild then txBuild() end
