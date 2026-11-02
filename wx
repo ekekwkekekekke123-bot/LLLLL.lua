@@ -1021,7 +1021,7 @@ local gui=B("ScreenGui",{Name="wx_Menu_"..tostring(math.random(100000,999999)),R
 local vp0=(workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize) or Vector2.new(800,360)
 local PW=340 local PH=250
 local BGID=""
-local icon=B("TextButton",{Size=UDim2.fromOffset(32,32),Position=UDim2.new(1,-48,0,60),BackgroundColor3=Color3.new(0,0,0),Text="wx",Font=Enum.Font.GothamBold,TextSize=11,TextColor3=W,AutoButtonColor=false,ZIndex=200,Parent=gui}) R(icon,0.5) SK(icon,W,0.6)
+local icon=B("TextButton",{Size=UDim2.fromOffset(32,32),Position=UDim2.new(1,-48,0,60),BackgroundColor3=Color3.new(0,0,0),Text="wx",Font=Enum.Font.GothamBold,TextSize=11,TextColor3=W,AutoButtonColor=false,ZIndex=200,Parent=gui}) R(icon,0) SK(icon,W,0.6)
 function wxInitGlass()
 	icon.BackgroundColor3=Color3.fromRGB(236,250,252) icon.BackgroundTransparency=0.7 icon.TextColor3=Color3.fromRGB(150,242,238) icon.ClipsDescendants=true
 	local ig=Instance.new("UIGradient") ig.Rotation=105
@@ -1030,7 +1030,7 @@ function wxInitGlass()
 	ig.Parent=icon
 	local igs=icon:FindFirstChildOfClass("UIStroke")
 	if igs then igs.Color=Color3.fromRGB(150,242,238) igs.Transparency=0.3 igs.Thickness=1.2 end
-	local igf=B("Frame",{Size=UDim2.new(1,-2,1,-2),Position=UDim2.fromOffset(1,1),BackgroundTransparency=1,ZIndex=201,Parent=icon}) R(igf,0.5)
+	local igf=B("Frame",{Size=UDim2.new(1,-2,1,-2),Position=UDim2.fromOffset(1,1),BackgroundTransparency=1,ZIndex=201,Parent=icon}) R(igf,0)
 	local igk=Instance.new("UIStroke") igk.Color=Color3.fromRGB(150,242,238) igk.Thickness=1 igk.Transparency=0.75 igk.Parent=igf
 	local isw=B("Frame",{Size=UDim2.new(0.4,0,1,0),Position=UDim2.fromOffset(-14,0),BackgroundColor3=W,BorderSizePixel=0,ZIndex=202,Parent=icon})
 	local isg=Instance.new("UIGradient") isg.Transparency=NumberSequence.new{NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.5,0.2),NumberSequenceKeypoint.new(1,1)} isg.Parent=isw
@@ -1992,7 +1992,31 @@ task.spawn(function()
 			end
 		end)
 
-		local cam=workspace.CurrentCamera
+				local cam=workspace.CurrentCamera
+		local UIS=game:GetService("UserInputService")
+		local sy,sp,sd=0,-0.35,12
+		local drag=false
+		local lx,ly=0,0
+		UIS.InputBegan:Connect(function(i,g)
+			if g or not S.SpecOn then return end
+			if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
+				drag=true lx=i.Position.X ly=i.Position.Y
+			end
+		end)
+		UIS.InputChanged:Connect(function(i,g)
+			if not drag or not S.SpecOn then return end
+			if i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch then
+				sy=sy-(i.Position.X-lx)*0.006
+				sp=math.clamp(sp-(i.Position.Y-ly)*0.006,-1.2,1.2)
+				lx=i.Position.X ly=i.Position.Y
+			end
+		end)
+		UIS.InputEnded:Connect(function(i)
+			if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drag=false end
+		end)
+		UIS.TouchPinch:Connect(function(t,scale)
+			if S.SpecOn then sd=math.clamp(sd/scale,3,60) end
+		end)
 		task.spawn(function()
 			while true do
 				task.wait()
@@ -2001,7 +2025,8 @@ task.spawn(function()
 					local h=txHrp(ch)
 					if h and cam then
 						cam.CameraType=Enum.CameraType.Scriptable
-						cam.CFrame=CFrame.lookAt(h.Position+Vector3.new(0,3,9),h.Position)
+						local dir=CFrame.Angles(0,sy,0)*CFrame.Angles(sp,0,0)
+						cam.CFrame=CFrame.lookAt(h.Position+(dir*CFrame.new(0,1.5,sd)).Position,h.Position)
 					end
 				elseif cam and cam.CameraType==Enum.CameraType.Scriptable then
 					cam.CameraType=Enum.CameraType.Custom
