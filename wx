@@ -1928,7 +1928,7 @@ task.spawn(function()
 			if txGo(ch) then wxToast("已传送到 "..tostring(S.TxName)) else wxToast("没找到目标角色") end
 		end)
 		tg(pgT,"循环传送",false,function(v) S.TpLoop=v end)
-		G(pgT,"吸人位置","TxPos",{"身前","身后","头顶"})
+				sg(pgT,"吸人位置",{"身前","身后","头顶"},S.TxPos,function(v) S.TxPos=v end)
 		bt(pgT,"吸人一次(本地)",function()
 			local ch=txChar()
 			if txPull(ch) then wxToast("已把目标吸到身边") else wxToast("没找到目标角色") end
@@ -1948,7 +1948,7 @@ task.spawn(function()
 			local ok=false
 			for _,v in ipairs(opts) do if v==S.TxName then ok=true end end
 			if not ok then S.TxName=opts[1] end
-			selRow=sg(pgT,"选择玩家","TxName",opts)
+						selRow=sg(pgT,"选择玩家",opts,S.TxName,function(v) S.TxName=v end)
 		end
 		txBuild()
 
@@ -1987,8 +1987,8 @@ task.spawn(function()
 		tg(pd,"自身血量显示",false,function(v) S.HpShow=v hudRefresh(true) end)
 		tg(pd,"帧率显示",false,function(v) S.FpsShow=v hudRefresh(true) end)
 		tg(pd,"Ping显示",false,function(v) S.PingShow=v hudRefresh(true) end)
-		sg(pd,"显示位置","HudPos",{"右上角","右下角","左上角","左下角"},function(v) S.HudPos=v hudRefresh(true) end)
-	end
+			sg(pd,"显示位置",{"右上角","右下角","左上角","左下角"},S.HudPos,function(v) S.HudPos=v hudRefresh(true) end)
+end
 end)
 local function N(par,l,k,mn,mx) nb(par,l,k,S[k],tostring(mn).."-"..tostring(mx),mn,mx) end
 local function G(par,l,k,opts) sg(par,l,opts,S[k],function(v) S[k]=v apK(k) end) end
