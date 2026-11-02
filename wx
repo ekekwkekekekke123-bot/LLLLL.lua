@@ -1968,12 +1968,18 @@ task.spawn(function()
 				end
 				task.delay(8,function() closePop() end)
 			end)
-			txBuild=function()
-				local list=txList()
-				if #list==0 or list[1]=="无其他玩家" then S.TxName="" return end
+						txBuild=function()
+				local n=0
+				for i=#txCache,1,-1 do txCache[i]=nil end
+				for _,pl in ipairs(P:GetPlayers()) do
+					if pl~=LP then txCache[#txCache+1]=pl.Name n=n+1 end
+				end
+				if n==0 then txCache[1]="无其他玩家" end
 				local ok=false
-				for _,v in ipairs(list) do if v==S.TxName then ok=true end end
-				if not ok then S.TxName=list[1] end
+				for _,v in ipairs(txCache) do if v==S.TxName then ok=true end end
+				if not ok then S.TxName=txCache[1] end
+				if selRow then pcall(function() selRow:Destroy() end) end
+				selRow=sg(pgT,"选择玩家",txCache,S.TxName,function(v) S.TxName=v end)
 			end
 			txBuild()
 
