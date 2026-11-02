@@ -1236,7 +1236,8 @@ local function WXBeauty()
 	end
 	WXBeauty()
 ]]
-	_G.wxB=pgB
+		_G.wxT=pgT
+_G.wxB=pgB
 --===== 美化页结束 =====
 function wxInitFX()
 	function fxGlitch(dur)
@@ -2985,7 +2986,132 @@ end)
 end _main()
 
 do
-	local pgB=_G.wxB
+	--===== 传送页 =====
+do
+	local pgT=_G.wxT
+	if pgT then
+		S.TxName=S.TxName or ""
+		S.TxPos=S.TxPos or "身前"
+		S.TxDist=tonumber(S.TxDist) or 6
+		S.TpLoop=S.TpLoop or false
+		S.TxLoop=S.TxLoop or false
+		S.FlLoop=S.FlLoop or false
+		S.SpecOn=S.SpecOn or false
+
+		local function txList()
+			local t={}
+			for _,pl in ipairs(P:GetPlayers()) do
+				if pl~=LP then t[#t+1]=pl.Name end
+			end
+			if #t==0 then t[1]="无其他玩家" end
+			return t
+		end
+		local function txChar()
+			for _,pl in ipairs(P:GetPlayers()) do
+				if pl.Name==S.TxName and pl.Character then return pl.Character end
+			end
+			return nil
+		end
+		local function txHrp(ch)
+			return ch and (ch:FindFirstChild("HumanoidRootPart") or ch.PrimaryPart)
+		end
+		local function txSpot()
+			local h=txHrp(LP.Character)
+			if not h then return nil end
+			local d=math.clamp(tonumber(S.TxDist) or 6,1,50)
+			if S.TxPos=="身后" then return h.CFrame*CFrame.new(0,0,d) end
+			if S.TxPos=="头顶" then return h.CFrame*CFrame.new(0,3,0) end
+			return h.CFrame*CFrame.new(0,0,-d)
+		end
+		local function txGo(ch)
+			local my=LP.Character
+			local th=txHrp(ch)
+			if not my or not my.PrimaryPart or not th then return false end
+			pcall(function() my:PivotTo(th.CFrame*CFrame.new(0,0,4)) end)
+			return true
+		end
+		local function txPull(ch)
+			local p=txSpot()
+			local h=txHrp(ch)
+			if not p or not h then return false end
+			pcall(function() ch:PivotTo(p) end)
+			return true
+		end
+		local function txFling(ch)
+			local h=txHrp(ch)
+			if not h then return false end
+			pcall(function()
+				ch:PivotTo(h.CFrame*CFrame.new(0,30,0))
+				h.AssemblyLinearVelocity=Vector3.new(math.random(-60,60),260,math.random(-60,60))
+			end)
+			return true
+		end
+
+		local selRow=nil
+		local txBuild=nil
+
+		hd(pgT,"传送")
+		bt(pgT,"刷新玩家列表",function()
+			if txBuild then txBuild() end
+			wxToast("玩家列表已刷新")
+		end)
+		bt(pgT,"传送到玩家",function()
+			local ch=txChar()
+			if txGo(ch) then wxToast("已传送到 "..tostring(S.TxName)) else wxToast("没找到目标角色") end
+		end)
+		tg(pgT,"循环传送",false,function(v) S.TpLoop=v end)
+		G(pgT,"吸人位置","TxPos",{"身前","身后","头顶"})
+		bt(pgT,"吸人一次(本地)",function()
+			local ch=txChar()
+			if txPull(ch) then wxToast("已把目标吸到身边") else wxToast("没找到目标角色") end
+		end)
+		tg(pgT,"循环吸人(本地)",false,function(v) S.TxLoop=v end)
+		nb(pgT,"吸人距离","TxDist",6,"格",1,50)
+		tg(pgT,"观战玩家",false,function(v) S.SpecOn=v end)
+		bt(pgT,"甩飞一次",function()
+			local ch=txChar()
+			if txFling(ch) then wxToast("已甩飞目标") else wxToast("没找到目标角色") end
+		end)
+		tg(pgT,"循环甩飞",false,function(v) S.FlLoop=v end)
+
+		txBuild=function()
+			if selRow then pcall(function() selRow:Destroy() end) end
+			local opts=txList()
+			local ok=false
+			for _,v in ipairs(opts) do if v==S.TxName then ok=true end end
+			if not ok then S.TxName=opts[1] end
+			selRow=sg(pgT,"选择玩家","TxName",opts)
+		end
+		txBuild()
+
+		task.spawn(function()
+			while true do
+				task.wait(0.12)
+				if S.TpLoop then local ch=txChar() if ch then txGo(ch) end end
+				if S.TxLoop then local ch=txChar() if ch then txPull(ch) end end
+				if S.FlLoop then local ch=txChar() if ch then txFling(ch) end end
+			end
+		end)
+
+		local cam=workspace.CurrentCamera
+		task.spawn(function()
+			while true do
+				task.wait()
+				if S.SpecOn then
+					local ch=txChar()
+					local h=txHrp(ch)
+					if h and cam then
+						cam.CameraType=Enum.CameraType.Scriptable
+						cam.CFrame=CFrame.lookAt(h.Position+Vector3.new(0,3,9),h.Position)
+					end
+				elseif cam and cam.CameraType==Enum.CameraType.Scriptable then
+					cam.CameraType=Enum.CameraType.Custom
+				end
+			end
+		end)
+	end
+end
+local pgB=_G.wxB
 	if pgB then
 		local P=game:GetService("Players")
 		local TS=game:GetService("TweenService")
