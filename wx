@@ -3022,7 +3022,7 @@ end _main()
 
 do
 	--===== 传送页 =====
-;(function()
+(function()
 	local pgT=_G.wxT
 	if pgT then
 		S.TxName=S.TxName or ""
@@ -3147,7 +3147,7 @@ do
 	end
 end)()
 --===== 显示功能页 =====
-;(function()
+(function()
 	local pd=_G.wxD2
 	if pd then
 		hd(pd,"显示开关")
