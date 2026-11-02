@@ -963,17 +963,37 @@ end
 		local rc=cam.CFrame-cam.CFrame.Position
 		cam.CFrame=CFrame.new(pos)*rc:Lerp(rot,math.clamp(dt*22,0,1))
 	end
-		function fcSet()
-		pcall(function()
-			local plr=game:GetService("Players").LocalPlayer
+			function fcSet()
+			local cam=workspace.CurrentCamera
+			local _,h=chr()
 			if S.FC then
-				plr.CameraMaxZoomDistance=600
-				plr.CameraMinZoomDistance=0.5
+				if FC.on or not cam then return end
+				FC.on=true FC.yaw=0 FC.pitch=0 FC.mx=0 FC.my=0
+				if h then FC.ow=h.WalkSpeed FC.oj=h.JumpPower h.WalkSpeed=0 h.JumpPower=0 end
+				FCG.Enabled=true cam.CameraType=Enum.CameraType.Scriptable
+				local pgui=LP:FindFirstChildOfClass("PlayerGui")
+				local tg=pgui and pgui:FindFirstChild("TouchGui")
+				local tc=tg and tg:FindFirstChild("TouchControlFrame")
+				local jb=tc and tc:FindFirstChild("JumpButton")
+				if jb then jb.Visible=false end
 			else
-				plr.CameraMaxZoomDistance=128
+				if not FC.on then return end
+				FC.on=false FCG.Enabled=false
+				local _,h2=chr()
+				if h2 then
+					if FC.ow then h2.WalkSpeed=FC.ow end
+					if FC.oj then h2.JumpPower=FC.oj end
+				end
+				if cam then cam.CameraType=Enum.CameraType.Custom end
+				local pgui2=LP:FindFirstChildOfClass("PlayerGui")
+				local tg2=pgui2 and pgui2:FindFirstChild("TouchGui")
+				local tc2=tg2 and tg2:FindFirstChild("TouchControlFrame")
+				local jb2=tc2 and tc2:FindFirstChild("JumpButton")
+				if jb2 then jb2.Visible=true end
 			end
-		end)
-	end
+			pcall(function() RS:UnbindFromRenderStep("WX_FREECAM") end)
+			RS:BindToRenderStep("WX_FREECAM",Enum.RenderPriority.Camera.Value+1,fcUpd)
+		end
 end
 wxInitFC()
 local Stats=game:GetService("Stats")
@@ -3079,7 +3099,7 @@ T(pgM,"自瞄总开关","AimOn",false)
 nb(pgM,"FOV半径","AimFov",55,"0-250",0,250)
 S.AimPart=S.AimPart or "Head"
 S.fcProxy={Col=Color3.new(1,1,1)}
-local fcRow=B("TextButton",{Size=UDim2.new(1,0,0,26),BackgroundColor3=C.row,Text="",AutoButtonColor=false,Active=true,ZIndex=200,Parent=pgM})
+local fcRow=B("TextButton",{Size=UDim2.new(1,0,0,26),BackgroundColor3=C.row,Text="",AutoButtonColor=false,Active=true,ZIndex=200,Parent=pgM}) BackgroundTransparency=0.35,
 R(fcRow,7)
 fcRow.LayoutOrder=nxt()
 			local fcTxt=B("TextLabel",{Size=UDim2.new(0.6,0,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text="FOV颜色",Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=201,Parent=fcRow})
