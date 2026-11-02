@@ -1437,7 +1437,7 @@ local function tg(par,t,dv,cb)
 end
 local selPop,selBlock=nil,nil
 function wxSel(par,title,opts,dv,cb)
-	local rw=B("Frame",{Size=UDim2.new(1,-16,0,28),BackgroundColor3=C.card,BackgroundTransparency=0.35,BorderSizePixel=0,Parent=par})
+		local rw=B("Frame",{Size=UDim2.new(1,-16,0,28),BackgroundColor3=C.row,BackgroundTransparency=0.35,BorderSizePixel=0,LayoutOrder=nxt(),Parent=par})
 	R(rw,7)
 	B("TextLabel",{Size=UDim2.new(1,-100,1,0),Position=UDim2.new(0,10,0,0),BackgroundTransparency=1,Text=title,TextColor3=C.txt,Font=Enum.Font.GothamMedium,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,Parent=rw})
 	local val=B("TextLabel",{Size=UDim2.new(0,76,0,22),Position=UDim2.new(1,-84,0,3),BackgroundColor3=C.off,BackgroundTransparency=0.5,BorderSizePixel=0,Text=tostring(dv),TextColor3=C.accent,Font=Enum.Font.GothamMedium,TextSize=11,Parent=rw})
