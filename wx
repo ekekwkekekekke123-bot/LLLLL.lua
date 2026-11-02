@@ -3480,7 +3480,6 @@ local pgB=_G.wxB
 	else
 		warn("[WX] 美化页找不到")
 	end
-end
 --===== 右上角提示覆盖补丁 =====
 do
 	local TS2=game:GetService("TweenService")
