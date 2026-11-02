@@ -1507,9 +1507,9 @@ end
 
 local function openSel(title,opts,cur,cb,anchor)
 	closeSel(true)
-	local root=pn.Parent
+		local root=pn.Parent
+	while root and not root:IsA("ScreenGui") do root=root.Parent end
 	if not root then return end
-
 	local block=B("TextButton",{
 		Size=UDim2.fromScale(1,1),
 		BackgroundTransparency=1,
