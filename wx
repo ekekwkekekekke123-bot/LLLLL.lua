@@ -1992,30 +1992,29 @@ task.spawn(function()
 			end
 		end)
 
+						task.spawn(function()
+			while true do
+				task.wait(0.2)
 				local cam=workspace.CurrentCamera
-		local UIS=game:GetService("UserInputService")
-		local sy,sp,sd=0,-0.35,12
-		local drag=false
-		local lx,ly=0,0
-		UIS.InputBegan:Connect(function(i,g)
-			if g or not S.SpecOn then return end
-			if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
-				drag=true lx=i.Position.X ly=i.Position.Y
+				local myHum=LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")
+				if S.SpecOn then
+					local ch=txChar()
+					local hum=ch and ch:FindFirstChildOfClass("Humanoid")
+					if hum and hum.Health>0 then
+						if cam and cam.CameraSubject~=hum then
+							cam.CameraType=Enum.CameraType.Custom
+							cam.CameraSubject=hum
+						end
+					else
+						S.SpecOn=false
+						wxToast("观战目标已离开，已自动关闭")
+						if cam and myHum then cam.CameraSubject=myHum end
+					end
+				elseif cam and cam.CameraType==Enum.CameraType.Scriptable then
+					cam.CameraType=Enum.CameraType.Custom
+					if myHum then cam.CameraSubject=myHum end
+				end
 			end
-		end)
-		UIS.InputChanged:Connect(function(i,g)
-			if not drag or not S.SpecOn then return end
-			if i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch then
-				sy=sy-(i.Position.X-lx)*0.006
-				sp=math.clamp(sp-(i.Position.Y-ly)*0.006,-1.2,1.2)
-				lx=i.Position.X ly=i.Position.Y
-			end
-		end)
-		UIS.InputEnded:Connect(function(i)
-			if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drag=false end
-		end)
-		UIS.TouchPinch:Connect(function(t,scale)
-			if S.SpecOn then sd=math.clamp(sd/scale,3,60) end
 		end)
 		task.spawn(function()
 			while true do
