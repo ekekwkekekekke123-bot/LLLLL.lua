@@ -1017,6 +1017,17 @@ hf:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
 	if hf.Visible then hf.Position=hudPos() end
 end)
 local fsm=60 local hudT=0
+_G.WXFT=_G.WXFT or {X=0,Y=0}
+do
+	local uis=game:GetService("UserInputService")
+	uis.InputBegan:Connect(function(i,g)
+		if g then return end
+		if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseButton1 then
+			_G.WXFT.X=i.Position.X
+			_G.WXFT.Y=i.Position.Y
+		end
+	end)
+end
 local gui=B("ScreenGui",{Name="wx_Menu_"..tostring(math.random(100000,999999)),ResetOnSpawn=false,IgnoreGuiInset=true,DisplayOrder=999,Parent=safeParent()})
 local vp0=(workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize) or Vector2.new(800,360)
 local PW=340 local PH=250
