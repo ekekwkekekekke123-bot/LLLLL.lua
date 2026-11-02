@@ -963,23 +963,17 @@ end
 		local rc=cam.CFrame-cam.CFrame.Position
 		cam.CFrame=CFrame.new(pos)*rc:Lerp(rot,math.clamp(dt*22,0,1))
 	end
-	function fcSet()
-		local cam=workspace.CurrentCamera local _,h=chr()
-		if S.FC then
-			if FC.on or not cam then return end
-			FC.on=true FC.yaw=0 FC.pitch=0 FC.mx=0 FC.my=0 FC.vy=0 fknSet(0,0)
-			if h then FC.ow=h.WalkSpeed FC.oj=h.JumpPower end
-			FCG.Enabled=true cam.CameraType=Enum.CameraType.Scriptable
-		else
-			if not FC.on then return end
-			FC.on=false FCG.Enabled=false
-			local _,h2=chr()
-			if h2 then if FC.ow then h2.WalkSpeed=FC.ow end if FC.oj then h2.JumpPower=FC.oj end end
-			if cam then cam.CameraType=Enum.CameraType.Custom cam.CameraSubject=h2 end
-		end
+		function fcSet()
+		pcall(function()
+			local plr=game:GetService("Players").LocalPlayer
+			if S.FC then
+				plr.CameraMaxZoomDistance=600
+				plr.CameraMinZoomDistance=0.5
+			else
+				plr.CameraMaxZoomDistance=128
+			end
+		end)
 	end
-	pcall(function() RS:UnbindFromRenderStep("WX_FREECAM") end)
-	RS:BindToRenderStep("WX_FREECAM",Enum.RenderPriority.Camera.Value+1,fcUpd)
 end
 wxInitFC()
 local Stats=game:GetService("Stats")
@@ -1437,7 +1431,7 @@ local function tg(par,t,dv,cb)
 end
 local selPop,selBlock=nil,nil
 function wxSel(par,title,opts,dv,cb)
-		local rw=B("Frame",{Size=UDim2.new(1,-16,0,28),BackgroundColor3=C.row,BackgroundTransparency=0.35,BorderSizePixel=0,LayoutOrder=nxt(),Parent=par})
+			local rw=B("Frame",{Size=UDim2.new(1,-16,0,28),BackgroundColor3=C.off,BackgroundTransparency=0.15,BorderSizePixel=0,LayoutOrder=nxt(),ZIndex=30,Parent=par})
 	R(rw,7)
 	B("TextLabel",{Size=UDim2.new(1,-100,1,0),Position=UDim2.new(0,10,0,0),BackgroundTransparency=1,Text=title,TextColor3=C.txt,Font=Enum.Font.GothamMedium,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,Parent=rw})
 	local val=B("TextLabel",{Size=UDim2.new(0,76,0,22),Position=UDim2.new(1,-84,0,3),BackgroundColor3=C.off,BackgroundTransparency=0.5,BorderSizePixel=0,Text=tostring(dv),TextColor3=C.accent,Font=Enum.Font.GothamMedium,TextSize=11,Parent=rw})
