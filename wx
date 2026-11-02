@@ -1416,7 +1416,32 @@ local function tg(par,t,dv,cb)
 	return rw,pl,kn,set2
 end
 local selPop,selBlock=nil,nil
-
+function wxSel(par,title,opts,dv,cb)
+	local rw=B("Frame",{Size=UDim2.new(1,-16,0,28),BackgroundColor3=C.card,BackgroundTransparency=0.35,BorderSizePixel=0,Parent=par})
+	R(rw,7)
+	B("TextLabel",{Size=UDim2.new(1,-100,1,0),Position=UDim2.new(0,10,0,0),BackgroundTransparency=1,Text=title,TextColor3=C.txt,Font=Enum.Font.GothamMedium,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,Parent=rw})
+	local val=B("TextLabel",{Size=UDim2.new(0,76,0,22),Position=UDim2.new(1,-84,0,3),BackgroundColor3=C.off,BackgroundTransparency=0.5,BorderSizePixel=0,Text=tostring(dv),TextColor3=C.accent,Font=Enum.Font.GothamMedium,TextSize=11,Parent=rw})
+	R(val,5)
+	local list=nil
+	local function close() if list then list:Destroy() list=nil end end
+	local btn=B("TextButton",{Size=UDim2.new(1,0,1,0),BackgroundTransparency=1,Text="",Parent=rw})
+	btn.MouseButton1Click:Connect(function()
+		if list then close() return end
+		list=B("Frame",{Size=UDim2.new(1,-16,0,math.min(#opts,4)*26+8),Position=UDim2.new(0,0,1,6),BackgroundColor3=Color3.fromRGB(30,28,32),BackgroundTransparency=0.03,BorderSizePixel=0,ZIndex=9000,Parent=rw})
+		R(list,7)
+		local ly=Instance.new("UIListLayout") ly.Padding=UDim.new(0,2) ly.Parent=list
+		local ui=Instance.new("UIPadding") ui.PaddingTop=UDim.new(0,4) ui.PaddingBottom=UDim.new(0,4) ui.PaddingLeft=UDim.new(0,4) ui.PaddingRight=UDim.new(0,4) ui.Parent=list
+		for _,o in ipairs(opts) do
+			local ob=B("TextButton",{Size=UDim2.new(1,0,0,22),BackgroundTransparency=1,Text=tostring(o),TextColor3=C.txt,Font=Enum.Font.GothamMedium,TextSize=11,ZIndex=9001,Parent=list})
+			ob.MouseButton1Click:Connect(function()
+				val.Text=tostring(o)
+				if cb then cb(o) end
+				close()
+			end)
+		end
+	end)
+	return rw
+end
 local function closeSel(instant)
 	local p,b=selPop,selBlock
 	selPop=nil
@@ -1952,7 +1977,7 @@ task.spawn(function()
 				for _,v in ipairs(txCache) do if v==S.TxName then ok=true end end
 				if not ok then S.TxName=txCache[1] end
 				if selRow then pcall(function() selRow:Destroy() end) end
-				selRow=sg(pgT,"选择玩家",txCache,S.TxName,function(v) S.TxName=v end)
+								selRow=wxSel(pgT,"选择玩家",txCache,S.TxName,function(v) S.TxName=v end)
 			end
 			txBuild()
 
