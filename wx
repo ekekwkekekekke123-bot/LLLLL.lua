@@ -1449,7 +1449,7 @@ local function openSel(title,opts,cur,cb,anchor)
 		Text="",
 		AutoButtonColor=false,
 		Active=true,
-		ZIndex=950,
+		ZIndex=9998,
 		Parent=root
 	})
 	block.MouseButton1Click:Connect(function()
@@ -1464,7 +1464,7 @@ local function openSel(title,opts,cur,cb,anchor)
 		BackgroundTransparency=1,
 		BorderSizePixel=0,
 		Active=true,
-		ZIndex=951,
+		ZIndex=9999,
 		Parent=root
 	})
 	R(pop,10)
