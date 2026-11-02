@@ -1942,15 +1942,40 @@ task.spawn(function()
 		end)
 		tg(pgT,"循环甩飞",false,function(v) S.FlLoop=v end)
 
-		txBuild=function()
-			if selRow then pcall(function() selRow:Destroy() end) end
-			local opts=txList()
-			local ok=false
-			for _,v in ipairs(opts) do if v==S.TxName then ok=true end end
-			if not ok then S.TxName=opts[1] end
-						selRow=sg(pgT,"选择玩家",opts,S.TxName,function(v) S.TxName=v end)
-		end
-		txBuild()
+					local pickPop=nil
+			local function closePop()
+				if pickPop and pickPop.Parent then pcall(function() pickPop:Destroy() end) end
+				pickPop=nil
+			end
+			bt(pgT,"选择玩家",function()
+				if pickPop then closePop() return end
+				local list=txList()
+				if #list==0 or list[1]=="无其他玩家" then wxToast("当前没有其他玩家") return end
+				local host=pgT.Parent or pgT
+				local box=B("Frame",{Size=UDim2.fromOffset(200,math.min(#list,6)*30+12),Position=UDim2.new(0.5,-100,0.5,-40),BackgroundColor3=Color3.fromRGB(30,26,24),BackgroundTransparency=0.06,Parent=host})
+				R(box,10)
+				local ly=Instance.new("UIListLayout") ly.Padding=UDim.new(0,4) ly.Parent=box
+				local uip=Instance.new("UIPadding") uip.PaddingTop=UDim.new(0,6) uip.PaddingBottom=UDim.new(0,6) uip.PaddingLeft=UDim.new(0,8) uip.PaddingRight=UDim.new(0,8) uip.Parent=box
+				pickPop=box
+				for _,nm in ipairs(list) do
+					local b2=B("TextButton",{Size=UDim2.new(1,0,0,26),BackgroundColor3=Color3.fromRGB(246,241,232),Text=nm,TextColor3=Color3.fromRGB(80,60,45),Font=Enum.Font.GothamMedium,TextSize=13,BackgroundTransparency=0.05,Parent=box})
+					R(b2,7)
+					b2.MouseButton1Click:Connect(function()
+						S.TxName=nm
+						wxToast("已选择："..nm)
+						closePop()
+					end)
+				end
+				task.delay(8,function() closePop() end)
+			end)
+			txBuild=function()
+				local list=txList()
+				if #list==0 or list[1]=="无其他玩家" then S.TxName="" return end
+				local ok=false
+				for _,v in ipairs(list) do if v==S.TxName then ok=true end end
+				if not ok then S.TxName=list[1] end
+			end
+			txBuild()
 
 		task.spawn(function()
 			while true do
