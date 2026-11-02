@@ -2006,7 +2006,7 @@ task.spawn(function()
 				for _,v in ipairs(txCache) do if v==S.TxName then ok=true end end
 				if not ok then S.TxName=txCache[1] end
 				if selRow then pcall(function() selRow:Destroy() end) end
-								selRow=wxSel(pgT,"选择玩家",txCache,S.TxName,function(v) S.TxName=v end)
+												selRow=sg(pgT,"选择玩家",txCache,S.TxName,function(v) S.TxName=v end)
 			end
 			txBuild()
 
