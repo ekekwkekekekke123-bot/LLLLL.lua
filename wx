@@ -974,12 +974,47 @@ end
 end
 wxInitFC()
 local Stats=game:GetService("Stats")
+S.HpShow=S.HpShow or false
+S.FpsShow=S.FpsShow or false
+S.PingShow=S.PingShow or false
+S.HudPos=S.HudPos or "左下角"
 local HUD=B("ScreenGui",{Name="wx_HUD_"..tostring(math.random(100000,999999)),IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=998,Parent=safeParent()})
-local hf=B("Frame",{AnchorPoint=Vector2.new(0,1),Position=UDim2.new(0,12,1,-12),BackgroundTransparency=1,Size=UDim2.fromOffset(0,0),AutomaticSize=Enum.AutomaticSize.Y,Parent=HUD})
-B("UIListLayout",{FillDirection=Enum.FillDirection.Vertical,Padding=UDim.new(0,2),SortOrder=Enum.SortOrder.LayoutOrder,Parent=hf})
-local lH=B("TextLabel",{Size=UDim2.fromOffset(0,14),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=10,TextColor3=Color3.fromRGB(120,255,150),TextStrokeTransparency=0.35,AutomaticSize=Enum.AutomaticSize.X,Text="HP：100",LayoutOrder=1,Parent=hf})
-local lF=B("TextLabel",{Size=UDim2.fromOffset(0,14),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=10,TextColor3=W,TextStrokeTransparency=0.35,AutomaticSize=Enum.AutomaticSize.X,Text="FPS：0",LayoutOrder=2,Parent=hf})
-local lP=B("TextLabel",{Size=UDim2.fromOffset(0,14),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=10,TextColor3=W,TextStrokeTransparency=0.35,AutomaticSize=Enum.AutomaticSize.X,Text="ping：0",LayoutOrder=3,Parent=hf})
+local hf=B("Frame",{BackgroundColor3=Color3.fromRGB(18,18,18),BackgroundTransparency=0.4,Size=UDim2.fromOffset(0,0),AutomaticSize=Enum.AutomaticSize.XY,BorderSizePixel=0,Visible=false,Parent=HUD})
+R(hf,8)
+local hudScale=Instance.new("UIScale") hudScale.Parent=hf
+B("UIPadding",{PaddingTop=UDim.new(0,4),PaddingBottom=UDim.new(0,4),PaddingLeft=UDim.new(0,8),PaddingRight=UDim.new(0,8),Parent=hf})
+B("UIListLayout",{FillDirection=Enum.FillDirection.Vertical,Padding=UDim.new(0,1),SortOrder=Enum.SortOrder.LayoutOrder,Parent=hf})
+local lH=B("TextLabel",{Size=UDim2.fromOffset(0,15),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=11,TextColor3=Color3.fromRGB(120,255,150),TextStrokeTransparency=0.35,AutomaticSize=Enum.AutomaticSize.X,Text="HP：100",LayoutOrder=1,Visible=false,Parent=hf})
+local lF=B("TextLabel",{Size=UDim2.fromOffset(0,15),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=11,TextColor3=W,TextStrokeTransparency=0.35,AutomaticSize=Enum.AutomaticSize.X,Text="FPS：0",LayoutOrder=2,Visible=false,Parent=hf})
+local lP=B("TextLabel",{Size=UDim2.fromOffset(0,15),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=11,TextColor3=W,TextStrokeTransparency=0.35,AutomaticSize=Enum.AutomaticSize.X,Text="ping：0",LayoutOrder=3,Visible=false,Parent=hf})
+function hudPos()
+	local vp=(workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize) or Vector2.new(800,360)
+	local pad=12
+	local w=hf.AbsoluteSize.X local hh=hf.AbsoluteSize.Y
+	if S.HudPos=="右上角" then return UDim2.fromOffset(vp.X-w-pad,pad) end
+	if S.HudPos=="右下角" then return UDim2.fromOffset(vp.X-w-pad,vp.Y-hh-pad) end
+	if S.HudPos=="左上角" then return UDim2.fromOffset(pad,pad) end
+	return UDim2.fromOffset(pad,vp.Y-hh-pad)
+end
+function hudRefresh(anim)
+	lH.Visible=S.HpShow lF.Visible=S.FpsShow lP.Visible=S.PingShow
+	local any=S.HpShow or S.FpsShow or S.PingShow
+	if not any then
+		if anim then local t=TS:Create(hudScale,TweenInfo.new(0.12),{Scale=0.92}) t:Play() t.Completed:Wait() end
+		hf.Visible=false
+		return
+	end
+	local was=hf.Visible
+	hf.Visible=true
+	hf.Position=hudPos()
+	if anim and not was then
+		hudScale.Scale=0.9
+		TS:Create(hudScale,TweenInfo.new(0.2,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play()
+	end
+end
+hf:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+	if hf.Visible then hf.Position=hudPos() end
+end)
 local fsm=60 local hudT=0
 local gui=B("ScreenGui",{Name="wx_Menu_"..tostring(math.random(100000,999999)),ResetOnSpawn=false,IgnoreGuiInset=true,DisplayOrder=999,Parent=safeParent()})
 local vp0=(workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize) or Vector2.new(800,360)
@@ -1114,10 +1149,10 @@ local side=B("ScrollingFrame",{Size=UDim2.new(0,74,1,-33),Position=UDim2.fromOff
 B("UIListLayout",{Padding=UDim.new(0,3),SortOrder=Enum.SortOrder.LayoutOrder,Parent=side})
 B("UIPadding",{PaddingLeft=UDim.new(0,6),PaddingRight=UDim.new(0,6),PaddingTop=UDim.new(0,5),Parent=side})
 local function sideBtn(t,i) local b=B("TextButton",{Size=UDim2.new(1,0,0,24),BackgroundColor3=Color3.fromRGB(246,241,232),Text=t,Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=Color3.fromRGB(255,255,230),AutoButtonColor=false,LayoutOrder=i,ZIndex=16,Parent=side}) R(b,7) return b end
-local sb={} for i,nm in ipairs({"玩家功能","透视功能","自瞄","子弹追踪","互动功能","NPC","画面功能","危险","配置","服务器","传送","美化"}) do sb[i]=sideBtn(nm,i) end
+local sb={} for i,nm in ipairs({"玩家功能","透视功能","自瞄","子弹追踪","互动功能","NPC","画面功能","界面功能","危险","配置","服务器","传送","美化"}) do sb[i]=sideBtn(nm,i) end
 local function spage(v) local f=B("ScrollingFrame",{Size=UDim2.new(1,-80,1,-37),Position=UDim2.fromOffset(76,35),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=2,ScrollBarImageColor3=C.off,AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollingDirection=Enum.ScrollingDirection.Y,Visible=v,ZIndex=14,Parent=pn}) B("UIListLayout",{Padding=UDim.new(0,4),SortOrder=Enum.SortOrder.LayoutOrder,Parent=f}) B("UIPadding",{PaddingBottom=UDim.new(0,8),PaddingRight=UDim.new(0,4),Parent=f}) return f end
-local pgP=spage(true) local pgE=spage(false) local pgM=spage(false) local pgA=spage(false) local pgI=spage(false) local pgN=spage(false) local pgV=spage(false) local pgW=spage(false) local pgS=spage(false) pgSv=spage(false) local pgT=spage(false) local pgB=spage(false)
-                        local tabs={sb[1],sb[2],sb[3],sb[4],sb[5],sb[6],sb[7],sb[8],sb[9],sb[10],sb[11],sb[12]} local pages={pgP,pgE,pgM,pgA,pgI,pgN,pgV,pgW,pgS,pgSv,pgT,pgB}
+local pgP=spage(true) local pgE=spage(false) local pgM=spage(false) local pgA=spage(false) local pgI=spage(false) local pgN=spage(false) local pgV=spage(false) local pgD2=spage(false) local pgW=spage(false) local pgS=spage(false) pgSv=spage(false) local pgT=spage(false) local pgB=spage(false)
+                        local tabs={sb[1],sb[2],sb[3],sb[4],sb[5],sb[6],sb[7],sb[8],sb[9],sb[10],sb[11],sb[12],sb[13]} local pages={pgP,pgE,pgM,pgA,pgI,pgN,pgV,pgD2,pgW,pgS,pgSv,pgT,pgB}
 local function selp(i) for k=1,#tabs do pages[k].Visible=(k==i) tabs[k].BackgroundColor3=(k==i) and C.accent or Color3.fromRGB(246,241,231) tabs[k].TextColor3=(k==i) and Color3.new(0,0,0) or C.txt end end
 for k=1,#tabs do tabs[k].MouseButton1Click:Connect(function() selp(k) end) end
 		--[[
@@ -1237,6 +1272,7 @@ local function WXBeauty()
 	WXBeauty()
 ]]
 		_G.wxT=pgT
+	_G.wxD2=pgD2
 _G.wxB=pgB
 --===== 美化页结束 =====
 function wxInitFX()
@@ -2366,13 +2402,11 @@ task.delay(0.35,function() pcall(function() powerState(true) end) end)
 		if dmgT>0 then dmgT=dmgT-st if dmgT<=0 then dmgLbl.Visible=false end end
 		fsm=fsm+((1/math.max(st,0.001))-fsm)*0.12
 		hudT=hudT+st
-		if hudT>=0.2 then
+				if hudT>=0.2 then
 			hudT=0
-			local pg=0 pcall(function() pg=math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue()) end)
-			lP.Text="ping："..pg
-			lF.Text="FPS："..math.floor(fsm+0.5)
-			local _,hh2=chr()
-			if hh2 then local hp=math.floor(hh2.Health+0.5) lH.Text="HP："..hp lH.TextColor3=(hp<=30 and Color3.fromRGB(255,90,90)) or Color3.fromRGB(120,255,150) end
+			if S.PingShow then local pg=0 pcall(function() pg=math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue()) end) lP.Text="ping："..pg end
+			if S.FpsShow then lF.Text="FPS："..math.floor(fsm+0.5) end
+			if S.HpShow then local _,hh2=chr() if hh2 then local hp=math.floor(hh2.Health+0.5) lH.Text="HP："..hp lH.TextColor3=(hp<=30 and Color3.fromRGB(255,90,90)) or Color3.fromRGB(120,255,150) end end
 		end
 	end)
 end)
@@ -3109,6 +3143,17 @@ do
 				end
 			end
 		end)
+	end
+end
+--===== 显示功能页 =====
+do
+	local pd=_G.wxD2
+	if pd then
+		hd(pd,"显示开关")
+		tg(pd,"自身血量显示",false,function(v) S.HpShow=v hudRefresh(true) end)
+		tg(pd,"帧率显示",false,function(v) S.FpsShow=v hudRefresh(true) end)
+		tg(pd,"Ping显示",false,function(v) S.PingShow=v hudRefresh(true) end)
+		sg(pd,"显示位置","HudPos",{"右上角","右下角","左上角","左下角"},function(v) S.HudPos=v hudRefresh(true) end)
 	end
 end
 local pgB=_G.wxB
