@@ -3022,7 +3022,7 @@ end _main()
 
 do
 	--===== 传送页 =====
-(function()
+task.spawn(function()
 	local pgT=_G.wxT
 	if pgT then
 		S.TxName=S.TxName or ""
@@ -3145,9 +3145,9 @@ do
 			end
 		end)
 	end
-end)()
+end)
 --===== 显示功能页 =====
-(function()
+task.spawn(function()
 	local pd=_G.wxD2
 	if pd then
 		hd(pd,"显示开关")
@@ -3156,7 +3156,7 @@ end)()
 		tg(pd,"Ping显示",false,function(v) S.PingShow=v hudRefresh(true) end)
 		sg(pd,"显示位置","HudPos",{"右上角","右下角","左上角","左下角"},function(v) S.HudPos=v hudRefresh(true) end)
 	end
-end)()
+end)
 local pgB=_G.wxB
 	if pgB then
 		local P=game:GetService("Players")
