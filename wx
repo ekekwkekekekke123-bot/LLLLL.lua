@@ -1524,9 +1524,12 @@ local function openSel(title,opts,cur,cb,anchor)
 	end)
 
 	local w=226
-	local h=#opts*30+12
-	local pop=B("Frame",{
+		local h=math.min(#opts,5)*30+12
+		local pop=B("ScrollingFrame",{
 		Size=UDim2.fromOffset(w,h),
+		CanvasSize=UDim2.fromOffset(0,#opts*30+10),
+		ScrollBarThickness=2,
+		ScrollingDirection=Enum.ScrollingDirection.Y,
 		BackgroundColor3=Color3.fromRGB(14,14,17),
 		BackgroundTransparency=1,
 		BorderSizePixel=0,
@@ -1548,7 +1551,7 @@ local function openSel(title,opts,cur,cb,anchor)
 		y=math.clamp(y,8,vh-h-8)
 	end
 	pop.Position=UDim2.fromOffset(x,y)
-
+	task.delay(8,function() if pop and pop.Parent then pcall(function() closeSel() end) end end)
 	local us=Instance.new("UIScale")
 	us.Scale=0.9
 	us.Parent=pop
