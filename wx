@@ -2028,8 +2028,8 @@ task.spawn(function()
 						wxToast("观战目标已离开，已自动关闭")
 						if cam and myHum then cam.CameraSubject=myHum end
 					end
-				elseif cam and cam.CameraType==Enum.CameraType.Scriptable then
-					cam.CameraType=Enum.CameraType.Custom
+										elseif cam and myHum and cam.CameraSubject~=myHum then
+cam.CameraType=Enum.CameraType.Custom
 					if myHum then cam.CameraSubject=myHum end
 				end
 			end
