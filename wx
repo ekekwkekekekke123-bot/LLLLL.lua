@@ -1184,10 +1184,10 @@ local side=B("ScrollingFrame",{Size=UDim2.new(0,74,1,-33),Position=UDim2.fromOff
 B("UIListLayout",{Padding=UDim.new(0,3),SortOrder=Enum.SortOrder.LayoutOrder,Parent=side})
 B("UIPadding",{PaddingLeft=UDim.new(0,6),PaddingRight=UDim.new(0,6),PaddingTop=UDim.new(0,5),Parent=side})
 local function sideBtn(t,i) local b=B("TextButton",{Size=UDim2.new(1,0,0,24),BackgroundColor3=Color3.fromRGB(246,241,232),Text=t,Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=Color3.fromRGB(255,255,230),AutoButtonColor=false,LayoutOrder=i,ZIndex=16,Parent=side}) R(b,7) return b end
-local sb={} for i,nm in ipairs({"玩家功能","透视功能","自瞄","子弹追踪","互动功能","NPC","画面功能","界面功能","危险","配置","服务器","传送","美化"}) do sb[i]=sideBtn(nm,i) end
+local sb={} for i,nm in ipairs({"玩家功能","透视功能","自瞄","子弹追踪","互动功能","NPC","画面功能","界面功能","危险","配置","服务器","范围修改","传送/甩飞","美化"}) do sb[i]=sideBtn(nm,i) end
 local function spage(v) local f=B("ScrollingFrame",{Size=UDim2.new(1,-80,1,-37),Position=UDim2.fromOffset(76,35),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=2,ScrollBarImageColor3=C.off,AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollingDirection=Enum.ScrollingDirection.Y,Visible=v,ZIndex=14,Parent=pn}) B("UIListLayout",{Padding=UDim.new(0,4),SortOrder=Enum.SortOrder.LayoutOrder,Parent=f}) B("UIPadding",{PaddingBottom=UDim.new(0,8),PaddingRight=UDim.new(0,4),Parent=f}) return f end
-local pgP=spage(true) local pgE=spage(false) local pgM=spage(false) local pgA=spage(false) local pgI=spage(false) local pgN=spage(false) local pgV=spage(false) pgD2=spage(false) local pgW=spage(false) local pgS=spage(false) pgSv=spage(false) pgT=spage(false) local pgB=spage(false)
-                        local tabs={sb[1],sb[2],sb[3],sb[4],sb[5],sb[6],sb[7],sb[8],sb[9],sb[10],sb[11],sb[12],sb[13]} local pages={pgP,pgE,pgM,pgA,pgI,pgN,pgV,pgD2,pgW,pgS,pgSv,pgT,pgB}
+local pgP=spage(true) local pgE=spage(false) local pgM=spage(false) local pgA=spage(false) local pgI=spage(false) local pgN=spage(false) local pgV=spage(false) pgD2=spage(false) local pgW=spage(false) local pgS=spage(false) pgSv=spage(false) pgR=spage(false) pgT=spage(false) local pgB=spage(false)
+                        local tabs={sb[1],sb[2],sb[3],sb[4],sb[5],sb[6],sb[7],sb[8],sb[9],sb[10],sb[11],sb[12],sb[13],sb[14]} local pages={pgP,pgE,pgM,pgA,pgI,pgN,pgV,pgD2,pgW,pgS,pgSv,pgR,pgT,pgB}
 local function selp(i) for k=1,#tabs do pages[k].Visible=(k==i) tabs[k].BackgroundColor3=(k==i) and C.accent or Color3.fromRGB(246,241,231) tabs[k].TextColor3=(k==i) and Color3.new(0,0,0) or C.txt end end
 for k=1,#tabs do tabs[k].MouseButton1Click:Connect(function() selp(k) end) end
 		--[[
@@ -1308,6 +1308,7 @@ local function WXBeauty()
 ]]
 		_G.wxT=pgT
 	_G.wxD2=pgD2
+	_G.wxR=pgR
 _G.wxB=pgB
 --===== 美化页结束 =====
 function wxInitFX()
@@ -1924,6 +1925,112 @@ function apK(k)
 						elseif k=="TpOn" then tpSet() elseif k=="RevOn" then wxRev() elseif k=="AutoJp" then wxAutoJump() elseif k=="AimOn" then S.FovOn=S.AimOn or S.FovOn S.FovR=55 elseif k=="XrOn" or k=="XrV" then wxXRSet(S) end
 end
 local function T(par,l,k,dv) TGS=TGS or {} local rw,pl,kn,set2=tg(par,l,dv,function(v) S[k]=v apK(k) end) TGS[k]=set2 end
+--===== 范围修改页 =====
+do
+	local pr=_G.wxR
+	if pr then
+		S.RgOn=S.RgOn or false
+		S.RgTarget=S.RgTarget or "仅玩家"
+		S.RgPart=S.RgPart or "身体"
+		S.RgScale=tonumber(S.RgScale) or 10
+		S.RgAlpha=tonumber(S.RgAlpha) or 0.7
+		S.RgColor=S.RgColor or "红色"
+		S.RgTeam=S.RgTeam or false
+		S.RgAlive=S.RgAlive or true
+		S.RgNear=S.RgNear or false
+		S.RgBox=S.RgBox or false
+		S.RgPhys=S.RgPhys or false
+		S.RgLight=S.RgLight or false
+		local colMap={红色=Color3.fromRGB(255,60,60),蓝色=Color3.fromRGB(70,130,255),绿色=Color3.fromRGB(60,230,110),白色=Color3.fromRGB(255,255,255)}
+		local O={}
+		local function restore(ch)
+			local t=O[ch]
+			if t then
+				for p,sz in pairs(t) do
+					if p and p.Parent then
+						pcall(function() p.Size=sz.s p.Transparency=sz.t p.Color=sz.c p.Material=sz.m end)
+					end
+				end
+				O[ch]=nil
+			end
+			local hl=ch and ch:FindFirstChild("WX_RG_HL")
+			if hl then pcall(function() hl:Destroy() end) end
+		end
+		local function apply(ch)
+			local pl=game:GetService("Players"):GetPlayerFromCharacter(ch)
+			if S.RgTarget=="仅玩家" and not pl then return end
+			if S.RgTeam and pl and pl.Team and LP.Team and pl.Team==LP.Team then return end
+			local hum=ch:FindFirstChildOfClass("Humanoid")
+			if S.RgAlive and hum and hum.Health<=0 then return end
+			local base=ch:FindFirstChild("HumanoidRootPart")
+			if not base then return end
+			local my=LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+			if S.RgNear and my and (base.Position-my.Position).Magnitude<6 then return end
+			local t=O[ch]
+			if not t then t={} O[ch]=t end
+			local col=(S.RgColor=="彩虹" and Color3.fromHSV((tick()/4)%1,0.9,1)) or (colMap[S.RgColor] or Color3.fromRGB(255,60,60))
+			local list
+			if S.RgPart=="头部" then
+				local hh=ch:FindFirstChild("Head")
+				list={}
+				if hh then list[1]=hh end
+			else
+				list={}
+				for _,p in ipairs(ch:GetChildren()) do
+					if p:IsA("BasePart") then list[#list+1]=p end
+				end
+			end
+			for _,p in ipairs(list) do
+				if not t[p] then t[p]={s=p.Size,t=p.Transparency,c=p.Color,m=p.Material} end
+				p.Size=t[p].s*S.RgScale
+				p.Transparency=math.clamp(S.RgAlpha,0,1)
+				if S.RgColor~="彩虹" then p.Color=col end
+				if S.RgLight then p.Material=Enum.Material.Neon end
+				if S.RgPhys then p.CanCollide=false end
+			end
+			local hl=ch:FindFirstChild("WX_RG_HL")
+			if S.RgBox then
+				if not hl then
+					hl=Instance.new("Highlight")
+					hl.Name="WX_RG_HL"
+					hl.Adornee=ch
+					hl.FillTransparency=1
+					hl.OutlineColor=col
+					hl.Parent=ch
+				end
+				hl.OutlineColor=col
+			elseif hl then
+				pcall(function() hl:Destroy() end)
+			end
+		end
+		task.spawn(function()
+			while true do
+				task.wait(0.25)
+				if S.RgOn then
+					for _,pl in ipairs(game:GetService("Players"):GetPlayers()) do
+						local ch=pl.Character
+						if ch and pl~=LP and ch:FindFirstChild("HumanoidRootPart") then pcall(apply,ch) end
+					end
+				else
+					for ch in pairs(O) do pcall(restore,ch) end
+				end
+			end
+		end)
+		hd(pr,"范围")
+		tg(pr,"开启范围",false,function(v) S.RgOn=v end)
+		sg(pr,"选择生效目标",{"仅玩家","所有玩家"},S.RgTarget,function(v) S.RgTarget=v end)
+		sg(pr,"选择修改部位",{"身体","头部"},S.RgPart,function(v) S.RgPart=v end)
+		nb(pr,"范围大小","RgScale",10,"0.1-100 倍",0.1,100)
+		nb(pr,"透明度","RgAlpha",0.7,"0-1",0,1)
+		sg(pr,"范围颜色",{"红色","蓝色","绿色","白色","彩虹"},S.RgColor,function(v) S.RgColor=v end)
+		tg(pr,"队伍检测过滤",false,function(v) S.RgTeam=v end)
+		tg(pr,"活体检测过滤",true,function(v) S.RgAlive=v end)
+		tg(pr,"近身范围保护",false,function(v) S.RgNear=v end)
+		tg(pr,"显示外框轮廓",false,function(v) S.RgBox=v end)
+		tg(pr,"Hitbox 物理保护",false,function(v) S.RgPhys=v end)
+		tg(pr,"高亮发光特效",false,function(v) S.RgLight=v end)
+	end
+end
 --===== 传送页 =====
 task.spawn(function()
 	local pgT=_G.wxT
