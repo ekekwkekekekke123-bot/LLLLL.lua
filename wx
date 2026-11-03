@@ -1969,10 +1969,26 @@ do
 				end
 				O[ch]=nil
 			end
+					local b=ch and ch:FindFirstChild("WX_RG")
+			if b then pcall(function() b:Destroy() end) end
+local hl=ch and ch:FindFirstChild("WX_RG_HL")
+			if hl then pcall(function() hl:Destroy() end) end
+		end
+				local function clearOne(ch)
+			local b=ch and ch:FindFirstChild("WX_RG")
+			if b then pcall(function() b:Destroy() end) end
 			local hl=ch and ch:FindFirstChild("WX_RG_HL")
 			if hl then pcall(function() hl:Destroy() end) end
 		end
-				local function apply(ch)
+		local function clearAll()
+			for _,pl in ipairs(game:GetService("Players"):GetPlayers()) do
+				if pl.Character then pcall(clearOne,pl.Character) end
+			end
+			for _,m in ipairs(workspace:GetChildren()) do
+				if m:IsA("Model") then pcall(clearOne,m) end
+			end
+		end		
+local function apply(ch)
 						local pl=game:GetService("Players"):GetPlayerFromCharacter(ch)
 			if S.RgTarget=="仅玩家" and not pl then return end
 			if S.RgTarget=="仅NPC" and pl then return end
@@ -1983,7 +1999,7 @@ do
 			local anchor=head and ch:FindFirstChild("Head") or ch:FindFirstChild("HumanoidRootPart")
 			if not anchor then return end
 			local my=LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-			if S.RgNear and my and (anchor.Position-my.Position).Magnitude<6 then return end
+			if S.RgNear and my and (anchor.Position-my.Position).Magnitude<6 then pcall(clearOne,ch) return end
 			local col=(S.RgColor=="彩虹" and Color3.fromHSV((tick()/4)%1,0.9,1)) or (colMap[S.RgColor] or Color3.fromRGB(255,60,60))
 			local sz
 			if head then
@@ -2025,9 +2041,9 @@ sz=Vector3.new(2,5,2)*math.clamp(S.RgScale,1,10)
 					hl=Instance.new("Highlight")
 					hl.Name="WX_RG_HL"
 					hl.Adornee=ch
-					hl.FillTransparency=0.75
+					hl.FillTransparency=0.85
 					hl.OutlineTransparency=0
-					hl.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
+										hl.DepthMode=Enum.HighlightDepthMode.Occluded
 					hl.Parent=ch
 				end
 				hl.FillColor=col
@@ -2057,17 +2073,17 @@ else
 			end
 		end)
 		hd(pr,"范围")
-		tg(pr,"开启范围",false,function(v) S.RgOn=v end)
-		sg(pr,"选择生效目标",{"仅玩家","NPC","所有",},S.RgTarget,function(v) S.RgTarget=v end)
-		sg(pr,"选择修改部位",{"身体","头部"},S.RgPart,function(v) S.RgPart=v end)
-		nb(pr,"范围大小","RgScale",10,"0.1-100 倍",0.1,100)
+				tg(pr,"开启范围",false,function(v) S.RgOn=v if not v then clearAll() end end)
+		sg(pr,"选择生效目标",{"仅玩家","仅NPC","所有"},S.RgTarget,function(v) S.RgTarget=v clearAll() end)
+		sg(pr,"选择修改部位",{"身体","头部"},S.RgPart,function(v) S.RgPart=v clearAll() end)
+		nb(pr,"范围大小","RgScale",10,"1-10 倍",1,10)
 		nb(pr,"透明度","RgAlpha",0.7,"0-1",0,1)
-				sg(pr,"范围颜色",{"红色","蓝色","绿色","白色","黄色","紫色","橙色","粉色"},S.RgColor,function(v) S.RgColor=v end)
-		tg(pr,"队伍检测过滤",false,function(v) S.RgTeam=v end)
-		tg(pr,"活体检测过滤",true,function(v) S.RgAlive=v end)
-		tg(pr,"近身范围保护",false,function(v) S.RgNear=v end)
-		tg(pr,"显示外框轮廓",false,function(v) S.RgBox=v end)
-		tg(pr,"Hitbox 物理保护",false,function(v) S.RgPhys=v end)
+		sg(pr,"范围颜色",{"红色","蓝色","绿色","白色","黄色","紫色","橙色","粉色"},S.RgColor,function(v) S.RgColor=v clearAll() end)
+		tg(pr,"队伍检测过滤",false,function(v) S.RgTeam=v clearAll() end)
+		tg(pr,"活体检测过滤",true,function(v) S.RgAlive=v clearAll() end)
+		tg(pr,"近身范围保护",false,function(v) S.RgNear=v clearAll() end)
+		tg(pr,"显示外框轮廓",false,function(v) S.RgBox=v clearAll() end)
+		tg(pr,"Hitbox 物理保护",true,function(v) S.RgPhys=v end)
 		tg(pr,"高亮发光特效",false,function(v) S.RgLight=v end)
 	end
 end
@@ -2129,12 +2145,22 @@ task.spawn(function()
 			pcall(function() ch:PivotTo(p) end)
 			return true
 		end
-		local function txFling(ch)
-			local h=txHrp(ch)
-			if not h then return false end
+				local function txFling(ch)
+			local my=LP.Character
+			local mh=txHrp(my)
+			local th=txHrp(ch)
+			if not my or not mh or not th then return false end
 			pcall(function()
-				ch:PivotTo(h.CFrame*CFrame.new(0,30,0))
-				h.AssemblyLinearVelocity=Vector3.new(math.random(-60,60),260,math.random(-60,60))
+				my:PivotTo(th.CFrame*CFrame.new(0,0,-1))
+				task.wait(0.05)
+				local hum=ch:FindFirstChildOfClass("Humanoid")
+				if hum then hum.PlatformStand=true end
+				for i=1,8 do
+					mh.AssemblyLinearVelocity=Vector3.new(math.random(-40,40),80,math.random(-40,40))
+					th.AssemblyLinearVelocity=Vector3.new(math.random(-300,300),4000,math.random(-300,300))
+					task.wait(0.02)
+				end
+				task.delay(2,function() if hum and hum.Parent then hum.PlatformStand=false end end)
 			end)
 			return true
 		end
