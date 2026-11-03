@@ -1941,7 +1941,7 @@ do
 		S.RgBox=S.RgBox or false
 		S.RgPhys=S.RgPhys or false
 		S.RgLight=S.RgLight or false
-		local colMap={红色=Color3.fromRGB(255,60,60),蓝色=Color3.fromRGB(70,130,255),绿色=Color3.fromRGB(60,230,110),白色=Color3.fromRGB(255,255,255)}
+				local colMap={["红色"]=Color3.fromRGB(255,60,60),["蓝色"]=Color3.fromRGB(70,130,255),["绿色"]=Color3.fromRGB(60,230,110),["白色"]=Color3.fromRGB(255,255,255)}
 		local O={}
 		local function restore(ch)
 			local t=O[ch]
