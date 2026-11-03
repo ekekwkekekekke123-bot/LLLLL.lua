@@ -456,22 +456,22 @@ local function drawP(p,cam,vp)
 			end
 		end
 	else d.b.Visible=false end
-		    	    		if ES.Tr.On and rt then
-			local pos,on=cam:WorldToViewportPoint(rt.Position)
-			local sx=vp.X/2
-			local sy=(S.TrPos=="底部") and vp.Y or 0
-			if S.TrPos=="头部" then
-				local hh=LP.Character and LP.Character:FindFirstChild("Head")
-				if hh then local hp=cam:WorldToViewportPoint(hh.Position) sx=hp.X sy=hp.Y end
-			elseif S.TrPos=="跟随" then
-				if _G.WXFT then sx=_G.WXFT.X sy=_G.WXFT.Y end
-			end
-			if on and pos.X>-60 and pos.X<vp.X+60 and pos.Y>-60 and pos.Y<vp.Y+60 then
-				d.t.Visible=true
-				local ex,ey=pos.X,pos.Y
-				d.t.Size=UDim2.new(0,math.sqrt((ex-sx)^2+(ey-sy)^2),0,1)
-				d.t.Rotation=math.deg(math.atan2(ey-sy,ex-sx))
-				if not d.t.Position or true then d.t.Position=UDim2.new(0,sx,0,sy) end
+		    	    	    	if ES.Tr.On and rt then
+		local pos,on=cam:WorldToViewportPoint(rt.Position)
+		local sx,sy=vp.X/2,0
+		if S.TrPos=="底部" then sy=vp.Y
+		elseif S.TrPos=="头部" then
+			local hh=LP.Character and LP.Character:FindFirstChild("Head")
+			if hh then local hp=cam:WorldToViewportPoint(hh.Position) sx=hp.X sy=hp.Y end
+		elseif S.TrPos=="跟随" then
+			if _G.WXFT then sx=_G.WXFT.X sy=_G.WXFT.Y end
+		end
+		if on and pos.X>-40 and pos.X<vp.X+40 and pos.Y>-40 and pos.Y<vp.Y+40 then
+			local ex,ey=pos.X,pos.Y
+			d.t.Size=UDim2.new(0,math.sqrt((ex-sx)^2+(ey-sy)^2),0,1.5) d.t.Position=UDim2.new(0,(sx+ex)/2,0,(sy+ey)/2)
+			d.t.Rotation=math.deg(math.atan2(ey-sy,ex-sx)) d.t.BackgroundColor3=gc(ES.Tr) d.t.Visible=true
+		else d.t.Visible=false end
+	else d.t.Visible=false end
 			else
 				d.t.Visible=false
 			end
