@@ -1060,7 +1060,7 @@ local gui=B("ScreenGui",{Name="wx_Menu_"..tostring(math.random(100000,999999)),R
 local vp0=(workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize) or Vector2.new(800,360)
 local PW=340 local PH=250
 local BGID=""
-local icon=B("TextButton",{Size=UDim2.fromOffset(32,32),Position=UDim2.new(1,-48,0,60),BackgroundColor3=Color3.new(0,0,0),Text="wx",Font=Enum.Font.GothamBold,TextSize=11,TextColor3=W,AutoButtonColor=false,ZIndex=200,Parent=gui}) R(icon,0) SK(icon,W,0.6)
+local icon=B("TextButton",{Size=UDim2.fromOffset(32,32),Position=UDim2.new(1,-48,0,60),BackgroundColor3=Color3.fromRGB(34,34,38),Text="wx",Font=Enum.Font.GothamBold,TextSize=11,TextColor3=W,AutoButtonColor=false,ZIndex=200,Parent=gui}) R(icon,0) SK(icon,W,0.6)
 function wxInitGlass()
 	icon.BackgroundColor3=Color3.fromRGB(236,250,252) icon.BackgroundTransparency=0.7 icon.TextColor3=Color3.fromRGB(150,242,238) icon.ClipsDescendants=true
 	local ig=Instance.new("UIGradient") ig.Rotation=105
