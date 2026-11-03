@@ -2381,6 +2381,25 @@ hd(pgN,"NPC") T(pgN,"启用","NpcOn",false) T(pgN,"NPC高亮","NpcHl",false) T(p
 hd(pgV,"画面") T(pgV,"普通夜视","NV",false) T(pgV,"超亮夜视","NVX",false) T(pgV,"去雾","NoFog",false) T(pgV,"防摄像机晃动","NoShake",false) T(pgV,"自由视角","FC",false) nb(pgV,"自由视角速度","FCSpd",S.FCSpd,"1-15",1,15)
 hd(pgW,"危险")
 bt(pgW,"自杀",function() local _,h=chr() if h then pcall(function() h.Health=0 end) end end)
+bt(pgW,"原位自杀",function()
+	local ch2=LP.Character
+	local hrp2=ch2 and ch2:FindFirstChild("HumanoidRootPart")
+	local hum2=ch2 and ch2:FindFirstChildOfClass("Humanoid")
+	if not hrp2 or not hum2 then wxToast("找不到角色") return end
+	local saveCF=hrp2.CFrame
+	hum2.Health=0
+	wxToast("已记录坐标，复活后自动传送")
+	local conn
+	conn=LP.CharacterAdded:Connect(function(nc)
+		task.wait(0.8)
+		local h=nc:FindFirstChild("HumanoidRootPart")
+		if h then
+			pcall(function() nc:PivotTo(saveCF) end)
+			wxToast("已传送回原位")
+		end
+		if conn then conn:Disconnect() end
+	end)
+end)
 bt(pgW,"退出服务器",function() pcall(function() game:Shutdown() end) task.wait(0.4) pcall(function() LP:Kick("已退出") end) end)
 bt(pgW,"重新进入服务器",function()
 	local TPS=game:GetService("TeleportService")
