@@ -1957,7 +1957,7 @@ do
 		S.RgBox=S.RgBox or false
 		S.RgPhys=S.RgPhys or true
 		S.RgLight=S.RgLight or false
-				local colMap={["红色"]=Color3.fromRGB(255,60,60),["蓝色"]=Color3.fromRGB(70,130,255),["绿色"]=Color3.fromRGB(60,230,110),["白色"]=Color3.fromRGB(255,255,255)}
+						local colMap={["红色"]=Color3.fromRGB(255,60,60),["蓝色"]=Color3.fromRGB(70,130,255),["绿色"]=Color3.fromRGB(60,230,110),["白色"]=Color3.fromRGB(255,255,255),["黄色"]=Color3.fromRGB(255,215,60),["紫色"]=Color3.fromRGB(170,90,255),["橙色"]=Color3.fromRGB(255,150,50),["粉色"]=Color3.fromRGB(255,120,190)}
 		local O={}
 		local function restore(ch)
 			local t=O[ch]
@@ -2062,7 +2062,7 @@ else
 		sg(pr,"选择修改部位",{"身体","头部"},S.RgPart,function(v) S.RgPart=v end)
 		nb(pr,"范围大小","RgScale",10,"0.1-100 倍",0.1,100)
 		nb(pr,"透明度","RgAlpha",0.7,"0-1",0,1)
-		sg(pr,"范围颜色",{"红色","蓝色","绿色","白色","彩虹"},S.RgColor,function(v) S.RgColor=v end)
+				sg(pr,"范围颜色",{"红色","蓝色","绿色","白色","黄色","紫色","橙色","粉色"},S.RgColor,function(v) S.RgColor=v end)
 		tg(pr,"队伍检测过滤",false,function(v) S.RgTeam=v end)
 		tg(pr,"活体检测过滤",true,function(v) S.RgAlive=v end)
 		tg(pr,"近身范围保护",false,function(v) S.RgNear=v end)
