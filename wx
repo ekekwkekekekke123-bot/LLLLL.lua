@@ -472,12 +472,6 @@ local function drawP(p,cam,vp)
 			d.t.Rotation=math.deg(math.atan2(ey-sy,ex-sx)) d.t.BackgroundColor3=gc(ES.Tr) d.t.Visible=true
 		else d.t.Visible=false end
 	else d.t.Visible=false end
-			else
-				d.t.Visible=false
-			end
-		else
-			d.t.Visible=false
-		end
 	if ES.Ar.On and rt then
 		local pos,on=cam:WorldToViewportPoint(rt.Position)
 		if on then d.a.Visible=false else
