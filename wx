@@ -456,26 +456,22 @@ local function drawP(p,cam,vp)
 			end
 		end
 	else d.b.Visible=false end
-		    		if ES.Tr.On and rt then
+		    	    		if ES.Tr.On and rt then
 			local pos,on=cam:WorldToViewportPoint(rt.Position)
-			local sx,sy=vp.X/2,0
-			if S.TrPos=="底部" then
-				sy=vp.Y
-			elseif S.TrPos=="头部" then
+			local sx=vp.X/2
+			local sy=(S.TrPos=="底部") and vp.Y or 0
+			if S.TrPos=="头部" then
 				local hh=LP.Character and LP.Character:FindFirstChild("Head")
-				if hh then
-					local hp=cam:WorldToViewportPoint(hh.Position)
-					sx=hp.X sy=hp.Y
-				end
+				if hh then local hp=cam:WorldToViewportPoint(hh.Position) sx=hp.X sy=hp.Y end
 			elseif S.TrPos=="跟随" then
 				if _G.WXFT then sx=_G.WXFT.X sy=_G.WXFT.Y end
 			end
-			if on and pos.X>=0 and pos.X<=vp.X and pos.Y>=0 and pos.Y<=vp.Y and sx>=0 and sx<=vp.X and sy>=0 and sy<=vp.Y then
+			if on and pos.X>-60 and pos.X<vp.X+60 and pos.Y>-60 and pos.Y<vp.Y+60 then
 				d.t.Visible=true
 				local ex,ey=pos.X,pos.Y
 				d.t.Size=UDim2.new(0,math.sqrt((ex-sx)^2+(ey-sy)^2),0,1)
 				d.t.Rotation=math.deg(math.atan2(ey-sy,ex-sx))
-				d.t.Position=UDim2.new(0,sx,0,sy)
+				if not d.t.Position or true then d.t.Position=UDim2.new(0,sx,0,sy) end
 			else
 				d.t.Visible=false
 			end
