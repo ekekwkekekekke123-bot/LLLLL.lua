@@ -456,13 +456,25 @@ local function drawP(p,cam,vp)
 			end
 		end
 	else d.b.Visible=false end
-	if ES.Tr.On and rt then
-				local pos,on=cam:WorldToViewportPoint(rt.Position)
-		local sx,sy=vp.X/2,0
-		if S.TrPos=="底部" then sy=vp.Y
-		elseif S.TrPos=="头部" then
-			local hh=LP.Character and LP.Character:FindFirstChild("Head")
-			if hh then local hp=cam:WorldToViewportPoint(hh.Position) sx=hp.X sy=hp.Y end
+			if ES.Tr.On and rt then
+			local pos,on=cam:WorldToViewportPoint(rt.Position)
+			local sx,sy=vp.X/2,0
+			if S.TrPos=="底部" then sy=vp.Y
+			elseif S.TrPos=="头部" then
+				local hh=LP.Character and LP.Character:FindFirstChild("Head")
+				if hh then local hp=cam:WorldToViewportPoint(hh.Position) sx=hp.X sy=hp.Y end
+			elseif S.TrPos=="跟随" then
+				if _G.WXFT then sx=_G.WXFT.X sy=_G.WXFT.Y end
+			end
+			if not on or pos.X<0 or pos.X>vp.X or pos.Y<0 or pos.Y>vp.Y or sx<0 or sx>vp.X or sy<0 or sy>vp.Y then
+				d.t.Visible=false
+			else
+				d.t.Visible=true
+				d.t.Position=UDim2.new(0,math.min(0,0)+0,0,0)
+			end
+		else
+			d.t.Visible=false
+		end
 		elseif S.TrPos=="跟随" then
 			if _G.WXFT then sx=_G.WXFT.X sy=_G.WXFT.Y end
 		end
@@ -721,10 +733,25 @@ local function npcMk(m)
 	ND[m]=d
 end
 local function npcTick(cam,vp)
-		if not S.NpcOn then for m,d in pairs(ND) do d.b.Visible=false d.n.Visible=false d.d.Visible=false d.h.Visible=false end return end
-	local seen={}
-		for _,m in ipairs(workspace:GetDescendants()) do
-		if m:IsA("Model") and not P:GetPlayerFromCharacter(m) then
+				if not S.NpcOn then local ks={} for m in pairs(ND) do ks[#ks+1]=m end for _,m in ipairs(ks) do npcDrop(m) end return end
+		local seen={}
+		local cand={}
+		for _,c1 in ipairs(workspace:GetChildren()) do
+			if c1:IsA("Model") then
+				if c1:FindFirstChildOfClass("Humanoid") then cand[#cand+1]=c1 end
+			elseif c1:IsA("Folder") then
+				for _,c2 in ipairs(c1:GetChildren()) do
+					if c2:IsA("Model") and c2:FindFirstChildOfClass("Humanoid") then cand[#cand+1]=c2 end
+					if c2:IsA("Folder") then
+						for _,c3 in ipairs(c2:GetChildren()) do
+							if c3:IsA("Model") and c3:FindFirstChildOfClass("Humanoid") then cand[#cand+1]=c3 end
+						end
+					end
+				end
+			end
+		end
+		for _,m in ipairs(cand) do
+if m:IsA("Model") and not P:GetPlayerFromCharacter(m) then
 			local hu=m:FindFirstChildOfClass("Humanoid")
 						if (not hu) or hu.Health>0 then
 				seen[m]=true
