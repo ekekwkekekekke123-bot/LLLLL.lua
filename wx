@@ -1956,54 +1956,55 @@ do
 			local hl=ch and ch:FindFirstChild("WX_RG_HL")
 			if hl then pcall(function() hl:Destroy() end) end
 		end
-		local function apply(ch)
-			local pl=game:GetService("Players"):GetPlayerFromCharacter(ch)
+				local function apply(ch)
+						local pl=game:GetService("Players"):GetPlayerFromCharacter(ch)
 			if S.RgTarget=="仅玩家" and not pl then return end
+			if S.RgTarget=="仅NPC" and pl then return end
 			if S.RgTeam and pl and pl.Team and LP.Team and pl.Team==LP.Team then return end
 			local hum=ch:FindFirstChildOfClass("Humanoid")
 			if S.RgAlive and hum and hum.Health<=0 then return end
-			local base=ch:FindFirstChild("HumanoidRootPart")
-			if not base then return end
+			local head=(S.RgPart=="头部")
+			local anchor=head and ch:FindFirstChild("Head") or ch:FindFirstChild("HumanoidRootPart")
+			if not anchor then return end
 			local my=LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-			if S.RgNear and my and (base.Position-my.Position).Magnitude<6 then return end
-			local t=O[ch]
-			if not t then t={} O[ch]=t end
+			if S.RgNear and my and (anchor.Position-my.Position).Magnitude<6 then return end
 			local col=(S.RgColor=="彩虹" and Color3.fromHSV((tick()/4)%1,0.9,1)) or (colMap[S.RgColor] or Color3.fromRGB(255,60,60))
-			local list
-			if S.RgPart=="头部" then
-				local hh=ch:FindFirstChild("Head")
-				list={}
-				if hh then list[1]=hh end
+			local sz
+			if head then
+				sz=anchor.Size*S.RgScale
 			else
-				list={}
-				for _,p in ipairs(ch:GetChildren()) do
-					if p:IsA("BasePart") then list[#list+1]=p end
-				end
+				local ok,ex=pcall(function() return ch:GetExtentsSize() end)
+				sz=(ok and ex or Vector3.new(3,5,2))*S.RgScale
 			end
-			for _,p in ipairs(list) do
-				if not t[p] then t[p]={s=p.Size,t=p.Transparency,c=p.Color,m=p.Material} end
-				p.Size=t[p].s*S.RgScale
-				p.Transparency=math.clamp(S.RgAlpha,0,1)
-				if S.RgColor~="彩虹" then p.Color=col end
-				if S.RgLight then p.Material=Enum.Material.Neon end
-				if S.RgPhys then p.CanCollide=false end
+			local box=ch:FindFirstChild("WX_RG")
+			if not box then
+				box=Instance.new("Part")
+				box.Name="WX_RG"
+				box.CanCollide=false
+				box.CanQuery=true
+				box.Massless=true
+				box.Anchored=false
+				box.TopSurface=Enum.SurfaceType.Smooth
+				box.BottomSurface=Enum.SurfaceType.Smooth
+				box.Material=Enum.Material.ForceField
+				box.Size=sz
+				box.CFrame=anchor.CFrame
+				box.Transparency=S.RgAlpha
+				box.Parent=ch
+				local w=Instance.new("WeldConstraint")
+				w.Part0=anchor w.Part1=box w.Parent=box
 			end
-			local hl=ch:FindFirstChild("WX_RG_HL")
-			if S.RgBox then
-				if not hl then
-					hl=Instance.new("Highlight")
-					hl.Name="WX_RG_HL"
-					hl.Adornee=ch
-					hl.FillTransparency=1
-					hl.OutlineColor=col
-					hl.Parent=ch
-				end
-				hl.OutlineColor=col
-			elseif hl then
-				pcall(function() hl:Destroy() end)
+			if head then
+				box.Shape=Enum.PartType.Ball
+			else
+				box.Shape=Enum.PartType.Block
 			end
+			box.Size=sz
+			box.Transparency=math.clamp(S.RgAlpha,0,1)
+			box.Color=col
+			box.CanCollide=(not S.RgPhys)
 		end
-		task.spawn(function()
+task.spawn(function()
 			while true do
 				task.wait(0.25)
 				if S.RgOn then
@@ -2011,14 +2012,21 @@ do
 						local ch=pl.Character
 						if ch and pl~=LP and ch:FindFirstChild("HumanoidRootPart") then pcall(apply,ch) end
 					end
-				else
+									if S.RgTarget~="仅玩家" then
+						for _,m in ipairs(workspace:GetChildren()) do
+							if m:IsA("Model") and m:FindFirstChildOfClass("Humanoid") and not game:GetService("Players"):GetPlayerFromCharacter(m) then
+								pcall(apply,m)
+							end
+						end
+					end
+else
 					for ch in pairs(O) do pcall(restore,ch) end
 				end
 			end
 		end)
 		hd(pr,"范围")
 		tg(pr,"开启范围",false,function(v) S.RgOn=v end)
-		sg(pr,"选择生效目标",{"仅玩家","所有玩家"},S.RgTarget,function(v) S.RgTarget=v end)
+		sg(pr,"选择生效目标",{"仅玩家","NPC","所有",},S.RgTarget,function(v) S.RgTarget=v end)
 		sg(pr,"选择修改部位",{"身体","头部"},S.RgPart,function(v) S.RgPart=v end)
 		nb(pr,"范围大小","RgScale",10,"0.1-100 倍",0.1,100)
 		nb(pr,"透明度","RgAlpha",0.7,"0-1",0,1)
