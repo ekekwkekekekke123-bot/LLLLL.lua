@@ -1939,7 +1939,7 @@ do
 		S.RgAlive=S.RgAlive or true
 		S.RgNear=S.RgNear or false
 		S.RgBox=S.RgBox or false
-		S.RgPhys=S.RgPhys or false
+		S.RgPhys=S.RgPhys or true
 		S.RgLight=S.RgLight or false
 				local colMap={["红色"]=Color3.fromRGB(255,60,60),["蓝色"]=Color3.fromRGB(70,130,255),["绿色"]=Color3.fromRGB(60,230,110),["白色"]=Color3.fromRGB(255,255,255)}
 		local O={}
@@ -1972,9 +1972,9 @@ do
 			local sz
 			if head then
 				sz=anchor.Size*S.RgScale
-			else
-				local ok,ex=pcall(function() return ch:GetExtentsSize() end)
-				sz=(ok and ex or Vector3.new(3,5,2))*S.RgScale
+		else
+								local ok,ex=false,nil			
+sz=Vector3.new(2,5,2)*math.clamp(S.RgScale,1,10)
 			end
 			local box=ch:FindFirstChild("WX_RG")
 			if not box then
