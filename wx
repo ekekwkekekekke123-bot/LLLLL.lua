@@ -861,11 +861,22 @@ pcall(function()
 end)
 local LGT=game:GetService("Lighting")
 local function nvSet()
-	if S.NV then
+	if S.NV or S.NVX then
 		if RT.nv0==nil then RT.nv0={LGT.Brightness,LGT.Ambient,LGT.OutdoorAmbient} end
-		LGT.Brightness=3 LGT.Ambient=Color3.fromRGB(190,190,190) LGT.OutdoorAmbient=Color3.fromRGB(190,190,190)
+		if S.NVX then
+			LGT.Brightness=12
+			LGT.Ambient=Color3.fromRGB(255,255,255)
+			LGT.OutdoorAmbient=Color3.fromRGB(255,255,255)
+		else
+			LGT.Brightness=3
+			LGT.Ambient=Color3.fromRGB(190,190,190)
+			LGT.OutdoorAmbient=Color3.fromRGB(190,190,190)
+		end
 	elseif RT.nv0 then
-		LGT.Brightness=RT.nv0[1] LGT.Ambient=RT.nv0[2] LGT.OutdoorAmbient=RT.nv0[3] RT.nv0=nil
+		LGT.Brightness=RT.nv0[1]
+		LGT.Ambient=RT.nv0[2]
+		LGT.OutdoorAmbient=RT.nv0[3]
+		RT.nv0=nil
 	end
 end
 local function fogSet()
@@ -1915,7 +1926,7 @@ function apK(k)
 	elseif k=="FlV" or k=="FlMd" then if S.FlOn then fly() end
 	elseif k=="NcOn" then clip()
 	elseif k=="SecOn" or k=="IRange" or k=="IVal" then ensurePR() applyP()
-	elseif k=="NV" then nvSet()
+		elseif k=="NV" or k=="NVX" then nvSet()
 	elseif k=="NoFog" then fogSet()
 	elseif k=="GravOn" or k=="GravV" then gravSet()
   elseif k=="NoShake" then shakeSet()                             
@@ -2341,7 +2352,7 @@ bt(pgI,"一键互动全部",function()
 	end
 end)
 hd(pgN,"NPC") T(pgN,"启用","NpcOn",false) T(pgN,"NPC高亮","NpcHl",false) T(pgN,"NPC方框","NpcBx",false) T(pgN,"NPC名称","NpcNm",false) T(pgN,"NPC血量","NpcHp",false) T(pgN,"NPC距离","NpcDs",false)
-hd(pgV,"画面") T(pgV,"普通夜视","NV",false) T(pgV,"铺设光源（测试）","LPlOn",false) T(pgV,"去雾","NoFog",false) T(pgV,"防摄像机晃动","NoShake",false) T(pgV,"自由视角","FC",false) nb(pgV,"自由视角速度","FCSpd",S.FCSpd,"1-15",1,15)
+hd(pgV,"画面") T(pgV,"普通夜视","NV",false) T(pgV,"超亮夜视","NVX",false) T(pgV,"去雾","NoFog",false) T(pgV,"防摄像机晃动","NoShake",false) T(pgV,"自由视角","FC",false) nb(pgV,"自由视角速度","FCSpd",S.FCSpd,"1-15",1,15)
 hd(pgW,"危险")
 bt(pgW,"自杀",function() local _,h=chr() if h then pcall(function() h.Health=0 end) end end)
 bt(pgW,"退出服务器",function() pcall(function() game:Shutdown() end) task.wait(0.4) pcall(function() LP:Kick("已退出") end) end)
