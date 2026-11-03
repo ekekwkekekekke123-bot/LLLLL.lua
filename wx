@@ -958,7 +958,7 @@ end
 		local rot=CFrame.Angles(0,math.rad(FC.yaw),0)*CFrame.Angles(math.rad(FC.pitch),0,0)
 		local dir=rot:VectorToWorldSpace(Vector3.new(ax,0,-ay))+Vector3.new(0,FC.vy,0)
 		local mag=math.min(dir.Magnitude,1) if dir.Magnitude>0.0001 then dir=dir.Unit end
-		local spd=math.max(12,(tonumber(S.FCSpd) or 1)*20)
+		local spd=math.max(3,(tonumber(S.FCSpd) or 1)*3)
 		local pos=cam.CFrame.Position+dir*(spd*mag*dt)
 		local rc=cam.CFrame-cam.CFrame.Position
 		cam.CFrame=CFrame.new(pos)*rc:Lerp(rot,math.clamp(dt*22,0,1))
@@ -2336,7 +2336,7 @@ bt(pgI,"一键互动全部",function()
 	end
 end)
 hd(pgN,"NPC") T(pgN,"启用","NpcOn",false) T(pgN,"NPC高亮","NpcHl",false) T(pgN,"NPC方框","NpcBx",false) T(pgN,"NPC名称","NpcNm",false) T(pgN,"NPC血量","NpcHp",false) T(pgN,"NPC距离","NpcDs",false)
-hd(pgV,"画面") T(pgV,"普通夜视","NV",false) T(pgV,"铺设光源（测试）","LPlOn",false) T(pgV,"去雾","NoFog",false) T(pgV,"防摄像机晃动","NoShake",false) T(pgV,"自由视角","FC",false) nb(pgV,"自由视角速度","FCSpd",S.FCSpd,"1-500",1,500)
+hd(pgV,"画面") T(pgV,"普通夜视","NV",false) T(pgV,"铺设光源（测试）","LPlOn",false) T(pgV,"去雾","NoFog",false) T(pgV,"防摄像机晃动","NoShake",false) T(pgV,"自由视角","FC",false) nb(pgV,"自由视角速度","FCSpd",S.FCSpd,"1-15",1,15)
 hd(pgW,"危险")
 bt(pgW,"自杀",function() local _,h=chr() if h then pcall(function() h.Health=0 end) end end)
 bt(pgW,"退出服务器",function() pcall(function() game:Shutdown() end) task.wait(0.4) pcall(function() LP:Kick("已退出") end) end)
