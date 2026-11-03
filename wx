@@ -2055,11 +2055,11 @@ sz=Vector3.new(2,5,2)*math.clamp(S.RgScale,1,10)
 				if not hl then
 					hl=Instance.new("Highlight")
 					hl.Name="WX_RG_HL"
-					hl.Adornee=ch
+					hl.Adornee=box
 					hl.FillTransparency=0.85
 					hl.OutlineTransparency=0
 										hl.DepthMode=Enum.HighlightDepthMode.Occluded
-					hl.Parent=ch
+					hl.Parent=box
 				end
 				hl.FillColor=col
 				hl.OutlineColor=col
