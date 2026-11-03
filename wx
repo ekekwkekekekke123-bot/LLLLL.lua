@@ -664,7 +664,12 @@ local function hookSilent()
 				if (S.SilentMode=="Raycast" or S.SilentMode=="双通道") and m=="Raycast" then
 					local a={...} local n=#a local pi=nil
 					for i=1,n do if typeof(a[i])=="RaycastParams" then pi=i end end
-					if S.AiWall and pi then local rp=RaycastParams.new() rp.FilterType=Enum.RaycastFilterType.Include rp.FilterDescendantsInstances={aimPart.Parent} a[pi]=rp end
+										if S.AiWall then
+						local rp=RaycastParams.new()
+						rp.FilterType=Enum.RaycastFilterType.Include
+						rp.FilterDescendantsInstances={aimPart.Parent}
+						if pi then a[pi]=rp else n=n+1 a[n]=rp end
+					end
 					if n>=2 and typeof(a[2])=="Vector3" then a[1]=cp a[2]=tg return old(self,table.unpack(a)) end
 				elseif (S.SilentMode=="FireServer" or S.SilentMode=="双通道") and m=="FireServer" then
 					local a={...} local n=#a
