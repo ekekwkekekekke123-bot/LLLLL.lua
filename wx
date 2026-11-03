@@ -2145,22 +2145,24 @@ task.spawn(function()
 			pcall(function() ch:PivotTo(p) end)
 			return true
 		end
-				local function txFling(ch)
+						local function txFling(ch)
 			local my=LP.Character
-			local mh=txHrp(my)
-			local th=txHrp(ch)
-			if not my or not mh or not th then return false end
+			local mh=my and my:FindFirstChild("HumanoidRootPart")
+			local th=ch:FindFirstChild("HumanoidRootPart")
+			if not mh or not th then return false end
 			pcall(function()
-				my:PivotTo(th.CFrame*CFrame.new(0,0,-1))
-				task.wait(0.05)
+				local back=mh.CFrame
 				local hum=ch:FindFirstChildOfClass("Humanoid")
 				if hum then hum.PlatformStand=true end
-				for i=1,8 do
-					mh.AssemblyLinearVelocity=Vector3.new(math.random(-40,40),80,math.random(-40,40))
-					th.AssemblyLinearVelocity=Vector3.new(math.random(-300,300),4000,math.random(-300,300))
-					task.wait(0.02)
+				local t0=os.clock()
+				while os.clock()-t0<1.5 do
+					mh.CFrame=th.CFrame
+					mh.AssemblyLinearVelocity=Vector3.new(math.random(-800,800),2000+math.random(0,800),math.random(-800,800))
+					mh.AssemblyAngularVelocity=Vector3.new(math.random(-8000,8000),math.random(-8000,8000),math.random(-8000,8000))
+					task.wait(0.01)
 				end
-				task.delay(2,function() if hum and hum.Parent then hum.PlatformStand=false end end)
+				pcall(function() my:PivotTo(back) end)
+				task.delay(1,function() if hum and hum.Parent then hum.PlatformStand=false end end)
 			end)
 			return true
 		end
