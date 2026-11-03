@@ -2003,7 +2003,23 @@ sz=Vector3.new(2,5,2)*math.clamp(S.RgScale,1,10)
 			box.Transparency=math.clamp(S.RgAlpha,0,1)
 			box.Color=col
 			box.CanCollide=(not S.RgPhys)
-		end
+					local hl=ch:FindFirstChild("WX_RG_HL")
+			if S.RgBox then
+				if not hl then
+					hl=Instance.new("Highlight")
+					hl.Name="WX_RG_HL"
+					hl.Adornee=ch
+					hl.FillTransparency=0.75
+					hl.OutlineTransparency=0
+					hl.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
+					hl.Parent=ch
+				end
+				hl.FillColor=col
+				hl.OutlineColor=col
+			elseif hl then
+				pcall(function() hl:Destroy() end)
+			end
+end
 task.spawn(function()
 			while true do
 				task.wait(0.25)
