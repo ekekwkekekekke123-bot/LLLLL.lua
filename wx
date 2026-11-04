@@ -564,10 +564,16 @@ local function as(dt)
 		if not S.AiOn then fov.Visible=false inf.Visible=false tline.Visible=false aimPart=nil if aimBB then aimBB.Enabled=false end if hdB then hdB.Enabled=false end if RT.aimHL then pcall(function() RT.aimHL:Destroy() end) RT.aimHL=nil end return end
 	fov.Visible=S.FovOn fov.Position=UDim2.fromOffset(cx,cy) fov.Size=UDim2.fromOffset(S.FovR*2,S.FovR*2) fs.Color=(S.RainOn and Color3.fromHSV(hue,1,1)) or S.TgtC.Col
 	local best=pick(cam,cx,cy)
-						if best and S.AiVis and not S.AiWall and best.ch~=lastVisCh then
-		local part=S.aiPart(best.ch) or best.ch:FindFirstChild("HumanoidRootPart")
-		if part and not see(cam,part,best.ch) then best=nil end
-	end
+								if best and S.AiVis and not S.AiWall then
+			local nowv=os.clock()
+			if best.ch~=lastVisCh or nowv-(lastVisT or 0)>0.12 then
+				local pv=S.aiPart(best.ch) or best.ch:FindFirstChild("HumanoidRootPart")
+				lastVisOn=(pv and see(cam,pv,best.ch)) or false
+				lastVisCh=best.ch
+				lastVisT=nowv
+			end
+			if lastVisOn==false then best=nil end
+		end
 	if best then lastVisCh=best.ch end
 	if best and S.AiMiss and math.random()<0.15 then best=nil end
 		if best and S.AiAcc<100 and math.random()*100>S.AiAcc then best=nil end
@@ -1596,7 +1602,7 @@ local function openSel(title,opts,cur,cb,anchor)
 			BackgroundColor3=C.off,
 			BackgroundTransparency=isOn and 0.55 or 1,
 			Text=tostring(opt),
-			TextColor3=isOn and C.accent or C.txt,
+						TextColor3=isOn and C.accent or Color3.fromRGB(235,235,240),
 			Font=Enum.Font.GothamMedium,
 			TextSize=9,
 			TextXAlignment=Enum.TextXAlignment.Center,
