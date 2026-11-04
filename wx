@@ -2199,7 +2199,7 @@ task.spawn(function()
 			if txPull(ch) then wxToast("已把目标吸到身边") else wxToast("没找到目标角色") end
 		end)
 		tg(pgT,"循环吸人(本地)",false,function(v) S.TxLoop=v end)
-		nb(pgT,"吸人距离","TxDist",6,"格",0,25)
+		nb(pgT,"吸人距离","TxDist",6,"0-25",0,25)
 		tg(pgT,"观战玩家",false,function(v) S.SpecOn=v end)
 		bt(pgT,"甩飞一次",function()
 			local ch=txChar()
