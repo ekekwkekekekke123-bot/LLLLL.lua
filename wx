@@ -2230,7 +2230,8 @@ task.spawn(function()
 			end
 		end)
 
-						task.spawn(function()
+								task.spawn(function()
+			local was=false
 			while true do
 				task.wait(0.2)
 				local cam=workspace.CurrentCamera
@@ -2243,14 +2244,17 @@ task.spawn(function()
 							cam.CameraType=Enum.CameraType.Custom
 							cam.CameraSubject=hum
 						end
+						was=true
 					else
 						S.SpecOn=false
 						wxToast("观战目标已离开，已自动关闭")
-						if cam and myHum then cam.CameraSubject=myHum end
 					end
-										elseif cam and myHum and cam.CameraSubject~=myHum then
-cam.CameraType=Enum.CameraType.Custom
-					if myHum then cam.CameraSubject=myHum end
+				elseif was then
+					if cam and myHum then
+						cam.CameraType=Enum.CameraType.Custom
+						cam.CameraSubject=myHum
+					end
+					was=false
 				end
 			end
 		end)
