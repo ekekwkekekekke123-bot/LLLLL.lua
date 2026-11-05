@@ -2872,7 +2872,39 @@ end
 
 task.delay(0.35,function() pcall(function() powerState(true) end) end)
             RS.RenderStepped:Connect(function(dt)
-	if dead then return end
+	--===== 点击波纹：从手指按下的位置向外扩散 =====
+local function wxRipple(b)
+	if b:GetAttribute("wxRip")==true then return end
+	b:SetAttribute("wxRip",true)
+	b.ClipsDescendants=true
+	b.InputBegan:Connect(function(ip)
+		if ip.UserInputType~=Enum.UserInputType.Touch and ip.UserInputType~=Enum.UserInputType.MouseButton1 then return end
+		if dead then return end
+		local ap,az=b.AbsolutePosition,b.AbsoluteSize
+		if az.X<2 or az.Y<2 then return end
+		local px,py=ip.Position.X-ap.X,ip.Position.Y-ap.Y
+		if px<0 or py<0 or px>az.X or py>az.Y then px,py=az.X*0.5,az.Y*0.5 end
+		local lum=b.BackgroundColor3.R*0.299+b.BackgroundColor3.G*0.587+b.BackgroundColor3.B*0.114
+		local rg=(lum>0.5) and Color3.fromRGB(70,60,55) or Color3.fromRGB(255,255,255)
+		local f=Instance.new("Frame")
+		f.AnchorPoint=Vector2.new(0.5,0.5)
+		f.Position=UDim2.fromOffset(px,py)
+		f.Size=UDim2.fromOffset(0,0)
+		f.BackgroundColor3=rg
+		f.BackgroundTransparency=0.7
+		f.BorderSizePixel=0
+		f.ZIndex=b.ZIndex+20
+		f.Parent=b
+		local u=Instance.new("UICorner") u.CornerRadius=UDim.new(0.5,0) u.Parent=f
+		local d=math.max(az.X,az.Y)*1.6
+		TS:Create(f,TweenInfo.new(0.45,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.fromOffset(d,d),BackgroundTransparency=1}):Play()
+		task.delay(0.5,function() pcall(function() f:Destroy() end) end)
+	end)
+end
+for _,o in ipairs(gui:GetDescendants()) do if o:IsA("GuiButton") then pcall(wxRipple,o) end end
+gui.DescendantAdded:Connect(function(o) if o:IsA("GuiButton") then pcall(wxRipple,o) end end)
+--===== END =====
+if dead then return end
 		pcall(function() as(dt) esp() hookSilent()
 		local st=math.min(dt,0.05)
 		hue=(hue+st*0.06*((S.RainOn and S.RainSpd or 1)))%1
