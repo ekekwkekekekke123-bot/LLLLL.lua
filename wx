@@ -2361,7 +2361,7 @@ hd(pgA,"准星") T(pgA,"显示FOV圈","FovOn",true) cr(pgA,"FOV圈颜色",S.TgtC
 hd(pgA,"信息") selrow(pgA,"信息显示样式",{"名称头顶","独立面板"},"InfoStyle") T(pgA,"显示目标名字","ShowName",true) T(pgA,"显示目标血量","ShowHp",true) T(pgA,"显示目标距离","ShowDist",true) T(pgA,"显示目标类别","ShowType",true)
 hd(pgA,"高亮") T(pgA,"启用高亮","AiHl",false) cr(pgA,"高亮颜色",S.HlC) T(pgA,"显示目标追踪线","TLine",false) cr(pgA,"追踪线颜色",S.TrC)
 hd(pgA,"锁定")
-local lkStatus=B("TextLabel",{Size=UDim2.new(1,0,0,22),BackgroundColor3=C.row,BackgroundTransparency=0.35,Text="锁定状态: 无",Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.accent,TextXAlignment=Enum.TextXAlignment.Left,LayoutOrder=nxt(),ZIndex=15,Parent=pgA}) R(lkStatus,7)
+local lkStatus=B("TextLabel",{Size=UDim2.new(1,0,0,22),BackgroundColor3=C.row,BackgroundTransparency=0.35,Text="锁定状态: 无",Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.accent,TextXAlignment=Enum.TextXAlignment.Left,LayoutOrder=nxt(),ZIndex=15,Parent=pgA}) R(lkStatus,7) _G.wxLkStatus=lkStatus
 local nameBtns={}
 bt(pgA,"刷新列表",function()
 	for _,b in ipairs(nameBtns) do b:Destroy() end nameBtns={}
@@ -2379,6 +2379,22 @@ bt(pgA,"刷新列表",function()
 	end
 end)
 bt(pgA,"清除锁定",function() S.Lock="无" lkStatus.Text="锁定状态: 无" for _,x in ipairs(nameBtns) do x.BackgroundColor3=C.row x.TextColor3=C.txt end end)
+task.spawn(function()
+	while true do
+		task.wait(0.5)
+		if S.Lock and S.Lock~="无" then
+			local found=false
+			for _,pl in ipairs(game:GetService("Players"):GetPlayers()) do
+				if pl.Name==S.Lock and pl.Character then found=true break end
+			end
+			if not found then
+				S.Lock="无"
+				if _G.wxLkStatus then _G.wxLkStatus.Text="锁定状态: 无" end
+				wxToast("锁定目标已离开，已自动取消锁定")
+			end
+		end
+	end
+end)
 hd(pgA,"名称索敌") T(pgA,"启用名称索敌","NameHunt",false) trow(pgA,"名称","NameInput","输入 NPC 名称")
 local lt=B("TextLabel",{Size=UDim2.new(1,0,0,22),BackgroundColor3=C.row,BackgroundTransparency=0.35,Text="名称列表: --",Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.accent,TextXAlignment=Enum.TextXAlignment.Left,LayoutOrder=nxt(),ZIndex=15,Parent=pgA}) R(lt,7)
 bt(pgA,"添加到列表",function() local n=S.NameInput if n and n~="" then table.insert(NL,n) lt.Text="名称列表: "..table.concat(NL," / ") end end)
