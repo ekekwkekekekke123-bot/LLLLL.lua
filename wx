@@ -2192,7 +2192,23 @@ task.spawn(function()
 		hd(pgT,"传送")
 		bt(pgT,"刷新玩家列表",function()
 			if txBuild then txBuild() end
-			wxToast("玩家列表已刷新")
+					task.spawn(function()
+			while true do
+				task.wait(1)
+				local nm=S.TxName
+				if nm and nm~="" and nm~="无其他玩家" then
+					local found=false
+					for _,pl in ipairs(game:GetService("Players"):GetPlayers()) do
+						if pl.Name==nm then found=true break end
+					end
+					if not found then
+						S.TxName=""
+						wxToast("目标已退出，已自动取消选择")
+					end
+				end
+			end
+		end)
+wxToast("玩家列表已刷新")
 		end)
 		bt(pgT,"传送到玩家",function()
 			local ch=txChar()
