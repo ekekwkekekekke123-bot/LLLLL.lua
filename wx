@@ -2180,24 +2180,53 @@ task.spawn(function()
 			pcall(function() ch:PivotTo(p) end)
 			return true
 		end
-								local function txFling(ch)
+										local function txFling(ch)
 			local my=LP.Character
 			local mh=my and my:FindFirstChild("HumanoidRootPart")
-			local th=ch:FindFirstChild("HumanoidRootPart")
-			if not mh or not th then return false end
+			local hum=my and my:FindFirstChildOfClass("Humanoid")
+			local th=ch and ch:FindFirstChild("HumanoidRootPart")
+			if not (mh and th) then return false end
 			local back=mh.CFrame
-			pcall(function()
+			local ows=hum and hum.WalkSpeed or 16
+			local ojp=hum and hum.JumpPower or 50
+			local oar=hum and hum.AutoRotate or true
+			local ok=pcall(function()
+				if hum then
+					hum.PlatformStand=true
+					hum.AutoRotate=false
+					hum.WalkSpeed=0
+					pcall(function() hum:ChangeState(Enum.HumanoidStateType.Physics) end)
+				end
 				local t0=os.clock()
-				while os.clock()-t0<1.25 do
+				while os.clock()-t0<1.25 and mh.Parent and th.Parent do
 					mh.CFrame=th.CFrame
-					mh.AssemblyLinearVelocity=Vector3.new()
+					mh.AssemblyLinearVelocity=Vector3.zero
 					mh.AssemblyAngularVelocity=Vector3.new(12000,12000,12000)
 					task.wait()
 				end
-				mh.AssemblyAngularVelocity=Vector3.new()
-				pcall(function() my:PivotTo(back) end)
 			end)
-			return true
+			pcall(function()
+				for _,p in ipairs(my:GetDescendants()) do
+					if p:IsA("BasePart") then
+						p.AssemblyLinearVelocity=Vector3.zero
+						p.AssemblyAngularVelocity=Vector3.zero
+					end
+				end
+				pcall(function() my:PivotTo(back) end)
+				if mh and mh.Parent then
+					mh.CFrame=back
+					mh.Anchored=true
+					task.delay(0.08,function() pcall(function() if mh and mh.Parent then mh.Anchored=false end end) end)
+				end
+				if hum then
+					hum.PlatformStand=false
+					hum.AutoRotate=oar
+					hum.WalkSpeed=ows
+					pcall(function() hum.JumpPower=ojp end)
+					pcall(function() hum:ChangeState(Enum.HumanoidStateType.GettingUp) end)
+				end
+			end)
+			return ok
 		end
 
 		local selRow=nil
