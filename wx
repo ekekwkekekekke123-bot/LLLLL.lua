@@ -3366,7 +3366,7 @@ wxToast=function(msg,dur)
 		task.delay(0.22,function() pcall(function() card:Destroy() end) end)
 	end)
 end
-local function wxCfgSave()
+function wxCfgSave()
 	local d={}
 	for k,v in pairs(S) do
 		if type(v)=="boolean" or type(v)=="number" or type(v)=="string" then d[k]=v end
@@ -3375,7 +3375,7 @@ local function wxCfgSave()
 		writefile("wx_cfg.json",game:GetService("HttpService"):JSONEncode(d))
 	end)
 end
-local function wxCfgLoad()
+function wxCfgLoad()
 	if not (isfile and readfile) then return end
 	pcall(function()
 		if not isfile("wx_cfg.json") then return end
