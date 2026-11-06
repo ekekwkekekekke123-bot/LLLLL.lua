@@ -1461,7 +1461,7 @@ function wxInitFX()
 			pwT=TS:Create(pn,TweenInfo.new(0.26,Enum.EasingStyle.Quart,Enum.EasingDirection.In),{Position=T_POS,Size=T_SIZE})
 			pwT:Play()
 			fxGlitch(0.3)
-			pwT.Completed:Connect(function()
+			pwT.Completed:Once(function()
 				if not PWON then
 					pn.Visible=false
 					pn.Position=O_POS
