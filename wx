@@ -2891,8 +2891,7 @@ selp(1)
 end
 
 task.delay(0.35,function() pcall(function() powerState(true) end) end)
-            RS.RenderStepped:Connect(function(dt)
-	--===== 点击波纹：从手指按下的位置向外扩散 =====
+           	--===== 点击波纹：从手指按下的位置向外扩散 =====
 local function wxRipple(b)
 	if b:GetAttribute("wxRip")==true then return end
 	b:SetAttribute("wxRip",true)
@@ -2924,6 +2923,7 @@ end
 for _,o in ipairs(gui:GetDescendants()) do if o:IsA("GuiButton") then pcall(wxRipple,o) end end
 gui.DescendantAdded:Connect(function(o) if o:IsA("GuiButton") then pcall(wxRipple,o) end end)
 --===== END =====
+RS.RenderStepped:Connect(function(dt)
 if dead then return end
 		pcall(function() as(dt) esp() hookSilent()
 		local st=math.min(dt,0.05)
