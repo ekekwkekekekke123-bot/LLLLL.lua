@@ -3737,7 +3737,7 @@ local pgB=_G.wxB
 			sync()
 		end
 		do
-			local d1,d2=false,false
+			d1,d2=false,false
 			sv.InputBegan:Connect(function(i)
 				if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
 					d1=true
