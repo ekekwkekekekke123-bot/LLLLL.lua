@@ -3619,7 +3619,6 @@ hd(pgSv,"服务器")
 		end)
 		dead=true
 	end)
-_main()
 local pgB=_G.wxB
 	if pgB then
 				(function()
@@ -3989,3 +3988,4 @@ do
 		end)
 	end
 end
+_main()
