@@ -1016,7 +1016,7 @@ end
 			else
 				if not FC.on then return end
 				FC.on=false FCG.Enabled=false
-				local _,h2=chr()
+				_x,h2=chr()
 				if h2 then
 					if FC.ow then h2.WalkSpeed=FC.ow end
 					if FC.oj then h2.JumpPower=FC.oj end
