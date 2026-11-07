@@ -398,9 +398,13 @@ local function drawP(p,cam,vp)
 	local hu=ch:FindFirstChildOfClass("Humanoid")
 	local hd=ch:FindFirstChild("Head") local rt=ch:FindFirstChild("HumanoidRootPart") or ch:FindFirstChild("Torso")
 	if not hu or hu.Health<=0 or not hd or not rt then
-		local d=DD[p]
-			if d.hl then d.hl:Destroy() d.hl=nil end
-		return
+	    			local d=DD[p]
+			if d then
+				d.n.Visible=false d.h.Visible=false d.d.Visible=false
+				d.b.Visible=false d.a.Visible=false d.t.Visible=false
+				if d.hl then d.hl:Destroy() d.hl=nil end
+			end
+			return 
 	end
 	local d=DD[p]
 	if not d or d.ch~=ch then
