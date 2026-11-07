@@ -3619,7 +3619,6 @@ hd(pgSv,"服务器")
 		end)
 		dead=true
 	end)
-end
 _main()
 local pgB=_G.wxB
 	if pgB then
