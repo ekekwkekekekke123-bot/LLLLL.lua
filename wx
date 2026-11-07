@@ -3517,11 +3517,12 @@ S.aimBP=function(ch)
 	if a=="Legs" then return ch:FindFirstChild("LowerTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("Head") end
 	return ch:FindFirstChild("Head") or ch:FindFirstChild("Torso")
 end
-RS:BindToRenderStep("wxAim",Enum.RenderPriority.Camera.Value+1,function()
+RS:BindToRenderStep("wxAim",2000,function()
 		if not S.AimOn or dead then if S.afov then S.afov.Visible=false end return end
 	pcall(function()
 		local cam=workspace.CurrentCamera
-		local me=LP.Character
+					if cam and cam.CameraType==Enum.CameraType.Scriptable then cam.CameraType=Enum.CameraType.Custom end
+local me=LP.Character
 		local mh=me and me:FindFirstChild("HumanoidRootPart")
 		if not (cam and mh) then return end
 		local fr=math.clamp(tonumber(S.AimFov) or 55,0,250)
