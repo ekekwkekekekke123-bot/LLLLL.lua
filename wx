@@ -3617,9 +3617,9 @@ bt(pgSv,"MM2",function()
 			if g:IsA("ScreenGui") and g.Name:sub(1,3)=="wx_" then g:Destroy() end
 		end
 	end)
-		dead=true
-       end(
-end _main()
+					dead=true
+		end)
+	end _main()
 local pgB=_G.wxB
 	if pgB then
 		local P=game:GetService("Players")
