@@ -3898,7 +3898,7 @@ do
 	local root=(gethui and gethui()) or game:GetService("CoreGui")
 	local menu=nil
 	for _,v in ipairs(root:GetChildren()) do
-		if v:IsA("ScreenGui") and v.Name:sub(1,8)=="wx_Menu" then menu=v break end
+		if v:IsA("ScreenGui") and v.Name:sub(1,7)=="wx_Menu" then menu=v break end
 	end
 	if menu then
 		local function rip(b)
