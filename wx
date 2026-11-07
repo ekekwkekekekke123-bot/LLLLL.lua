@@ -512,10 +512,20 @@ for _,p in ipairs(P:GetPlayers()) do if p~=LP then drawP(p,cam,vp) end end
 	end
 end
 local AG=B("ScreenGui",{Name="wx_Aim_"..tostring(math.random(100000,999999)),ResetOnSpawn=false,IgnoreGuiInset=true,DisplayOrder=997,Parent=safeParent()})
-local fov=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),BackgroundTransparency=1,Visible=false,Parent=AG}) R(fov,0.5)
+local fov=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),BackgroundTransparency=1,Visible=false,Parent=AG})
+do
+	local u=Instance.new("UICorner")
+	u.CornerRadius=UDim.new(0.5,0)
+	u.Parent=fov
+end
 local fs=Instance.new("UIStroke") fs.Thickness=1.5 fs.Color=S.TgtC.Col fs.Parent=fov
 local tline=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),BorderSizePixel=0,Visible=false,Parent=AG})
-local inf=B("Frame",{Size=UDim2.fromOffset(112,34),BackgroundColor3=Color3.fromRGB(10,10,12),BackgroundTransparency=0.35,Visible=false,Parent=AG}) R(inf,5)
+local inf=B("Frame",{Size=UDim2.fromOffset(112,34),BackgroundColor3=Color3.fromRGB(10,10,12),BackgroundTransparency=0.35,Visible=false,Parent=AG})
+do
+	local u=Instance.new("UICorner")
+	u.CornerRadius=UDim.new(0,5)
+	u.Parent=inf
+end
 local iN=Instance.new("TextLabel") iN.Size=UDim2.new(1,-6,0,12) iN.Position=UDim2.fromOffset(3,3) iN.BackgroundTransparency=1 iN.Font=Enum.Font.GothamBold iN.TextSize=9 iN.TextColor3=W iN.TextXAlignment=Enum.TextXAlignment.Left iN.Parent=inf
 local iH=Instance.new("TextLabel") iH.Size=UDim2.new(1,-6,0,11) iH.Position=UDim2.fromOffset(3,15) iH.BackgroundTransparency=1 iH.Font=Enum.Font.GothamMedium iH.TextSize=8 iH.TextColor3=YEL iH.TextXAlignment=Enum.TextXAlignment.Left iH.Parent=inf
 local dmgLbl=B("TextLabel",{Size=UDim2.fromOffset(90,20),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=14,TextColor3=Color3.fromRGB(255,80,80),TextStrokeTransparency=0.3,Visible=false,ZIndex=6,Parent=AG})
