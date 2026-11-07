@@ -3618,7 +3618,6 @@ bt(pgSv,"MM2",function()
 		end
 	end)
 		dead=true
-end)
 end _main()
 local pgB=_G.wxB
 	if pgB then
