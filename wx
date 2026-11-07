@@ -3453,25 +3453,41 @@ local qb=B("TextButton",{Size=UDim2.fromOffset(104,26),Position=UDim2.new(0.5,-5
 qb.Visible=false
 R(qb,6)
 local qs=Instance.new("UIStroke") qs.Color=Color3.fromRGB(25,25,25) qs.Thickness=1 qs.Parent=qb
-local qdrag=false
-qb.InputBegan:Connect(function(i)
-	if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseButton1 then
-		qdrag=true
-		task.delay(0.18,function() qdrag=false end)
+	local qhb=B("TextButton",{Size=UDim2.fromOffset(180,72),BackgroundTransparency=1,Text="",AutoButtonColor=false,Parent=qg})
+	qhb.Position=UDim2.new(qb.Position.X.Scale,qb.Position.X.Offset-38,qb.Position.Y.Scale,qb.Position.Y.Offset-23)
+	qb.Parent=qhb
+	qb.AnchorPoint=Vector2.new(0,0)
+	qb.Position=UDim2.fromOffset(38,23)
+	qb.Visible=true
+	local qLast=0
+	local function qToggle()
+		local now=os.clock()
+		if now-qLast<0.15 then return end
+		qLast=now
+		S.AimOn=not S.AimOn
+		if S.AimOn then S.FovOn=true S.FovR=55 end
+		if TGS and TGS.AimOn then pcall(TGS.AimOn,S.AimOn) end
 	end
-end)
-qb.InputChanged:Connect(function(i)
-	if qdrag and (i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseMovement) then
-		qb.Position=UDim2.new(0.5,qb.Position.X.Offset+i.Delta.X,0.64,qb.Position.Y.Offset+i.Delta.Y)
-	end
-end)
-qb.Activated:Connect(function()
-	S.AimOn=not S.AimOn
-	if S.AimOn then S.FovOn=true S.FovR=55 end
-	if TGS and TGS.AimOn then pcall(TGS.AimOn,S.AimOn) end
-end)
+	local qdrag=false
+	qhb.InputBegan:Connect(function(i)
+		if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseButton1 then
+			qdrag=true
+		end
+	end)
+	qhb.InputEnded:Connect(function(i)
+		if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseButton1 then
+			qdrag=false
+		end
+	end)
+	qhb.InputChanged:Connect(function(i)
+		if qdrag and (i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseMovement) then
+			qhb.Position=UDim2.new(qhb.Position.X.Scale,qhb.Position.X.Offset+i.Delta.X,qhb.Position.Y.Scale,qhb.Position.Y.Offset+i.Delta.Y)
+		end
+	end)
+	qb.Activated:Connect(qToggle)
+	qhb.Activated:Connect(qToggle)
 RS.Heartbeat:Connect(function()
-		qb.Visible=S.QuickOn
+		qhb.Visible=S.QuickOn
 qb.Text="开启状态："..(S.AimOn and "✓" or "X")
 	qb.TextColor3=S.AimOn and Color3.fromRGB(30,140,60) or C.txt
 end)
