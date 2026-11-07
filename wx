@@ -3892,3 +3892,45 @@ do
 		end)
 	end
 end
+--===== 点击波纹（独立块，放文件最后）=====
+do
+	local Tween=game:GetService("TweenService")
+	local root=(gethui and gethui()) or game:GetService("CoreGui")
+	local menu=nil
+	for _,v in ipairs(root:GetChildren()) do
+		if v:IsA("ScreenGui") and v.Name:sub(1,8)=="wx_Menu" then menu=v break end
+	end
+	if menu then
+		local function rip(b)
+			if b:GetAttribute("wxRip") then return end
+			b:SetAttribute("wxRip",true)
+			b.ClipsDescendants=true
+			b.InputBegan:Connect(function(ip)
+				if ip.UserInputType~=Enum.UserInputType.Touch and ip.UserInputType~=Enum.UserInputType.MouseButton1 then return end
+				local ap,az=b.AbsolutePosition,b.AbsoluteSize
+				if az.X<2 or az.Y<2 then return end
+				local px,py=ip.Position.X-ap.X,ip.Position.Y-ap.Y
+				if px<0 or py<0 or px>az.X or py>az.Y then px,py=az.X*0.5,az.Y*0.5 end
+				local f=Instance.new("Frame")
+				f.AnchorPoint=Vector2.new(0.5,0.5)
+				f.Position=UDim2.fromOffset(px,py)
+				f.Size=UDim2.fromOffset(0,0)
+				f.BackgroundColor3=Color3.new(0.35,0.3,0.28)
+				f.BackgroundTransparency=0.7
+				f.BorderSizePixel=0
+				f.ZIndex=b.ZIndex+10
+				f.Parent=b
+				local u=Instance.new("UICorner") u.CornerRadius=UDim.new(0.5,0) u.Parent=f
+				local d=math.max(az.X,az.Y)*1.6
+				Tween:Create(f,TweenInfo.new(0.42,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.fromOffset(d,d),BackgroundTransparency=1}):Play()
+				task.delay(0.5,function() pcall(function() f:Destroy() end) end)
+			end)
+		end
+		for _,o in ipairs(menu:GetDescendants()) do
+			if o:IsA("GuiButton") then pcall(rip,o) end
+		end
+		menu.DescendantAdded:Connect(function(o)
+			if o:IsA("GuiButton") then pcall(rip,o) end
+		end)
+	end
+end
