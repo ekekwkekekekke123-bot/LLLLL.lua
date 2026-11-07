@@ -3384,20 +3384,24 @@ function wxCfgSave()
 	end)
 end
 function wxCfgLoad()
-	if not (isfile and readfile) then return end
+	if not (isfile and readfile) then wxToast("配置：执行器不支持读文件") return end
 	pcall(function()
-		if not isfile("wx_cfg.json") then return end
-		local d=game:GetService("HttpService"):JSONDecode(readfile("wx_cfg.json"))
+		if not isfile("wx_cfg.json") then wxToast("配置：没有保存文件") return end
+		local raw=readfile("wx_cfg.json")
+		if not raw or raw=="" then wxToast("配置：文件是空的") return end
+		local d=game:GetService("HttpService"):JSONDecode(raw)
+		local n=0
 		for k,v in pairs(d) do
 			if S[k]~=nil and type(S[k])~=table then
-				S[k]=v
+				S[k]=v n=n+1
 				if TGS and TGS[k] then pcall(TGS[k],v) end
 				if apK then pcall(apK,k) end
 			end
 		end
+		wxToast("配置已加载 "..n.." 项")
 	end)
 end
-task.delay(1.2,wxCfgLoad)
+task.delay(3,wxCfgLoad)
 hd(pgS,"配置")
 bt(pgS,"保存配置",function()
 	if wxCfgSave() then wxToast("保存成功") else wxToast("保存失败") end
