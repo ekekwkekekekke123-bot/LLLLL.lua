@@ -393,9 +393,12 @@ local function drawP(p,cam,vp)
 	local ch=p.Character if not ch then return end
 	local hu=ch:FindFirstChildOfClass("Humanoid")
 	local hd=ch:FindFirstChild("Head") local rt=ch:FindFirstChild("HumanoidRootPart") or ch:FindFirstChild("Torso")
-	if not hu or hu.Health<=0 or not hd or not rt then
-		local d=DD[p]
+			local d=DD[p]
+		if d then
+			d.n.Visible=false d.h.Visible=false d.d.Visible=false
+			d.b.Visible=false d.a.Visible=false d.t.Visible=false
 			if d.hl then d.hl:Destroy() d.hl=nil end
+		end
 		return
 	end
 	local d=DD[p]
@@ -496,7 +499,12 @@ else
 end
 local function esp()
 	local cam=workspace.CurrentCamera if not cam then return end local vp=cam.ViewportSize
-		for _,dd in pairs(DD) do if dd.e then for i=1,12 do dd.e[i].Visible=false end end end
+			for _,dd in pairs(DD) do
+		if dd.e then for i=1,12 do dd.e[i].Visible=false end end
+		if dd.t then dd.t.Visible=false end
+		if dd.a then dd.a.Visible=false end
+		if dd.b then dd.b.Visible=false end
+	end
 for _,p in ipairs(P:GetPlayers()) do if p~=LP then drawP(p,cam,vp) end end
 	for p,d in pairs(DD) do
 		local ch=p.Character
