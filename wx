@@ -3619,7 +3619,7 @@ hd(pgSv,"服务器")
 		end)
 		dead=true
 	end)
-end _main()
+_main()
 local pgB=_G.wxB
 	if pgB then
 		local P=game:GetService("Players")
