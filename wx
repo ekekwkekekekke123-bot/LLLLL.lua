@@ -3622,7 +3622,7 @@ hd(pgSv,"服务器")
 _main()
 local pgB=_G.wxB
 	if pgB then
-				;(function()
+				(function()
 local P=game:GetService("Players")
 		local TS=game:GetService("TweenService")
 		local UI=game:GetService("UserInputService")
