@@ -115,9 +115,9 @@ local function safeParent()
 	if ok2 and typeof(c)=="Instance" then return c end
 	return LP.PlayerGui
 end
-local function B(c,p) local o=Instance.new(c) for k,v in pairs(p) do if k~="Parent" then o[k]=v end end if p.Parent then o.Parent=p.Parent end return o end
-local function R(o,r) local u=Instance.new("UICorner") u.CornerRadius=(r>1) and UDim.new(0,r) or UDim.new(r,0) u.Parent=o end
-local function SK(o,c,t) local s=Instance.new("UIStroke") s.Color=c s.Thickness=1 s.Transparency=t or 0 s.Parent=o return s end
+function B(c,p) local o=Instance.new(c) for k,v in pairs(p) do if k~="Parent" then o[k]=v end end if p.Parent then o.Parent=p.Parent end return o end
+function R(o,r) local u=Instance.new("UICorner") u.CornerRadius=(r>1) and UDim.new(0,r) or UDim.new(r,0) u.Parent=o end
+function SK(o,c,t) local s=Instance.new("UIStroke") s.Color=c s.Thickness=1 s.Transparency=t or 0 s.Parent=o return s end
 local W=Color3.new(1,1,1) local YEL=Color3.fromRGB(255,220,40) local dead=false local hue=0
 local C={
  bg=Color3.fromRGB(238,233,223),
