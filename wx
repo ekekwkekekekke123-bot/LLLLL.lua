@@ -3853,35 +3853,59 @@ local pgB=_G.wxB
 			end
 		end)
 		workspace.DescendantAdded:Connect(function(o)
-			if not tr.on then return end
-			local nm=string.lower(o.Name)
-			if o:IsA("MeshPart") and (string.find(nm,"bullet") or string.find(nm,"trac")) then
-				pcall(function()
-					o.Color=tr.col
-					o.Material=Enum.Material.Neon
-					o.Reflectance=0
-					o.TextureID=""
-					if tr.szOn then o.Size=o.Size*math.clamp(tr.sz/12,0.05,20) end
-					tr.cache[o]=true
-				end)
-			elseif o:IsA("Trail") then
-				pcall(function()
-					o.Color=ColorSequence.new(tr.col)
-					o.LightEmission=0
-					if tr.szOn then o.WidthScale=NumberSequence.new(1.8*math.clamp(tr.sz/12,0,10)) else o.WidthScale=NumberSequence.new(1.8) end
-					if tr.ltOn then o.Lifetime=tr.lt end
-					tr.cache[o]=true
-				end)
-			elseif o:IsA("Beam") then
-				pcall(function()
-					o.Color=ColorSequence.new(tr.col)
-					o.LightInfluence=0
-					if tr.szOn then o.Width0=0.08*math.clamp(tr.sz/12,0,10) o.Width1=0.03*math.clamp(tr.sz/12,0,10) else o.Width0=0.08 end
-					if tr.ltOn then o.TextureLength=tr.lt*8 end
-					tr.cache[o]=true
-				end)
-			end
-		end)
+    if not tr.on then return end
+    local nm = string.lower(o.Name)
+    local cam = workspace.CurrentCamera
+    local inVM = false
+
+    if cam and o:IsDescendantOf(cam) then inVM = true end
+    if not inVM and o:FindFirstAncestorOfClass("Tool") then inVM = true end
+    if not inVM and LP.Character and o:IsDescendantOf(LP.Character) then inVM = true end
+
+    if string.find(nm, "handle") or string.find(nm, "gun") or string.find(nm, "barrel") or string.find(nm, "mag") then return end
+
+    if o:IsA("MeshPart") and (string.find(nm, "bullet") or string.find(nm, "trac")) then
+        if inVM then return end
+        pcall(function()
+            o.Color = tr.col
+            o.Material = Enum.Material.Neon
+            o.Reflectance = 0
+            o.TextureID = ""
+            if tr.szOn then
+                local k = math.clamp(tr.sz / 12, 1, 20)
+                o.Size = o.Size * k
+            end
+            tr.cache[o] = true
+        end)
+
+    elseif o:IsA("Trail") then
+        pcall(function()
+            o.Color = ColorSequence.new(tr.col)
+            o.LightEmission = 0
+            if tr.szOn then
+                o.WidthScale = NumberSequence.new(1.8 * math.clamp(tr.sz / 12, 0, 10))
+            else
+                o.WidthScale = NumberSequence.new(1.8)
+            end
+            if tr.ltOn then o.Lifetime = tr.lt end
+            tr.cache[o] = true
+        end)
+
+    elseif o:IsA("Beam") then
+        pcall(function()
+            o.Color = ColorSequence.new(tr.col)
+            o.LightInfluence = 0
+            if tr.szOn then
+                o.Width0 = 0.08 * math.clamp(tr.sz / 12, 0, 10)
+                o.Width1 = 0.03 * math.clamp(tr.sz / 12, 0, 10)
+            else
+                o.Width0 = 0.08            
+end
+            if tr.ltOn then o.TextureLength = tr.lt * 8 end
+            tr.cache[o] = true
+        end)
+    end
+end)
 		local b1,t1,k1=rowT("击中残影（不完全通用）",1)
 		b1.MouseButton1Click:Connect(function()
 			st.on=not st.on flip(t1,k1,st.on)
