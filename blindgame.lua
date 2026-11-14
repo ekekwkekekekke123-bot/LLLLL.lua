@@ -23,7 +23,12 @@ local function SP()
 	if ok2 and typeof(c)=="Instance" then return c end
 	return LP.PlayerGui
 end
-
+for _,g in ipairs(SP():GetChildren()) do
+	local n=g.Name
+	if n=="blind_ui" or n=="blind_pick" or string.sub(n,1,9)=="blind_esp" then
+		pcall(function() g:Destroy() end)
+	end
+end
 if game.PlaceId~=112270456220062 then
 	local sg=B("ScreenGui",{IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=9000,Parent=SP()})
 	B("TextLabel",{Size=UDim2.fromScale(1,0.12),Position=UDim2.fromScale(0,0.44),BackgroundColor3=Color3.fromRGB(20,20,24),TextColor3=Color3.fromRGB(255,140,140),Font=Enum.Font.GothamBold,TextSize=16,Text="此脚本不支持当前游戏 · "..tostring(game.PlaceId),Parent=sg})
@@ -383,7 +388,7 @@ F["_on_noRag"]=function(on)
 	end
 end
 RS.RenderStepped:Connect(function()
-	if not F.noRag then return end
+	if not gui.Parent or not F.noRag then return end
 	local ch=LP.Character
 	local hum=ch and ch:FindFirstChildOfClass("Humanoid")
 	if not hum then return end
