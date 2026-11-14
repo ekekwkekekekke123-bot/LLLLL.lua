@@ -186,13 +186,17 @@ local function hideES(d)
 	if d.hl then pcall(function() d.hl:Destroy() end) d.hl=nil end
 end
 local function setHL(inst,d,col)
-	if d.hl and not d.hl.Parent then d.hl=nil end
-	if not d.hl then
-				local ad=inst
-		if not (inst:IsA("BasePart") or inst:IsA("Model")) then ad=anchorOf(inst) or inst end
-		d.hl=B("Highlight",{Name="blindhl",FillTransparency=0.72,OutlineTransparency=0,DepthMode=Enum.HighlightDepthMode.AlwaysOnTop,Adornee=ad,Parent=ad})
+	if not inst then return end
+	local ad=inst
+	if inst:IsA("Tool") then ad=anchorOf(inst) or inst end
+	if not ad then return end
+	if d.hl and d.hl.Adornee~=ad then pcall(function() d.hl:Destroy() end) d.hl=nil end
+	if not d.hl or not d.hl.Parent then
+		d.hl=B("Highlight",{Name="blindhl",Adornee=ad,DepthMode=Enum.HighlightDepthMode.AlwaysOnTop,FillTransparency=0.6,Parent=ad})
 	end
-	d.hl.Enabled=true d.hl.FillColor=col d.hl.OutlineColor=col
+	d.hl.Enabled=true
+	d.hl.FillColor=col
+	d.hl.OutlineColor=col
 end
 local function draw(inst,hp,rp,d,col,label)
 	local a=cam:WorldToViewportPoint(hp)
