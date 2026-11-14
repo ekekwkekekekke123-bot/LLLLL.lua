@@ -32,7 +32,7 @@ if game.PlaceId~=112270456220062 then
 end
 
 local C={bg=Color3.fromRGB(238,233,223),row=Color3.fromRGB(243,237,227),off=Color3.fromRGB(212,204,191),accent=Color3.fromRGB(190,74,64),txt=Color3.fromRGB(38,38,38),dim=Color3.fromRGB(108,103,95)}
-local F={TrPos="顶部"}
+local F={TrPos="顶部",BoxMd="2D"}
 local gui=B("ScreenGui",{Name="blind_ui",IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=60})
 gui.Parent=SP()
 local vp=workspace.CurrentCamera.ViewportSize
@@ -99,6 +99,15 @@ B("UIStroke",{Color=Color3.fromRGB(150,140,128),Transparency=0.4,Parent=pRow})
 B("TextLabel",{Size=UDim2.new(1,-56,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text="射线位置",Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=131,Parent=pRow})
 local pVal=B("TextLabel",{Size=UDim2.new(0,52,1,0),Position=UDim2.new(1,-58,0,0),BackgroundTransparency=1,Text=F.TrPos,Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.accent,TextXAlignment=Enum.TextXAlignment.Right,ZIndex=131,Parent=pRow})
 rowToggle(bodyE,yE,"方框（通用）","eBx")
+local bxRow=B("TextButton",{Size=UDim2.new(1,0,0,30),Position=UDim2.fromOffset(0,yE.v),BackgroundColor3=C.row,BorderSizePixel=0,Text="",AutoButtonColor=false,ZIndex=130,Parent=bodyE})
+yE.v=yE.v+34
+B("UIStroke",{Color=Color3.fromRGB(150,140,128),Transparency=0.4,Parent=bxRow})
+B("TextLabel",{Size=UDim2.new(1,-56,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text="方框模式",Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=131,Parent=bxRow})
+local bxVal=B("TextLabel",{Size=UDim2.new(0,52,1,0),Position=UDim2.new(1,-58,0,0),BackgroundTransparency=1,Text=F.BoxMd,Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.accent,TextXAlignment=Enum.TextXAlignment.Right,ZIndex=131,Parent=bxRow})
+bxRow.MouseButton1Click:Connect(function()
+	F.BoxMd=(F.BoxMd=="2D") and "3D" or "2D"
+	bxVal.Text=F.BoxMd
+end)
 rowToggle(bodyE,yE,"距离（失明者看不到）","eDs")
 rowToggle(bodyE,yE,"高亮（失明者看不到）","eHl")
 title(bodyE,"其他 ESP",yE)
@@ -164,12 +173,16 @@ end
 local function dropES(inst)
 	local d=ES[inst]
 	if not d then return end
-	for _,o in pairs(d) do pcall(function() o:Destroy() end) end
+		for _,o in pairs(d) do
+		if type(o)=="table" then for _,f in ipairs(o) do pcall(function() f:Destroy() end) end
+		else pcall(function() o:Destroy() end) end
+	end
 	ES[inst]=nil
 end
 local function hideES(d)
 	if not d then return end
 	d.n.Visible=false d.d.Visible=false d.b.Visible=false d.t.Visible=false
+		if d.e then for i=1,12 do d.e[i].Visible=false end end
 	if d.hl then pcall(function() d.hl:Destroy() end) d.hl=nil end
 end
 local function setHL(inst,d,col)
@@ -193,11 +206,56 @@ local function draw(inst,hp,rp,d,col,label)
 		d.d.Text=math.floor((cam.CFrame.Position-rp).Magnitude).."m" d.d.TextColor3=col
 		d.d.Position=UDim2.fromOffset(cx,(F.eNm and a.Y-16) or (a.Y-30)) d.d.Visible=true
 	end
-	if F.eBx and on and b.Z>0 then
-		local h=math.max(math.abs(b.Y-a.Y),10) local w=math.max(h*0.62,6)
-		d.b.Size=UDim2.fromOffset(w,h) d.b.Position=UDim2.fromOffset(cx,math.min(a.Y,b.Y))
-		d.bs.Color=col d.b.Visible=true
-	else d.b.Visible=false end
+		if F.eBx and on then
+		if F.BoxMd=="3D" then
+			d.b.Visible=false
+			if not d.e then
+				d.e={}
+				for i=1,12 do
+					d.e[i]=B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),BorderSizePixel=0,Visible=false,ZIndex=900,Parent=ESPG})
+				end
+			end
+			local lk=cam.CFrame.LookVector
+			local yaw=math.atan2(-lk.X,-lk.Z)
+			local base=CFrame.new(rp)*CFrame.Angles(0,yaw,0)
+			local sz=Vector3.new(2.4,3.6,2.4)
+			local cs={} local ci=1
+			for sx=-1,1,2 do for sy=-1,1,2 do for szn=-1,1,2 do
+				local wp=base*CFrame.new(sx*sz.X*0.5,sy*sz.Y*0.5,szn*sz.Z*0.5)
+				local s,vis=cam:WorldToViewportPoint(wp.Position)
+				cs[ci]={X=s.X,Y=s.Y,Z=s.Z,on=vis} ci=ci+1
+			end end end
+			local EDGES={{1,5},{2,6},{3,7},{4,8},{1,3},{2,4},{5,7},{6,8},{1,2},{3,4},{5,6},{7,8}}
+			for k,e in ipairs(EDGES) do
+				local c1,c2=cs[e[1]],cs[e[2]]
+				local f=d.e[k]
+				if c1.on and c2.on and c1.Z>0 and c2.Z>0 then
+					local dx,dy=c2.X-c1.X,c2.Y-c1.Y
+					f.Size=UDim2.new(0,math.max(math.sqrt(dx*dx+dy*dy),1),0,1.5)
+					f.Position=UDim2.fromOffset((c1.X+c2.X)/2,(c1.Y+c2.Y)/2)
+					f.Rotation=math.deg(math.atan2(dy,dx))
+					f.BackgroundColor3=col f.Visible=true
+				else f.Visible=false end
+			end
+		else
+			if d.e then for i=1,12 do d.e[i].Visible=false end end
+			local rv=cam.CFrame.RightVector
+			local pt=cam:WorldToViewportPoint(hp+Vector3.new(0,0.6,0))
+			local pb=cam:WorldToViewportPoint(rp-Vector3.new(0,2.6,0))
+			if pt.Z>0 and pb.Z>0 then
+				local a1=cam:WorldToViewportPoint(rp+rv*2.4)
+				local a2=cam:WorldToViewportPoint(rp-rv*2.4)
+				local x1=math.min(a1.X,a2.X) local x2=math.max(a1.X,a2.X)
+				local y1=math.min(pt.Y,pb.Y) local y2=math.max(pt.Y,pb.Y)
+				d.b.Position=UDim2.fromOffset(x1,y1)
+				d.b.Size=UDim2.fromOffset(math.max(x2-x1,1),math.max(y2-y1,1))
+				d.bs.Color=col d.b.Visible=true
+			else d.b.Visible=false end
+		end
+	else
+		d.b.Visible=false
+		if d.e then for i=1,12 do d.e[i].Visible=false end end
+	end
 	if F.eTr and on then
 		local vv=cam.ViewportSize local ax,ay=vv.X/2,vv.Y
 		if F.TrPos=="顶部" then ax,ay=vv.X/2,0
