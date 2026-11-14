@@ -215,19 +215,18 @@ local function draw(inst,hp,rp,d,col,label)
 end
 
 local BAN={} local TRA={}
-local KB={"banana","banane","peel","skin"}
-local KT={"trap","piege","piège","blindman","bear"}
-local SKIP={"apercu","viewmodel"}
-local function hasAny(n,t)
-	for _,k in ipairs(t) do if string.find(n,k,1,true) then return true end end
+local KB={"banana","banane"}
+local KT={"beartrap","trap","piege","piège"}
+local function starts(n,t)
+	for _,k in ipairs(t) do if string.sub(n,1,#k)==k then return true end end
 	return false
 end
 local function reg(o)
 	if not (o:IsA("BasePart") or o:IsA("Model") or o:IsA("Tool")) then return end
 	local n=string.lower(o.Name)
-	if hasAny(n,SKIP) then return end
-	if hasAny(n,KB) then BAN[o]=true end
-	if hasAny(n,KT) then TRA[o]=true end
+	if string.find(n,"apercu",1,true) or string.find(n,"viewmodel",1,true) then return end
+	if starts(n,KB) then BAN[o]=true end
+	if starts(n,KT) then TRA[o]=true end
 end
 workspace.DescendantAdded:Connect(reg)
 for _,o in ipairs(workspace:GetDescendants()) do reg(o) end
@@ -242,7 +241,9 @@ local function tickSet(set,on,col,label)
 	for inst in pairs(set) do
 		if not inst.Parent then
 			set[inst]=nil dropES(inst)
-		elseif inst:IsDescendantOf(workspace.CurrentCamera) then
+				elseif inst:IsDescendantOf(workspace.CurrentCamera) then
+			hideES(ES[inst])
+		elseif LP.Character and inst:IsDescendantOf(LP.Character) then
 			hideES(ES[inst])
 		else
 			local d=ES[inst]
