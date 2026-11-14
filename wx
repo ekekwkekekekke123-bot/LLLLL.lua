@@ -3437,8 +3437,17 @@ S.aimBP=function(ch)
 	if a=="Legs" then return ch:FindFirstChild("LowerTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("Head") end
 	return ch:FindFirstChild("Head") or ch:FindFirstChild("Torso")
 end
-RS:BindToRenderStep("wxAim",Enum.RenderPriority.Camera.Value+1,function()
-		if not S.AimOn or dead then if S.afov then S.afov.Visible=false end return end
+local wxcLock=false local wxcT=0
+RS:BindToRenderStep("wxAim",2000,function()
+				if not S.AimOn or dead then
+			if S.afov then S.afov.Visible=false end
+			if wxcLock and os.clock()-wxcT>0.35 then
+				local c=workspace.CurrentCamera
+				if c then pcall(function() c.CameraType=Enum.CameraType.Custom end) end
+				wxcLock=false
+			end
+			return
+		end
 	pcall(function()
 		local cam=workspace.CurrentCamera
 		local me=LP.Character
@@ -3488,7 +3497,7 @@ RS:BindToRenderStep("wxAim",Enum.RenderPriority.Camera.Value+1,function()
 				end
 			end
 		end
-		if best and best~=LP.Character then
+				if best and best~=LP.Character then
 			local part=S.aimBP(best)
 			if part then
 				local pos=part.Position
@@ -3498,12 +3507,17 @@ RS:BindToRenderStep("wxAim",Enum.RenderPriority.Camera.Value+1,function()
 					local flat=Vector3.new(v.X,0,v.Z)
 					if flat.Magnitude>1 then pos=pos+flat.Unit*((pv/100)*6) end
 				end
-									if S.SoftAim then
-						local k=math.clamp((tonumber(S.SoftV) or 16)/100,0.02,0.95)
-						cam.CFrame=cam.CFrame:Lerp(CFrame.lookAt(cam.CFrame.Position,pos),k)
-					else
-						cam.CFrame=CFrame.lookAt(cam.CFrame.Position,pos)
-					end
+				if cam.CameraType~=Enum.CameraType.Scriptable then
+					pcall(function() cam.CameraType=Enum.CameraType.Scriptable end)
+				end
+				wxcLock=true wxcT=os.clock()
+				local cf=CFrame.lookAt(cam.CFrame.Position,pos)
+				if S.SoftAim then
+					local k=math.clamp((tonumber(S.SoftV) or 16)/100,0.02,0.95)
+					cam.CFrame=cam.CFrame:Lerp(cf,k)
+				else
+					cam.CFrame=cf
+				end
 			end
 		end
 	end)
