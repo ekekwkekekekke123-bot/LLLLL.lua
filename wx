@@ -3534,7 +3534,33 @@ bt(pgSv,"MM2",function()
 	end)
 		dead=true
 end)
-	function wxRipple(b)
+		bt(pgSv,"Blind people and vision",function()
+		local NAME="blindgame.lua"
+		wxToast("加载中…")
+		local ok=false
+		pcall(function()
+			local url="https://raw.githubusercontent.com/ekekwkekekekke123-bot/LLLLL.lua/main/"..NAME.."?v="..os.time()
+			local src=game:HttpGet(url)
+			if not src or #src<64 or string.find(src,"404: Not Found",1,true) then return end
+			local fn,err=loadstring(src)
+			if not fn then warn("[WX] 语法错误: "..tostring(err)) return end
+			ok=pcall(fn)
+		end)
+		if not ok then wxToast("加载失败 · 主脚本保持原样") return end
+		wxToast("加载成功")
+		task.wait(0.85)
+		TS:Create(pn,TweenInfo.new(0.22,Enum.EasingStyle.Quart,Enum.EasingDirection.In),{BackgroundTransparency=1}):Play()
+		task.wait(0.28)
+		for k,v in pairs(S) do if type(v)=="boolean" then S[k]=false end end
+		pcall(function() for k in pairs(S) do if apK then pcall(apK,k) end end end)
+		pcall(function()
+			for _,g in ipairs(safeParent():GetChildren()) do
+				if g:IsA("ScreenGui") and g.Name:sub(1,3)=="wx_" then g:Destroy() end
+			end
+		end)
+		dead=true
+	end)
+function wxRipple(b)
 		if b:GetAttribute("wxRip") then return end
 		b:SetAttribute("wxRip",true)
 		b.ClipsDescendants=true
