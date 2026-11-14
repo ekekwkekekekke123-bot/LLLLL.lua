@@ -3511,7 +3511,11 @@ RS:BindToRenderStep("wxAim",2000,function()
 					pcall(function() cam.CameraType=Enum.CameraType.Scriptable end)
 				end
 				wxcLock=true wxcT=os.clock()
-				local cf=CFrame.lookAt(cam.CFrame.Position,pos)
+								local base=cam.CFrame.Position
+				local rc=LP.Character
+				local rh=rc and (rc:FindFirstChild("Head") or rc:FindFirstChild("HumanoidRootPart"))
+				if rh then base=rh.Position end
+				local cf=CFrame.lookAt(base,pos)
 				if S.SoftAim then
 					local k=math.clamp((tonumber(S.SoftV) or 16)/100,0.02,0.95)
 					cam.CFrame=cam.CFrame:Lerp(cf,k)
