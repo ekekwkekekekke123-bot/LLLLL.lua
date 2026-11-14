@@ -294,8 +294,15 @@ task.spawn(function()
 		local hu=ch and ch:FindFirstChildOfClass("Humanoid")
 		local hr=ch and ch:FindFirstChild("HumanoidRootPart")
 		if F.antiSlip and hu and hr then
-			local mv=hu.MoveDirection local v=hr.AssemblyLinearVelocity local sp=hu.WalkSpeed
-			hr.AssemblyLinearVelocity=Vector3.new(mv.X*sp,v.Y,mv.Z*sp)
+			local v=hr.AssemblyLinearVelocity
+			local flat=Vector3.new(v.X,0,v.Z)
+			local mv=hu.MoveDirection
+			local sp=hu.WalkSpeed
+			if mv.Magnitude<0.05 then
+				hr.AssemblyLinearVelocity=Vector3.new(0,v.Y,0)
+			elseif flat.Magnitude>sp then
+				hr.AssemblyLinearVelocity=Vector3.new(mv.X*sp,v.Y,mv.Z*sp)
+			end
 		end
 	end
 end)
