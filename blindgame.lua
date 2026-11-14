@@ -188,7 +188,8 @@ end
 local function setHL(inst,d,col)
 	if d.hl and not d.hl.Parent then d.hl=nil end
 	if not d.hl then
-		local ad=anchorOf(inst) or inst
+				local ad=inst
+		if not (inst:IsA("BasePart") or inst:IsA("Model")) then ad=anchorOf(inst) or inst end
 		d.hl=B("Highlight",{Name="blindhl",FillTransparency=0.72,OutlineTransparency=0,DepthMode=Enum.HighlightDepthMode.AlwaysOnTop,Adornee=ad,Parent=ad})
 	end
 	d.hl.Enabled=true d.hl.FillColor=col d.hl.OutlineColor=col
