@@ -322,9 +322,26 @@ RS.RenderStepped:Connect(function()
 	end
 end)
 
-local icon=B("TextButton",{Size=UDim2.fromOffset(44,44),Position=pn.Position,BackgroundColor3=C.bg,BackgroundTransparency=0.03,BorderSizePixel=0,ZIndex=100,Visible=false,Text="B",Font=Enum.Font.GothamBold,TextSize=16,TextColor3=C.accent,Parent=gui})
-B("UICorner",{CornerRadius=UDim.new(0,10),Parent=icon})
-B("UIStroke",{Color=Color3.fromRGB(120,110,98),Transparency=0.5,Parent=icon})
+local icon=B("TextButton",{Size=UDim2.fromOffset(46,46),Position=pn.Position,BackgroundColor3=Color3.fromRGB(255,255,255),BackgroundTransparency=0.58,BorderSizePixel=0,ZIndex=100,Visible=false,Text="",AutoButtonColor=false,Parent=gui})
+B("UICorner",{CornerRadius=UDim.new(0.5,0),Parent=icon})
+B("UIStroke",{Color=Color3.fromRGB(255,255,255),Transparency=0.4,Thickness=1.4,Parent=icon})
+B("TextLabel",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="B",Font=Enum.Font.GothamBold,TextSize=17,TextColor3=C.accent,Parent=icon})
+local idrag=false local i0=nil local iP=nil
+icon.InputBegan:Connect(function(i)
+	if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseButton1 then
+		idrag=true i0=i.Position iP=icon.Position
+	end
+end)
+UIS.InputChanged:Connect(function(i)
+	if not idrag then return end
+	if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseMovement then
+		local d=i.Position-i0
+		icon.Position=UDim2.new(iP.X.Scale,iP.X.Offset+d.X,iP.Y.Scale,iP.Y.Offset+d.Y)
+	end
+end)
+UIS.InputEnded:Connect(function(i)
+	if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseButton1 then idrag=false end
+end)
 local minOn=false
 minBtn.MouseButton1Click:Connect(function()
 	if minOn then return end
@@ -334,12 +351,13 @@ minBtn.MouseButton1Click:Connect(function()
 	task.delay(0.22,function()
 		pn.Visible=false
 		icon.Position=pn.Position icon.Size=UDim2.fromOffset(6,6) icon.Visible=true
-		TS:Create(icon,TweenInfo.new(0.24,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.fromOffset(44,44)}):Play()
+		TS:Create(icon,TweenInfo.new(0.24,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.fromOffset(46,46)}):Play()
 	end)
 end)
 icon.MouseButton1Click:Connect(function()
 	if not minOn then return end
 	icon.Visible=false
+	pn.Position=icon.Position
 	pn.Visible=true pn.BackgroundTransparency=0.03 pn.Size=UDim2.fromOffset(4,4)
 	bar.Visible=true side.Visible=true
 	TS:Create(pn,TweenInfo.new(0.26,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.fromOffset(PW,PH)}):Play()
