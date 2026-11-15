@@ -198,6 +198,26 @@ rowBtn(bodyK,yK,"击杀最近的人",function()
 	tp(home)
 end)
 rowToggle(bodyK,yK,"自动挥刀","autoSwing")
+local function tap()
+	local vpv=workspace.CurrentCamera.ViewportSize
+	local x=math.floor(vpv.X*0.78)
+	local y=math.floor(vpv.Y*0.22)
+	pcall(function()
+		local VIM=game:GetService("VirtualInputManager")
+		VIM:SendMouseButtonEvent(x,y,0,true,game,0)
+	end)
+end
+task.spawn(function()
+	while gui.Parent do
+		task.wait(0.05)
+		if F.autoSwing then
+			local ch=LP.Character
+			local w=ch and ch:FindFirstChildOfClass("Tool")
+			if w then pcall(tap) end
+			task.wait(1.25)
+		end
+	end
+end)
 rowToggle(bodyK,yK,"恢复视野","seeFix")
 local pickGui=B("ScreenGui",{Name="blind_pick",IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=9000,Enabled=false,Parent=SP()})
 gui.Destroying:Connect(function() pcall(function() pickGui:Destroy() end) end)
