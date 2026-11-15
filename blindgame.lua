@@ -124,6 +124,21 @@ local function slam(p)
 	tp(t.CFrame*CFrame.new(0,0,3))
 	return true
 end
+local function lockTo(p,dur)
+	local t0=os.clock()
+	while os.clock()-t0<dur do
+		local ch=LP.Character
+		local hr=ch and ch:FindFirstChild("HumanoidRootPart")
+		local c=p.Character
+		local t=c and (c:FindFirstChild("HumanoidRootPart") or c:FindFirstChild("Torso"))
+		if not (hr and t) then break end
+		local dir=hr.Position-t.Position
+		if dir.Magnitude<0.5 then dir=Vector3.new(0,0,2) end
+		dir=Vector3.new(dir.X,0,dir.Z).Unit
+		hr.CFrame=CFrame.new(t.Position+dir*1.8,t.Position)
+		RS.RenderStepped:Wait()
+	end
+end
 local function ready()
 	local ch=LP.Character
 	if not ch then return nil end
@@ -149,10 +164,10 @@ rowBtn(bodyK,yK,"击杀所有人",function()
 	for _,p in ipairs(list) do
 		local c=p.Character
 		local h=c and c:FindFirstChildOfClass("Humanoid")
-		if h and h.Health>0 and slam(p) then
-			task.wait(TP_WAIT)
+		if h and h.Health>0 then
+			lockTo(p,TP_WAIT)
 			pcall(function() w:Activate() end)
-			task.wait(HIT_HOLD)
+			lockTo(p,HIT_HOLD)
 			task.wait(math.max(SWING_GAP-(TP_WAIT+HIT_HOLD),0))
 		end
 	end
@@ -177,11 +192,9 @@ rowBtn(bodyK,yK,"击杀最近的人",function()
 	end
 	if not best then return end
 	local home=hr.CFrame
-	if slam(best) then
-		task.wait(TP_WAIT)
-		pcall(function() w:Activate() end)
-		task.wait(HIT_HOLD)
-	end
+	lockTo(best,TP_WAIT)
+	pcall(function() w:Activate() end)
+	lockTo(best,HIT_HOLD)
 	tp(home)
 end)
 rowToggle(bodyK,yK,"自动挥刀","autoSwing")
@@ -490,6 +503,7 @@ F["_on_seeFix"]=function(on)
 	local SELF={Head=1,Torso=1,["Left Arm"]=1,["Right Arm"]=1,["Left Leg"]=1,["Right Leg"]=1,HumanoidRootPart=1,
 	UpperTorso=1,LowerTorso=1,LeftUpperArm=1,LeftLowerArm=1,RightUpperArm=1,RightLowerArm=1,
 	LeftUpperLeg=1,LeftLowerLeg=1,RightUpperLeg=1,RightLowerLeg=1,LeftHand=1,RightHand=1,LeftFoot=1,RightFoot=1}
+	local PUSH=1.2
 	if not on then
 		if F._sv then for k,v in pairs(F._sv) do pcall(function() L[k]=v end) end end
 		F._sv=nil
@@ -507,24 +521,22 @@ F["_on_seeFix"]=function(on)
 			L.Brightness=2
 		end)
 		local ch=LP.Character
-		if not ch then return end
-		local hum=ch:FindFirstChildOfClass("Humanoid")
 		local cm=workspace.CurrentCamera
-		if hum and cm and cm.CameraSubject~=hum then pcall(function() cm.CameraSubject=hum end) end
-		for _,d in ipairs(ch:GetDescendants()) do
-			if d:IsA("BasePart") and not SELF[d.Name] and not d:FindFirstAncestorOfClass("Accessory") and not d:FindFirstAncestorOfClass("Tool") then
-				local c=d.Color
-				if c.R<0.2 and c.G<0.2 and c.B<0.2 and d.Size.Magnitude>4 and d.Transparency<1 then d.Transparency=1 end
-			end
-		end
-		if cm then
-			for _,d in ipairs(cm:GetChildren()) do
-				if d:IsA("BasePart") then
-					local c=d.Color
-					if c.R<0.2 and c.G<0.2 and c.B<0.2 and d.Size.Magnitude>4 and d.Transparency<1 then d.Transparency=1 end
+		if not (ch and cm) then return end
+		local hd=ch:FindFirstChild("Head")
+		local hum=ch:FindFirstChildOfClass("Humanoid")
+		if hum and cm.CameraSubject~=hum then pcall(function() cm.CameraSubject=hum end) end
+		local function kill(p)
+			if p:IsA("BasePart") and not SELF[p.Name] and not p:FindFirstAncestorOfClass("Accessory") and not p:FindFirstAncestorOfClass("Tool") then
+				if p.Size.Magnitude>0.8 and p.Transparency<1 then
+					p.Transparency=1 p.CanQuery=false p.CanTouch=false
 				end
 			end
 		end
+		for _,d in ipairs(ch:GetDescendants()) do kill(d) end
+		if hd then for _,d in ipairs(hd:GetChildren()) do kill(d) end end
+		for _,d in ipairs(cm:GetChildren()) do if d:IsA("BasePart") then kill(d) end end
+		if PUSH>0 then pcall(function() cm.CFrame=cm.CFrame*CFrame.new(0,0,-PUSH) end) end
 	end)
 end
 local icon=B("TextButton",{Size=UDim2.fromOffset(46,46),Position=pn.Position,BackgroundColor3=Color3.fromRGB(255,255,255),BackgroundTransparency=0.58,BorderSizePixel=0,ZIndex=100,Visible=false,Text="",AutoButtonColor=false,Parent=gui})
