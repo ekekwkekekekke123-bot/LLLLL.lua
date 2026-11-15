@@ -3437,15 +3437,9 @@ S.aimBP=function(ch)
 	if a=="Legs" then return ch:FindFirstChild("LowerTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("Head") end
 	return ch:FindFirstChild("Head") or ch:FindFirstChild("Torso")
 end
-local wxcLock=false local wxcT=0
 RS:BindToRenderStep("wxAim",2000,function()
-				if not S.AimOn or dead then
+					if not S.AimOn or dead then
 			if S.afov then S.afov.Visible=false end
-			if wxcLock and os.clock()-wxcT>0.35 then
-				local c=workspace.CurrentCamera
-				if c then pcall(function() c.CameraType=Enum.CameraType.Custom end) end
-				wxcLock=false
-			end
 			return
 		end
 	pcall(function()
@@ -3507,10 +3501,6 @@ RS:BindToRenderStep("wxAim",2000,function()
 					local flat=Vector3.new(v.X,0,v.Z)
 					if flat.Magnitude>1 then pos=pos+flat.Unit*((pv/100)*6) end
 				end
-				if cam.CameraType~=Enum.CameraType.Scriptable then
-					pcall(function() cam.CameraType=Enum.CameraType.Scriptable end)
-				end
-				wxcLock=true wxcT=os.clock()
 								local base=cam.CFrame.Position
 				local rc=LP.Character
 				local rh=rc and (rc:FindFirstChild("Head") or rc:FindFirstChild("HumanoidRootPart"))
