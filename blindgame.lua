@@ -471,53 +471,6 @@ RS.RenderStepped:Connect(function()
 		if d:IsA("Attachment") and string.find(d.Name,"RagA",1,true) then pcall(function() d:Destroy() end) end
 	end
 end)
-local lastSwing=0
-local chaseClock=0
-RS.Heartbeat:Connect(function()
-	if not F.autoSwing or not gui.Parent then return end
-	local ch=LP.Character
-	local w=ch and ch:FindFirstChildOfClass("Tool")
-	local hr=ch and ch:FindFirstChild("HumanoidRootPart")
-	local hum=ch and ch:FindFirstChildOfClass("Humanoid")
-	if not (w and hr and hum) then return end
-	local best,bd=nil,1e9
-	local bvel=Vector3.zero
-	for _,p in ipairs(P:GetPlayers()) do
-		if p~=LP then
-			local c=p.Character
-			local t=c and (c:FindFirstChild("HumanoidRootPart") or c:FindFirstChild("Torso"))
-			local h=c and c:FindFirstChildOfClass("Humanoid")
-			if t and h and h.Health>0 then
-				local d=(t.Position-hr.Position).Magnitude
-				if d<bd then bd=d best=t bvel=t.AssemblyLinearVelocity end
-			end
-		end
-	end
-	if not best then
-		pcall(function() if hum.WalkSpeed~=16 then hum.WalkSpeed=16 end end)
-		return
-	end
-	if bd>9 then
-		hum.WalkSpeed=42
-		if os.clock()-chaseClock>0.12 then
-			chaseClock=os.clock()
-			hum:MoveTo(best.Position+bvel*0.15)
-		end
-	else
-		hum.WalkSpeed=16
-		hum:MoveTo(hr.Position)
-		if os.clock()-lastSwing>1.35 then
-			lastSwing=os.clock()
-			local dir=hr.Position-best.Position
-			if dir.Magnitude<0.5 then dir=Vector3.new(0,0,3) end
-			dir=Vector3.new(dir.X,0,dir.Z).Unit
-			local pos=best.Position+dir*2.2
-			pcall(function() hr.CFrame=CFrame.new(pos,best.Position) end)
-			task.wait(0.03)
-			pcall(function() w:Activate() end)
-		end
-	end
-end)
 F["_on_seeFix"]=function(on)
 	local L=game:GetService("Lighting")
 	local SELF={Head=1,Torso=1,["Left Arm"]=1,["Right Arm"]=1,["Left Leg"]=1,["Right Leg"]=1,HumanoidRootPart=1,
