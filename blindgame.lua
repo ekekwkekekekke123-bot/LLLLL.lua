@@ -280,7 +280,7 @@ local function setHL(inst,d,col)
 	end
 	d.hl.Enabled=true d.hl.FillColor=col d.hl.OutlineColor=col
 end
-local function draw(inst,hp,rp,d,col,label,trOv)
+local function draw(inst,hp,rp,d,col,label,trOv,noBox)
 	local a=cam:WorldToViewportPoint(hp)
 	local b=cam:WorldToViewportPoint(rp)
 	local vpv=cam.ViewportSize
@@ -295,7 +295,7 @@ local function draw(inst,hp,rp,d,col,label,trOv)
 		d.d.Text=math.floor((cam.CFrame.Position-rp).Magnitude).."m" d.d.TextColor3=col
 		d.d.Position=UDim2.fromOffset(cx,(F.eNm and a.Y-16) or (a.Y-30)) d.d.Visible=true
 	end
-	if F.eBx and on then
+	if F.eBx and on and not noBox then
 		if F.BoxMd=="3D" then
 			d.b.Visible=false
 			if not d.e then
@@ -368,10 +368,15 @@ local function reg(o)
 	if not (o:IsA("BasePart") or o:IsA("Model") or o:IsA("Tool")) then return end
 	local n=string.lower(o.Name)
 	if string.find(n,"apercu",1,true) or string.find(n,"viewmodel",1,true) or string.find(n,"camera",1,true) then return end
-	if hasAny(n,KB) then BAN[o]=true return end
-	if isOne(n,KT) then TRA[o]=true return end
-	if o:IsA("Tool") or o:FindFirstChild("ClientBanana") or o:GetAttribute("Utilisations")~=nil then BAN[o]=true return end
-	if o:FindFirstChild("ClientBearTrap") then TRA[o]=true end
+	local ban=hasAny(n,KB) or o:FindFirstChild("ClientBanana")~=nil or o:GetAttribute("Utilisations")~=nil
+	local trap=isOne(n,KT) or o:FindFirstChild("ClientBearTrap")~=nil
+	if not ban and o:IsA("Tool") then
+		for _,d in ipairs(o:GetDescendants()) do
+			if d:IsA("BasePart") and hasAny(string.lower(d.Name),KB) then ban=true break end
+		end
+	end
+	if ban then BAN[o]=true return end
+	if trap then TRA[o]=true return end
 end
 workspace.DescendantAdded:Connect(reg)
 for _,o in ipairs(workspace:GetDescendants()) do reg(o) end
@@ -388,9 +393,15 @@ local function posOf(o)
 	if not r:IsA("BasePart") then r=h end
 	return h.Position,r.Position
 end
+local function dead(o)
+	if not o or not o.Parent then return true end
+	if o:IsA("BasePart") and o.Transparency>=1 then return true end
+	if o:IsA("Model") and not o:FindFirstChildWhichIsA("BasePart",true) then return true end
+	return false
+end
 local function tickSet(set,on,col,label,tr)
 	for inst in pairs(set) do
-		if not inst.Parent then
+		if dead(inst) then
 			set[inst]=nil dropES(inst)
 		elseif inst:IsDescendantOf(workspace.CurrentCamera) then
 			hideES(ES[inst])
@@ -400,7 +411,8 @@ local function tickSet(set,on,col,label,tr)
 			local d=ES[inst]
 			if not on then hideES(d) else
 				local hp,rp=posOf(inst)
-				if hp then d=getES(inst) draw(inst,hp,rp,d,col,label,tr) setHL(inst,d,col) end
+				if hp then d=getES(inst) draw(inst,hp,rp,d,col,label,tr,true) setHL(inst,d,col)
+				else hideES(d) end
 			end
 		end
 	end
@@ -422,9 +434,8 @@ RS.RenderStepped:Connect(function()
 				elseif d.hl then pcall(function() d.hl:Destroy() end) d.hl=nil end
 			else hideES(ES[p]) end
 		end
-	end
-	tickSet(BAN,F.eBan,Color3.fromRGB(250,238,150),"banana",F.eBanTr)
-	tickSet(TRA,F.eTrp,Color3.fromRGB(0,200,255),"trap",F.eTrpTr)
+			tickSet(BAN,F.eBan,Color3.fromRGB(250,238,150),"banana",F.eBanTr or false)
+	tickSet(TRA,F.eTrp,Color3.fromRGB(0,200,255),"trap",F.eTrpTr or false)
 	for inst in pairs(ES) do if inst:IsA("Player") and not inst.Parent then dropES(inst) end end
 end)
 UIS.InputBegan:Connect(function(i,g)
@@ -601,30 +612,35 @@ F["_on_seeFix"]=function(on)
 		end
 	end)
 end
-local icon=B("TextButton",{Size=UDim2.fromOffset(46,46),Position=pn.Position,BackgroundColor3=Color3.fromRGB(255,255,255),BackgroundTransparency=0.58,BorderSizePixel=0,ZIndex=100,Visible=false,Text="",AutoButtonColor=false,Parent=gui})
+local icon=B("TextButton",{Size=UDim2.fromOffset(32,32),Position=pn.Position,BackgroundColor3=Color3.fromRGB(255,255,255),BackgroundTransparency=0.58,BorderSizePixel=0,ZIndex=100,Visible=false,Text="",AutoButtonColor=false,Parent=gui})
 B("UICorner",{CornerRadius=UDim.new(0.5,0),Parent=icon})
 B("UIStroke",{Color=Color3.fromRGB(255,255,255),Transparency=0.4,Thickness=1.4,Parent=icon})
-B("TextLabel",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="B",Font=Enum.Font.GothamBold,TextSize=17,TextColor3=C.accent,Parent=icon})
+B("TextLabel",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="WX",Font=Enum.Font.GothamBold,TextSize=10,TextColor3=C.accent,Parent=icon})
 local idrag=false local i0=nil local iP=nil
 icon.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseButton1 then idrag=true i0=i.Position iP=icon.Position end end)
 UIS.InputChanged:Connect(function(i) if not idrag then return end if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseMovement then local d=i.Position-i0 icon.Position=UDim2.new(iP.X.Scale,iP.X.Offset+d.X,iP.Y.Scale,iP.Y.Offset+d.Y) end end)
 UIS.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseButton1 then idrag=false end end)
 local minOn=false
+local pnHome=pn.Position
+local iconHome=nil
 minBtn.MouseButton1Click:Connect(function()
 	if minOn then return end
 	minOn=true
+	pnHome=pn.Position
 	side.Visible=false bodyE.Visible=false bodyB.Visible=false bodyK.Visible=false bar.Visible=false
 	TS:Create(pn,TweenInfo.new(0.22,Enum.EasingStyle.Back,Enum.EasingDirection.In),{Size=UDim2.fromOffset(4,4),BackgroundTransparency=1}):Play()
 	task.delay(0.22,function()
 		pn.Visible=false
-		icon.Position=pn.Position icon.Size=UDim2.fromOffset(6,6) icon.Visible=true
-		TS:Create(icon,TweenInfo.new(0.24,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.fromOffset(46,46)}):Play()
+		if not iconHome then iconHome=pnHome end
+		icon.Size=UDim2.fromOffset(6,6) icon.Position=iconHome icon.Visible=true
+		TS:Create(icon,TweenInfo.new(0.24,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.fromOffset(32,32)}):Play()
 	end)
 end)
 icon.MouseButton1Click:Connect(function()
 	if not minOn then return end
 	icon.Visible=false
-	pn.Position=icon.Position
+	iconHome=icon.Position
+	pn.Position=pnHome
 	pn.Visible=true pn.BackgroundTransparency=0.03 pn.Size=UDim2.fromOffset(4,4)
 	bar.Visible=true side.Visible=true
 	TS:Create(pn,TweenInfo.new(0.26,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.fromOffset(PW,PH)}):Play()
