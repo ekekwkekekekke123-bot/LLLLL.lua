@@ -92,6 +92,69 @@ rowToggle(bodyE,yE,"香蕉 ESP","eBan")
 rowToggle(bodyE,yE,"香蕉 ESP 射线","eBanTr")
 rowToggle(bodyE,yE,"陷阱 ESP","eTrp")
 rowToggle(bodyE,yE,"陷阱 ESP 射线","eTrpTr")
+title(bodyE,"特殊模式",yE)
+rowToggle(bodyE,yE,"ESP盲人（红）","eBlind")
+rowToggle(bodyE,yE,"ESP有枪的人（蓝）","eGun")
+local smNote=B("TextLabel",{Size=UDim2.new(1,0,0,26),Position=UDim2.fromOffset(8,yE.v),BackgroundTransparency=1,Text="只在特殊模式开启这两个，不然会很乱",Font=Enum.Font.GothamMedium,TextSize=8,TextColor3=C.dim,TextXAlignment=Enum.TextXAlignment.Left,TextWrapped=true,ZIndex=131,Parent=bodyE})
+yE.v=yE.v+30
+local SM_KBAT={"batte","batter","baseball"}
+local SM_KGUN={"gun","pistol","revolver","sniper","shotgun","rifle","handgun"}
+local SMHL=setmetatable({},{__mode="k"})
+local function smHas(n,t) for _,k in ipairs(t) do if string.find(n,k,1,true) then return true end end return false end
+local function smRole(pl)
+	local bat,gun=false,false
+	local ch=pl.Character
+	local bp=pl:FindFirstChild("Backpack")
+	for _,c in ipairs({bp,ch}) do
+		if c then
+			for _,d in ipairs(c:GetChildren()) do
+				if d:IsA("Tool") then
+					local n=string.lower(d.Name)
+					if d:FindFirstChild("ClientBatte") or smHas(n,SM_KBAT) then bat=true end
+					if smHas(n,SM_KGUN) then gun=true end
+				end
+			end
+		end
+	end
+	if gun then return "gun" end
+	if bat then return "bat" end
+	return nil
+end
+local smT=0
+RS.Heartbeat:Connect(function(dt)
+	if not gui.Parent then return end
+	smT=smT+dt
+	if smT<0.3 then return end
+	smT=0
+	for _,pl in ipairs(P:GetPlayers()) do
+		local h=SMHL[pl]
+		if pl==LP then
+			if h then h.Enabled=false end
+		else
+			local r=smRole(pl)
+			local col=nil
+			if r=="bat" and F.eBlind then col=Color3.fromRGB(255,60,60)
+			elseif r=="gun" and F.eGun then col=Color3.fromRGB(60,120,255) end
+			local c2=pl.Character
+			if col and c2 then
+				if not h or not h.Parent then
+					h=Instance.new("Highlight")
+					h.Name="bdsm"
+					h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
+					h.FillTransparency=0.55
+					h.Parent=workspace
+					SMHL[pl]=h
+				end
+				h.Adornee=c2
+				h.FillColor=col
+				h.OutlineColor=col
+				h.Enabled=true
+			elseif h then
+				h.Enabled=false
+			end
+		end
+	end
+end)
 title(bodyB,"基础功能",yB)
 rowToggle(bodyB,yB,"防滑","antiSlip")
 rowToggle(bodyB,yB,"防布娃娃","noRag",function(v) local f=F["_on_noRag"] if f then pcall(f,v) end end)
@@ -451,41 +514,15 @@ RS.RenderStepped:Connect(function()
 	local hu=ch and ch:FindFirstChildOfClass("Humanoid")
 	local hr=ch and ch:FindFirstChild("HumanoidRootPart")
 	if not (hu and hr) then return end
-	for _,v in ipairs(ch:GetDescendants()) do
-		if v:IsA("LinearVelocity") or v:IsA("AlignPosition") or v:IsA("BodyVelocity") or v:IsA("VectorForce") or v:IsA("BodyForce") or v:IsA("Torque") then
-			pcall(function() v.Enabled=false end)
-		end
-	end
-	for _,v in ipairs(workspace:GetChildren()) do
-		if v:IsA("LinearVelocity") or v:IsA("AlignPosition") or v:IsA("BodyVelocity") or v:IsA("VectorForce") then
-			local hit=false
-			pcall(function()
-				if v.Attachment0 and v.Attachment0:IsDescendantOf(ch) then hit=true end
-				if v.Attachment1 and v.Attachment1:IsDescendantOf(ch) then hit=true end
-			end)
-			if hit then pcall(function() v.Enabled=false end) end
-		end
-	end
-	for _,v in ipairs(ch:GetDescendants()) do
-		if v:IsA("BasePart") then
-			local p=v.CustomPhysicalProperties
-			if not p or p.Friction<3 then pcall(function() v.CustomPhysicalProperties=PhysicalProperties.new(1.5,3,0.2,1,1) end) end
-		end
-	end
 	local mv=hu.MoveDirection
-	local vel=hr.AssemblyLinearVelocity
+	local v=hr.AssemblyLinearVelocity
+	local sp=hu.WalkSpeed
 	if mv.Magnitude<0.05 then
-		hr.AssemblyLinearVelocity=Vector3.new(0,math.min(vel.Y,0),0)
+		hr.AssemblyLinearVelocity=Vector3.new(0,math.min(v.Y,0),0)
 	else
-		local flat=Vector3.new(vel.X,0,vel.Z)
-		local sp=hu.WalkSpeed
-		if flat.Magnitude>sp+1 then
-			flat=flat.Unit*sp
-			hr.AssemblyLinearVelocity=Vector3.new(flat.X,vel.Y,flat.Z)
-		end
+		local u=mv.Unit
+		hr.AssemblyLinearVelocity=Vector3.new(u.X*sp,v.Y,u.Z*sp)
 	end
-	local st=hu:GetState()
-	if st==Enum.HumanoidStateType.FallingDown then pcall(function() hu:ChangeState(Enum.HumanoidStateType.Running) end) end
 end)
 F["_on_noRag"]=function(on)
 	local hu=LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")
@@ -508,9 +545,12 @@ RS.RenderStepped:Connect(function()
 	end
 end)
 local function inCh(v,ch) return v~=nil and typeof(v)=="Instance" and v:IsDescendantOf(ch) end
-local function breakGrab()
+local function inCh(v,ch) return v~=nil and typeof(v)=="Instance" and v:IsDescendantOf(ch) end
+local function freeFrom()
 	local ch=LP.Character
 	if not ch then return end
+	local hum=ch:FindFirstChildOfClass("Humanoid")
+	if not hum then return end
 	local function chk(o)
 		local ok,a,b=pcall(function() return o.Attachment0 or o.Part0,o.Attachment1 or o.Part1 end)
 		if not ok or not a or not b then return end
@@ -530,34 +570,50 @@ local function breakGrab()
 	for _,o in ipairs(ch:GetDescendants()) do
 		if o:IsA("AlignPosition") or o:IsA("AlignOrientation") or o:IsA("Weld") or o:IsA("WeldConstraint") or o:IsA("Motor6D") then chk(o) end
 	end
-	local hum=ch:FindFirstChildOfClass("Humanoid")
+	pcall(function() hum.PlatformStand=false end)
+	pcall(function() hum.Sit=false end)
+	local st=hum:GetState()
+	if st==Enum.HumanoidStateType.Physics or st==Enum.HumanoidStateType.FallingDown then
+		pcall(function() hum:ChangeState(Enum.HumanoidStateType.Running) end)
+	end
 	local cm=workspace.CurrentCamera
-	if hum and cm and cm.CameraSubject~=hum then pcall(function() cm.CameraSubject=hum end) end
-	if hum and hum.WalkSpeed<16 then pcall(function() hum.WalkSpeed=16 end) end
-end
-F["_on_touch"]=function(on)
-	local ch=LP.Character
-	if not ch then return end
-	if on then return end
-	if F.noBanana or F.noTrap then return end
-	for _,v in ipairs(ch:GetDescendants()) do
-		if v:IsA("BasePart") then pcall(function() v.CanTouch=true end) end
+	if cm and cm.CameraSubject~=hum then pcall(function() cm.CameraSubject=hum end) end
+	pcall(function() hum.Jump=true end)
+	for _,d in ipairs(ch:GetDescendants()) do
+		if d:IsA("ProximityPrompt") then pcall(function() fireproximityprompt(d) end) end
 	end
 end
 local grabClock=0
 RS.Heartbeat:Connect(function()
 	if not gui.Parent then return end
+	if not (F.noGrab or F.noTrap or F.noBanana) then return end
 	local t=os.clock()
-	if t-grabClock<0.1 then return end
+	if t-grabClock<0.05 then return end
 	grabClock=t
 	local ch=LP.Character
 	if not ch then return end
-	if F.noGrab then breakGrab() end
-	if F.noBanana or F.noTrap then
-		for _,v in ipairs(ch:GetDescendants()) do
-			if v:IsA("BasePart") and v.CanTouch then pcall(function() v.CanTouch=false end) end
+	local hum=ch:FindFirstChildOfClass("Humanoid")
+	if not hum then return end
+	local bad=false
+	if hum.PlatformStand then bad=true end
+	local st=hum:GetState()
+	if st==Enum.HumanoidStateType.Physics or st==Enum.HumanoidStateType.FallingDown then bad=true end
+	if not bad then
+		for _,p in ipairs(P:GetPlayers()) do
+			if p~=LP then
+				local c=p.Character
+				if c and c.Parent then
+					for _,o in ipairs(c:GetChildren()) do
+						if o:IsA("AlignPosition") or o:IsA("Weld") or o:IsA("WeldConstraint") then
+							local ok,a,b=pcall(function() return o.Attachment0 or o.Part0,o.Attachment1 or o.Part1 end)
+							if ok and ((inCh(a,ch) and not inCh(b,ch)) or (inCh(b,ch) and not inCh(a,ch))) then bad=true break end
+						end
+					end
+				end
+			end
 		end
 	end
+	if bad then freeFrom() end
 end)
 F["_on_seeFix"]=function(on)
 	local L=game:GetService("Lighting")
