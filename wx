@@ -832,7 +832,12 @@ local function fireP(d)
 end
 local IPG={}
 local function ipClear()
-	for i=#IPG,1,-1 do pcall(function() IPG[i].bb:Destroy() end) IPG[i]=nil end
+	for i=#IPG,1,-1 do
+		local o=IPG[i]
+		if o and o.bb then pcall(function() o.bb:Destroy() end) end
+		IPG[i]=nil
+	end
+	IPG={}
 end
 local function ipAdd(par,nm)
 	if not (par and par:IsA("BasePart")) then return end
@@ -869,23 +874,28 @@ workspace.DescendantAdded:Connect(function(d)
 end)
 local ipAt=0
 RS.Heartbeat:Connect(function(dt)
-	if not S.ESPInt then return end
 	ipAt=ipAt+dt
 	if ipAt<0.25 then return end
 	ipAt=0
-	local c=LP.Character
-	local hrp=c and c:FindFirstChild("HumanoidRootPart")
-	if not hrp then return end
-	local lim=math.clamp(tonumber(S.IPD) or 1000,0,2500)
 	for i=#IPG,1,-1 do
 		local o=IPG[i]
-		if not o.obj or not o.obj.Parent then
+		if not o then table.remove(IPG,i)
+		elseif not (o.obj and o.obj.Parent) then
 			pcall(function() o.bb:Destroy() end)
 			table.remove(IPG,i)
+		elseif S.ESPInt then
+			local c=LP.Character
+			local hrp=c and c:FindFirstChild("HumanoidRootPart")
+			if hrp then
+				local lim=math.clamp(tonumber(S.IPD) or 1000,0,2500)
+				local dd=(o.obj.Position-hrp.Position).Magnitude
+				o.bb.Enabled=(dd<=lim)
+				if dd<=lim then o.txt.Text=o.nm.."  "..math.floor(dd).."m" end
+			else
+				o.bb.Enabled=false
+			end
 		else
-			local dd=(o.obj.Position-hrp.Position).Magnitude
-			o.bb.Enabled=(dd<=lim)
-			if dd<=lim then o.txt.Text=o.nm.."  "..math.floor(dd).."m" end
+			o.bb.Enabled=false
 		end
 	end
 end)
@@ -3239,18 +3249,22 @@ RS.RenderStepped:Connect(function()
 	local hrp=ch and ch:FindFirstChild("HumanoidRootPart")
 	local list={}
 	if cam and hrp then
-		if S.ESPInt then
+				if S.ESPInt then
 			local lim=math.clamp(tonumber(S.IPD) or 1000,0,2500)
-			for i=1,#IPG do
+			for i=#IPG,1,-1 do
 				local o=IPG[i]
-				if o.obj and o.obj.Parent then
+				if not o then table.remove(IPG,i)
+				elseif not (o.obj and o.obj.Parent) then
+					pcall(function() o.bb:Destroy() end)
+					table.remove(IPG,i)
+				else
 					if o.bb then o.bb.Enabled=false end
 					local dd=(o.obj.Position-hrp.Position).Magnitude
 					if dd<=lim then list[#list+1]={o.obj,dd,o.nm,0} end
 				end
 			end
 		end
-		if S.NpcHl then
+if S.NpcHl then
 			for m in pairs(ND) do
 				if m.Parent then
 					local p=m:FindFirstChild("HumanoidRootPart") or m.PrimaryPart
