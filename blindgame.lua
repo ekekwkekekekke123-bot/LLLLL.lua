@@ -366,9 +366,10 @@ local function draw(inst,hp,rp,d,col,label,trOv,noBox)
 		d.n.Text=label d.n.TextColor3=col
 		d.n.Position=UDim2.fromOffset(cx,a.Y-30) d.n.Visible=true
 	end
-	if F.eDs and on then
+		if F.eDs and on then
+		local fb=cam:WorldToViewportPoint(rp-Vector3.new(0,3,0))
 		d.d.Text=math.floor((cam.CFrame.Position-rp).Magnitude).."m" d.d.TextColor3=col
-		d.d.Position=UDim2.fromOffset(cx,(F.eNm and a.Y-16) or (a.Y-30)) d.d.Visible=true
+		d.d.Position=UDim2.fromOffset(cx,fb.Y+6) d.d.Visible=true
 	end
 	if F.eBx and on and not noBox then
 		if F.BoxMd=="3D" then
