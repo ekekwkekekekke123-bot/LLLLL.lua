@@ -104,9 +104,9 @@ local function smHas(n,t) for _,k in ipairs(t) do if string.find(n,k,1,true) the
 local function smRole(pl)
 	local bat,gun=false,false
 	local function scan(n)
-		n=string.lower(n)
+		n=string.lower(tostring(n))
 		if string.find(n,"batte",1,true) or string.find(n,"batter",1,true) or string.find(n,"baseball",1,true) or string.find(n,"棒球",1,true) then bat=true end
-		if string.find(n,"gun",1,true) or string.find(n,"pistol",1,true) or string.find(n,"revolver",1,true) or string.find(n,"sheriff",1,true) or string.find(n,"枪",1,true) then gun=true end
+		if string.find(n,"fusil",1,true) or string.find(n,"pompe",1,true) or string.find(n,"shotgun",1,true) or string.find(n,"gun",1,true) or string.find(n,"枪",1,true) then gun=true end
 	end
 	local ch=pl.Character
 	local bp=pl:FindFirstChild("Backpack")
@@ -114,12 +114,25 @@ local function smRole(pl)
 		if c then
 			for _,d in ipairs(c:GetChildren()) do
 				if d:IsA("Tool") then
-					scan(d.Name)
 					if d:FindFirstChild("ClientBatte") then bat=true end
-					for _,x in ipairs(d:GetDescendants()) do scan(x.Name) end
+					if d:FindFirstChild("ClientFusil") then gun=true end
+					scan(d.Name)
+					for _,x in ipairs(d:GetChildren()) do scan(x.Name) end
 				end
 			end
 		end
+	end
+	pcall(function()
+		if pl.Team then scan(pl.Team.Name) end
+		for _,k in ipairs({"Role","role","Class","Type","Team","Rank"}) do
+			local v=pl:GetAttribute(k)
+			if type(v)=="string" then scan(v) end
+		end
+	end)
+	if gun then return "gun" end
+	if bat then return "bat" end
+	return nil
+end
 	end
 	pcall(function()
 		if pl.Team then scan(pl.Team.Name) end
