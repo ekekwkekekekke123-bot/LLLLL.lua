@@ -133,18 +133,6 @@ local function smRole(pl)
 	if bat then return "bat" end
 	return nil
 end
-	end
-	pcall(function()
-		if pl.Team then scan(pl.Team.Name) end
-		for _,k in ipairs({"Role","role","Team","Class","Type"}) do
-			local v=pl:GetAttribute(k)
-			if type(v)=="string" then scan(v) end
-		end
-	end)
-	if gun then return "gun" end
-	if bat then return "bat" end
-	return nil
-end
 local smT=0
 RS.Heartbeat:Connect(function(dt)
 	if not gui.Parent then return end
