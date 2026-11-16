@@ -403,6 +403,8 @@ local function tickSet(set,on,col,label,tr)
 	for inst in pairs(set) do
 		if dead(inst) then
 			set[inst]=nil dropES(inst)
+		elseif not inst:IsDescendantOf(workspace) then
+			set[inst]=nil dropES(inst)
 		elseif inst:IsDescendantOf(workspace.CurrentCamera) then
 			hideES(ES[inst])
 		elseif LP.Character and inst:IsDescendantOf(LP.Character) then
