@@ -434,6 +434,7 @@ RS.RenderStepped:Connect(function()
 				elseif d.hl then pcall(function() d.hl:Destroy() end) d.hl=nil end
 			else hideES(ES[p]) end
 		end
+		end
 			tickSet(BAN,F.eBan,Color3.fromRGB(250,238,150),"banana",F.eBanTr or false)
 	tickSet(TRA,F.eTrp,Color3.fromRGB(0,200,255),"trap",F.eTrpTr or false)
 	for inst in pairs(ES) do if inst:IsA("Player") and not inst.Parent then dropES(inst) end end
