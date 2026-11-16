@@ -94,7 +94,10 @@ rowToggle(bodyE,yE,"陷阱 ESP","eTrp")
 rowToggle(bodyE,yE,"陷阱 ESP 射线","eTrpTr")
 title(bodyB,"基础功能",yB)
 rowToggle(bodyB,yB,"防滑","antiSlip")
-rowToggle(bodyB,yB,"防布娃娃","noRag")
+rowToggle(bodyB,yB,"防布娃娃","noRag",function(v) local f=F["_on_noRag"] if f then pcall(f,v) end end)
+rowToggle(bodyB,yB,"防抱","noGrab")
+rowToggle(bodyB,yB,"防香蕉","noBanana",function(v) local f=F["_on_touch"] if f then pcall(f,v) end end)
+rowToggle(bodyB,yB,"防陷阱","noTrap",function(v) local f=F["_on_touch"] if f then pcall(f,v) end end)
 title(bodyK,"失明者功能",yK)
 local TP_WAIT=0.25
 local HIT_HOLD=0.35
@@ -194,7 +197,6 @@ rowBtn(bodyK,yK,"击杀最近的人",function()
 	pcall(function() w:Activate() end)
 	tp(home)
 end)
-rowToggle(bodyK,yK,"自动挥刀","autoSwing")
 rowToggle(bodyK,yK,"恢复视野","seeFix",function(v) local f=F["_on_seeFix"] if f then pcall(f,v) end end)
 local pickGui=B("ScreenGui",{Name="blind_pick",IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=9000,Enabled=false,Parent=SP()})
 gui.Destroying:Connect(function() pcall(function() pickGui:Destroy() end) end)
@@ -491,50 +493,55 @@ RS.RenderStepped:Connect(function()
 		if d:IsA("Attachment") and string.find(d.Name,"RagA",1,true) then pcall(function() d:Destroy() end) end
 	end
 end)
-local lastSwing=0
-local chaseClock=0
-RS.Heartbeat:Connect(function()
-	if not F.autoSwing or not gui.Parent then return end
+local function inCh(v,ch) return v~=nil and typeof(v)=="Instance" and v:IsDescendantOf(ch) end
+local function breakGrab()
 	local ch=LP.Character
-	local w=ch and ch:FindFirstChildOfClass("Tool")
-	local hr=ch and ch:FindFirstChild("HumanoidRootPart")
-	local hum=ch and ch:FindFirstChildOfClass("Humanoid")
-	if not (w and hr and hum) then return end
-	local best,bd=nil,1e9
-	local bvel=Vector3.zero
+	if not ch then return end
+	local function chk(o)
+		local ok,a,b=pcall(function() return o.Attachment0 or o.Part0,o.Attachment1 or o.Part1 end)
+		if not ok or not a or not b then return end
+		local am,bm=inCh(a,ch),inCh(b,ch)
+		if (am and not bm) or (bm and not am) then pcall(function() o:Destroy() end) end
+	end
 	for _,p in ipairs(P:GetPlayers()) do
 		if p~=LP then
 			local c=p.Character
-			local t=c and (c:FindFirstChild("HumanoidRootPart") or c:FindFirstChild("Torso"))
-			local h=c and c:FindFirstChildOfClass("Humanoid")
-			if t and h and h.Health>0 then
-				local d=(t.Position-hr.Position).Magnitude
-				if d<bd then bd=d best=t bvel=t.AssemblyLinearVelocity end
+			if c and c.Parent then
+				for _,o in ipairs(c:GetDescendants()) do
+					if o:IsA("AlignPosition") or o:IsA("AlignOrientation") or o:IsA("BallSocketConstraint") or o:IsA("HingeConstraint") or o:IsA("Weld") or o:IsA("WeldConstraint") or o:IsA("Motor6D") then chk(o) end
+				end
 			end
 		end
 	end
-	if not best then
-		pcall(function() if hum.WalkSpeed~=16 then hum.WalkSpeed=16 end end)
-		return
+	for _,o in ipairs(ch:GetDescendants()) do
+		if o:IsA("AlignPosition") or o:IsA("AlignOrientation") or o:IsA("Weld") or o:IsA("WeldConstraint") or o:IsA("Motor6D") then chk(o) end
 	end
-	if bd>9 then
-		hum.WalkSpeed=42
-		if os.clock()-chaseClock>0.12 then
-			chaseClock=os.clock()
-			hum:MoveTo(best.Position+bvel*0.15)
-		end
-	else
-		hum.WalkSpeed=16
-		hum:MoveTo(hr.Position)
-		if os.clock()-lastSwing>1.35 then
-			lastSwing=os.clock()
-			local dir=hr.Position-best.Position
-			if dir.Magnitude<0.5 then dir=Vector3.new(0,0,3) end
-			dir=Vector3.new(dir.X,0,dir.Z).Unit
-			local pos=best.Position+dir*2.2
-			pcall(function() hr.CFrame=CFrame.new(pos,best.Position) end)
-			task.wait(0.03)
-			pcall(function() w:Activate() end)
+	local hum=ch:FindFirstChildOfClass("Humanoid")
+	local cm=workspace.CurrentCamera
+	if hum and cm and cm.CameraSubject~=hum then pcall(function() cm.CameraSubject=hum end) end
+	if hum and hum.WalkSpeed<16 then pcall(function() hum.WalkSpeed=16 end) end
+end
+F["_on_touch"]=function(on)
+	local ch=LP.Character
+	if not ch then return end
+	if on then return end
+	if F.noBanana or F.noTrap then return end
+	for _,v in ipairs(ch:GetDescendants()) do
+		if v:IsA("BasePart") then pcall(function() v.CanTouch=true end) end
+	end
+end
+local grabClock=0
+RS.Heartbeat:Connect(function()
+	if not gui.Parent then return end
+	local t=os.clock()
+	if t-grabClock<0.1 then return end
+	grabClock=t
+	local ch=LP.Character
+	if not ch then return end
+	if F.noGrab then breakGrab() end
+	if F.noBanana or F.noTrap then
+		for _,v in ipairs(ch:GetDescendants()) do
+			if v:IsA("BasePart") and v.CanTouch then pcall(function() v.CanTouch=false end) end
 		end
 	end
 end)
