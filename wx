@@ -128,7 +128,8 @@ local C={
  dim=Color3.fromRGB(108,103,95)
 }
 local S={SpOn=false,SpV=50,JpOn=false,JpInf=false,JpH=50,FlOn=false,FlV=35,FlMd="物理",NcOn=false,ESMax=5000,TrPos="顶部",AiOn=false,AiTeam=false,AiVis=false,AiWall=false,AiMiss=false,AiAcc=100,AiType="玩家",AiPart="Head",AiPrio="准星最近",AiMax=500,SilentMode="Raycast",AiSilent=true,FovOn=true,FovR=55,FovFixed=true,ShowT=true,TgtC={Col=Color3.fromRGB(60,90,255),Rain=false},RainOn=false,RainSpd=1,InfoStyle="独立面板",ShowName=true,ShowHp=true,ShowDist=true,ShowType=true,AiHl=false,ArR=55,BoxMd="2D",HlC={Col=W,Rain=false},HlRain=false,DmgOn=false,HitSnd="关闭",TLine=false,TrC={Col=YEL,Rain=false},Lock="无",NameHunt=false,NameInput="",SecOn=false,AutoOn=false,IRange=false,IVal=20,NpcOn=false,NpcHl=false,NpcBx=false,NpcNm=false,NpcHp=false,NpcDs=false,NV=false,LPlOn=false,NoFog=false,NoShake=false,FC=false,FCSpd=10,ESPInt=false,GravOn=false,GravV=196.2,InvisOn=false}
-    S.XrV=55
+    S.InfoOn=true
+S.XrV=55
 -- [反检测伪装层参数]
 S.SafeOn   = false   -- 伪装总开关（关闭）
 S.SafeSpd  = S.SafeSpd  or 20                     -- 移动伪装速度上限
@@ -356,10 +357,10 @@ local function mk(p)
 	local d={ch=ch,o={},last=-1,hpv=-1}
 	local function rg(x) table.insert(d.o,x) return x end
 	local bbN=rg(B("BillboardGui",{Size=UDim2.fromOffset(190,30),StudsOffsetWorldSpace=Vector3.new(0,1.6,0),AlwaysOnTop=true,Adornee=hd,Parent=hd}))
-	d.n=rg(B("TextLabel",{Size=UDim2.fromOffset(190,15),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=11,TextStrokeTransparency=0.3,TextStrokeColor3=Color3.new(0,0,0),Text=p.Name,Parent=bbN}))
-	d.h=rg(B("TextLabel",{Size=UDim2.fromOffset(190,13),Position=UDim2.fromOffset(0,15),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=10,TextColor3=YEL,TextStrokeTransparency=0.3,TextStrokeColor3=Color3.new(0,0,0),Text="",Parent=bbN}))
+		d.n=rg(B("TextLabel",{Size=UDim2.fromOffset(190,15),BackgroundTransparency=1,Font=Enum.Font.SourceSansBold,TextSize=9,TextStrokeTransparency=0.25,TextStrokeColor3=Color3.new(0,0,0),Text=p.Name,Parent=bbN}))
+		d.h=rg(B("TextLabel",{Size=UDim2.fromOffset(190,13),Position=UDim2.fromOffset(0,15),BackgroundTransparency=1,Font=Enum.Font.SourceSans,TextSize=8,TextColor3=YEL,TextStrokeTransparency=0.25,TextStrokeColor3=Color3.new(0,0,0),Text="",Parent=bbN}))
 	local bbD=rg(B("BillboardGui",{Size=UDim2.fromOffset(110,14),StudsOffsetWorldSpace=Vector3.new(0,-2.2,0),AlwaysOnTop=true,Adornee=rt,Parent=rt}))
-	d.d=rg(B("TextLabel",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=10,TextStrokeTransparency=0.3,TextStrokeColor3=Color3.new(0,0,0),Text="",Parent=bbD}))
+		d.d=rg(B("TextLabel",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Font=Enum.Font.SourceSans,TextSize=8,TextStrokeTransparency=0.25,TextStrokeColor3=Color3.new(0,0,0),Text="",Parent=bbD}))
 	d.t=rg(B("Frame",{AnchorPoint=Vector2.new(0.5,0.5),BorderSizePixel=0,Visible=false,ZIndex=899,Parent=LG}))
 	d.b=rg(B("Frame",{BackgroundTransparency=1,BorderSizePixel=0,Visible=false,ZIndex=900,Parent=LG}))
 	d.bs=Instance.new("UIStroke") d.bs.Thickness=1.5 d.bs.Parent=d.b
@@ -593,7 +594,10 @@ local sp,on=cam:WorldToViewportPoint(part.Position)
 		dmgLbl.Text="-"..math.floor(lh-hu.Health) dmgLbl.Visible=true dmgLbl.Position=UDim2.fromOffset(sp.X+14,sp.Y-42) dmgT=0.8
 		if S.HitSnd~="关闭" then pcall(function() local snd=Instance.new("Sound") snd.SoundId="rbxassetid://9118823103" snd.Parent=SS snd:Play() task.delay(1,function() snd:Destroy() end) end) end
 	end
-	if S.InfoStyle=="名称头顶" then
+		if not S.InfoOn then
+		inf.Visible=false
+		if hdB then hdB.Enabled=false end
+	elseif S.InfoStyle=="名称头顶" then
 		inf.Visible=false
 		if not hdB then
 			hdB=B("BillboardGui",{Size=UDim2.fromOffset(170,32),AlwaysOnTop=true,Enabled=false,Parent=safeParent()})
@@ -643,7 +647,27 @@ local sp,on=cam:WorldToViewportPoint(part.Position)
 		if aimBB then aimBB.Enabled=false end
 		if RT.aimHL then pcall(function() RT.aimHL:Destroy() end) RT.aimHL=nil end
 	end
+	S._tgt=(best and best.ch) or nil
 end
+RS.Heartbeat:Connect(function()
+	local ch=S._tgt
+	if not ch or not ch.Parent then return end
+	if not (S.AiOn and S.InfoOn) then return end
+	local hu=ch:FindFirstChildOfClass("Humanoid")
+	if not hu then return end
+	local cam=workspace.CurrentCamera
+	local dpos=(ch:FindFirstChild("HumanoidRootPart") or ch.PrimaryPart)
+	local dtxt=(S.ShowDist and dpos and (math.floor((cam.CFrame.Position-dpos.Position).Magnitude).."m") or "")
+	if S.InfoStyle=="独立面板" then
+		if inf.Visible and S.ShowHp then
+			iH.Text="HP "..math.floor(hu.Health+0.5)..((S.ShowHp and S.ShowDist) and "        " or "  ")..dtxt
+		end
+	else
+		if hdB and hdB.Enabled and S.ShowHp then
+			hdT2.Text="HP "..math.floor(hu.Health+0.5)..(S.ShowDist and ("  "..dtxt) or "")
+		end
+	end
+end)
 local function hookSilent()
 	if not S.AiSilent or silentOn then return end
 	silentOn=true
@@ -1088,6 +1112,12 @@ do
 	uis.InputBegan:Connect(function(i,g)
 		if g then return end
 		if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseButton1 then
+			local ins=game:GetService("GuiService"):GetGuiInset()
+			_G.WXFT.X=i.Position.X
+			_G.WXFT.Y=i.Position.Y+ins.Y
+		end
+	end)
+end
 			_G.WXFT.X=i.Position.X
 			_G.WXFT.Y=i.Position.Y
 		end
@@ -2388,7 +2418,8 @@ end
 hd(pgA,"基础") T(pgA,"启用","AiOn",false) T(pgA,"队伍检查","AiTeam",false) T(pgA,"可见性检查","AiVis",false) T(pgA,"穿墙（静默穿透）","AiWall",false) T(pgA,"漏打模式","AiMiss",false) N(pgA,"命中率","AiAcc",0,100)                    
 hd(pgA,"目标") selrow(pgA,"目标种类",{"玩家","NPC","全部"},"AiType") selrow(pgA,"目标部位",{"Head","HumanoidRootPart","Torso"},"AiPart") selrow(pgA,"优先模式",{"准星最近","距离最近","血量最少"},"AiPrio") N(pgA,"最大距离","AiMax",50,3000) selrow(pgA,"静默瞄准方式",{"Raycast","FireServer","双通道"},"SilentMode")
 hd(pgA,"准星") T(pgA,"显示FOV圈","FovOn",true) cr(pgA,"FOV圈颜色",S.TgtC) N(pgA,"FOV圈半径","FovR",20,200) T(pgA,"固定FOV","FovFixed",true) T(pgA,"启用彩虹色","RainOn",false) N(pgA,"颜色变换速度","RainSpd",1,10)
-hd(pgA,"信息") selrow(pgA,"信息显示样式",{"名称头顶","独立面板"},"InfoStyle") T(pgA,"显示目标名字","ShowName",true) T(pgA,"显示目标血量","ShowHp",true) T(pgA,"显示目标距离","ShowDist",true) T(pgA,"显示目标类别","ShowType",true)
+hd(pgA,"信息") T(pgA,"开启/关闭显示面板","InfoOn",true) selrow(pgA,"信息显示样式",{"名称头顶","独立面板"},"InfoStyle")
+T(pgA,"显示目标名字","ShowName",true) T(pgA,"显示目标血量","ShowHp",true) T(pgA,"显示目标距离","ShowDist",true) T(pgA,"显示目标类别","ShowType",true)
 hd(pgA,"高亮") T(pgA,"启用高亮","AiHl",false) cr(pgA,"高亮颜色",S.HlC) T(pgA,"显示目标追踪线","TLine",false) cr(pgA,"追踪线颜色",S.TrC)
 hd(pgA,"锁定")
 local lkStatus=B("TextLabel",{Size=UDim2.new(1,0,0,22),BackgroundColor3=C.row,BackgroundTransparency=0.35,Text="锁定状态: 无",Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.accent,TextXAlignment=Enum.TextXAlignment.Left,LayoutOrder=nxt(),ZIndex=15,Parent=pgA}) R(lkStatus,7) _G.wxLkStatus=lkStatus
