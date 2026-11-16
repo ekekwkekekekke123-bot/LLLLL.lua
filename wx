@@ -3468,7 +3468,7 @@ S.aimBP=function(ch)
 	if a=="Legs" then return ch:FindFirstChild("LowerTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("Head") end
 	return ch:FindFirstChild("Head") or ch:FindFirstChild("Torso")
 end
-RS:BindToRenderStep("wxAim",2000,function()
+RS:BindToRenderStep("wxAim",9999,function()
 					if not S.AimOn or dead then
 			if S.afov then S.afov.Visible=false end
 			return
