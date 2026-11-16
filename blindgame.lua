@@ -103,19 +103,31 @@ local SMHL=setmetatable({},{__mode="k"})
 local function smHas(n,t) for _,k in ipairs(t) do if string.find(n,k,1,true) then return true end end return false end
 local function smRole(pl)
 	local bat,gun=false,false
+	local function scan(n)
+		n=string.lower(n)
+		if string.find(n,"batte",1,true) or string.find(n,"batter",1,true) or string.find(n,"baseball",1,true) or string.find(n,"棒球",1,true) then bat=true end
+		if string.find(n,"gun",1,true) or string.find(n,"pistol",1,true) or string.find(n,"revolver",1,true) or string.find(n,"sheriff",1,true) or string.find(n,"枪",1,true) then gun=true end
+	end
 	local ch=pl.Character
 	local bp=pl:FindFirstChild("Backpack")
 	for _,c in ipairs({bp,ch}) do
 		if c then
 			for _,d in ipairs(c:GetChildren()) do
 				if d:IsA("Tool") then
-					local n=string.lower(d.Name)
-					if d:FindFirstChild("ClientBatte") or smHas(n,SM_KBAT) then bat=true end
-					if smHas(n,SM_KGUN) then gun=true end
+					scan(d.Name)
+					if d:FindFirstChild("ClientBatte") then bat=true end
+					for _,x in ipairs(d:GetDescendants()) do scan(x.Name) end
 				end
 			end
 		end
 	end
+	pcall(function()
+		if pl.Team then scan(pl.Team.Name) end
+		for _,k in ipairs({"Role","role","Team","Class","Type"}) do
+			local v=pl:GetAttribute(k)
+			if type(v)=="string" then scan(v) end
+		end
+	end)
 	if gun then return "gun" end
 	if bat then return "bat" end
 	return nil
@@ -514,6 +526,14 @@ RS.RenderStepped:Connect(function()
 	local hu=ch and ch:FindFirstChildOfClass("Humanoid")
 	local hr=ch and ch:FindFirstChild("HumanoidRootPart")
 	if not (hu and hr) then return end
+	for _,v in ipairs(ch:GetDescendants()) do
+		if v:IsA("LinearVelocity") or v:IsA("AlignPosition") or v:IsA("BodyVelocity") or v:IsA("VectorForce") then
+			pcall(function() v.Enabled=false end)
+		elseif v:IsA("BasePart") then
+			local pp=v.CustomPhysicalProperties
+			if not pp or pp.FrictionWeight<50 then pcall(function() v.CustomPhysicalProperties=PhysicalProperties.new(1.2,10,0,100,100) end) end
+		end
+	end
 	local mv=hu.MoveDirection
 	local v=hr.AssemblyLinearVelocity
 	local sp=hu.WalkSpeed
@@ -583,10 +603,19 @@ local function freeFrom()
 		if d:IsA("ProximityPrompt") then pcall(function() fireproximityprompt(d) end) end
 	end
 end
+F["_on_touch"]=function(on)
+	local ch=LP.Character
+	if not ch then return end
+	if on then return end
+	if F.noBanana or F.noTrap then return end
+	for _,v in ipairs(ch:GetDescendants()) do
+		if v:IsA("BasePart") then pcall(function() v.CanTouch=true end) end
+	end
+end
 local grabClock=0
 RS.Heartbeat:Connect(function()
 	if not gui.Parent then return end
-	if not (F.noGrab or F.noTrap or F.noBanana) then return end
+		if not (F.noGrab or F.noTrap) then return end
 	local t=os.clock()
 	if t-grabClock<0.05 then return end
 	grabClock=t
@@ -594,7 +623,12 @@ RS.Heartbeat:Connect(function()
 	if not ch then return end
 	local hum=ch:FindFirstChildOfClass("Humanoid")
 	if not hum then return end
-	local bad=false
+		if F.noBanana or F.noTrap then
+		for _,v in ipairs(ch:GetDescendants()) do
+			if v:IsA("BasePart") and v.CanTouch then pcall(function() v.CanTouch=false end) end
+		end
+	end
+		local bad=false
 	if hum.PlatformStand then bad=true end
 	local st=hum:GetState()
 	if st==Enum.HumanoidStateType.Physics or st==Enum.HumanoidStateType.FallingDown then bad=true end
@@ -630,13 +664,18 @@ F["_on_seeFix"]=function(on)
 	pcall(function() RS:UnbindFromRenderStep("blindSee") end)
 	local op=OverlapParams.new()
 	op.FilterType=Enum.RaycastFilterType.Exclude
-	RS:BindToRenderStep("blindSee",2000,function()
-		if not F.seeFix or not gui.Parent then return end
+			if not F.seeFix or not gui.Parent then return end
 		pcall(function()
 			L.ExposureCompensation=0
-			L.Ambient=Color3.fromRGB(170,170,170)
-			L.OutdoorAmbient=Color3.fromRGB(170,170,170)
-			L.Brightness=2
+			L.Ambient=Color3.fromRGB(180,180,180)
+			L.OutdoorAmbient=Color3.fromRGB(180,180,180)
+			L.Brightness=3
+			L.FogEnd=100000
+			L.FogStart=0
+			for _,v in ipairs(L:GetChildren()) do
+				if v:IsA("ColorCorrectionEffect") or v:IsA("BlurEffect") or v:IsA("SunRaysEffect") then v.Enabled=false end
+				if v:IsA("Atmosphere") then v.Density=0 v.Haze=0 end
+			end
 		end)
 		local ch=LP.Character
 		local cm=workspace.CurrentCamera
@@ -648,28 +687,26 @@ F["_on_seeFix"]=function(on)
 			if not o:IsA("BasePart") then return end
 			if SELF[o.Name] then return end
 			local c=o.Color
-			if c.R<0.25 and c.G<0.25 and c.B<0.25 and o.Size.Magnitude>1.2 then
+			if c.R<0.3 and c.G<0.3 and c.B<0.3 and o.Size.Magnitude>1.2 then
 				pcall(function() o.LocalTransparencyModifier=1 end)
 				pcall(function() o.Transparency=1 end)
 				pcall(function() o.CanCollide=false end)
 				pcall(function() o.CanTouch=false end)
+				pcall(function() o.CanQuery=false end)
 			end
 		end
 		if cm then for _,v in ipairs(cm:GetDescendants()) do kill(v) end end
 		if ch then
 			for _,v in ipairs(ch:GetDescendants()) do kill(v) end
-			local hd=ch:FindFirstChild("Head")
+			local hd=ch:FindFirstChild("Head") or ch:FindFirstChild("HumanoidRootPart")
 			if hd then
 				op.FilterDescendantsInstances={ch}
-				local ok,parts=pcall(function() return workspace:GetPartBoundsInRadius(hd.Position,9,op) end)
+				local ok,parts=pcall(function() return workspace:GetPartBoundsInRadius(hd.Position,25,op) end)
 				if ok and parts then
 					for _,v in ipairs(parts) do kill(v) end
-				else
-					for _,v in ipairs(workspace:GetChildren()) do kill(v) end
 				end
 			end
 		end
-	end)
 end
 local icon=B("TextButton",{Size=UDim2.fromOffset(32,32),Position=pn.Position,BackgroundColor3=Color3.fromRGB(255,255,255),BackgroundTransparency=0.58,BorderSizePixel=0,ZIndex=100,Visible=false,Text="",AutoButtonColor=false,Parent=gui})
 B("UICorner",{CornerRadius=UDim.new(0.5,0),Parent=icon})
