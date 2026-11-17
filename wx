@@ -4047,3 +4047,115 @@ do
 		end)
 	end
 end
+--===== 美化 · 角色拖尾 / 角色透明 =====
+S.TrsOn=S.TrsOn or false
+S.TrsV=tonumber(S.TrsV) or 0.72
+S.TrsC=S.TrsC or {Col=Color3.fromRGB(210,210,255)}
+S.TrailOn=S.TrailOn or false
+S.TrailC=S.TrailC or {Col=Color3.new(1,1,1)}
+S.TrailDur=tonumber(S.TrailDur) or 1.5
+S.TrailShape=S.TrailShape or "长条形"
+
+local trsOrig=setmetatable({},{__mode="k"})
+local function trsApply()
+	local ch=LP.Character
+	if not ch then return end
+	for _,d in ipairs(ch:GetDescendants()) do
+		if d:IsA("BasePart") then
+			pcall(function()
+				d.LocalTransparencyModifier=math.clamp(S.TrsV,0.15,0.95)
+				d.Color=S.TrsC.Col
+			end)
+		end
+	end
+end
+local function trsClear()
+	local ch=LP.Character
+	if not ch then return end
+	for _,d in ipairs(ch:GetDescendants()) do
+		if d:IsA("BasePart") then pcall(function() d.LocalTransparencyModifier=0 end) end
+	end
+end
+task.spawn(function()
+	while task.wait(0.2) do
+		if dead then break end
+		if S.TrsOn then pcall(trsApply) else pcall(trsClear) end
+	end
+end)
+
+local TXT_SMOKE="rbxasset://textures/particles/smoke_main.dds"
+local TXT_FIRE="rbxasset://textures/particles/fire_main.dds"
+local trlObj=nil local trlPE=nil local trlCh=nil local trlShape=nil
+local function trlKill()
+	if trlObj then pcall(function() trlObj:Destroy() end) trlObj=nil end
+	if trlPE then pcall(function() trlPE:Destroy() end) trlPE=nil end
+	trlCh=nil trlShape=nil
+end
+local function trlBuild()
+	trlKill()
+	local ch=LP.Character
+	if not ch then return end
+	local hr=ch:FindFirstChild("HumanoidRootPart")
+	if not hr then return end
+	local a0=Instance.new("Attachment") a0.Name="wxT0" a0.Position=Vector3.new(0,0.6,0) a0.Parent=hr
+	local a1=Instance.new("Attachment") a1.Name="wxT1" a1.Position=Vector3.new(0,-0.6,0) a1.Parent=hr
+	local t=Instance.new("Trail")
+	t.Name="wxTrail"
+	t.Attachment0=a0 t.Attachment1=a1
+	t.FaceCamera=true t.MinLength=0 t.LightEmission=1
+	t.Lifetime=math.clamp(tonumber(S.TrailDur) or 1.5,0.1,12)
+	t.Color=ColorSequence.new(S.TrailC.Col)
+	local sh=S.TrailShape
+	if sh=="块状型" then
+		t.Texture=TXT_SMOKE t.WidthScale=NumberSequence.new(2,1) t.Transparency=NumberSequence.new(0.2,1)
+	elseif sh=="长条形" then
+		t.Texture="" t.WidthScale=NumberSequence.new(0.35,0.15) t.Transparency=NumberSequence.new(0,0.9)
+	elseif sh=="火焰型" then
+		t.Texture=TXT_FIRE t.WidthScale=NumberSequence.new(1.6,0.4) t.Transparency=NumberSequence.new(0.15,1)
+	else
+		t.Texture=TXT_SMOKE t.WidthScale=NumberSequence.new(0.8,0.2) t.Transparency=NumberSequence.new(0.3,1)
+	end
+	t.Parent=ch
+	trlObj=t trlCh=ch trlShape=sh
+	if sh=="粒子形" or sh=="火焰型" then
+		local pe=Instance.new("ParticleEmitter")
+		pe.Name="wxTrailPE"
+		pe.Texture=(sh=="火焰型") and TXT_FIRE or TXT_SMOKE
+		pe.Rate=60
+		pe.Lifetime=NumberRange.new(0.4,math.clamp(tonumber(S.TrailDur) or 1.5,0.1,12))
+		pe.Speed=NumberRange.new(0.5,2)
+		pe.SpreadAngle=Vector2.new(180,180)
+		pe.Size=NumberSequence.new(0.6,0.05)
+		pe.Transparency=NumberSequence.new(0.15,1)
+		pe.Color=ColorSequence.new(S.TrailC.Col)
+		pe.LightEmission=1
+		pe.Parent=hr
+		trlPE=pe
+	end
+end
+RS.Heartbeat:Connect(function()
+	if dead then return end
+	if S.TrailOn then
+		if not trlObj or not trlObj.Parent or trlCh~=LP.Character or trlShape~=S.TrailShape then pcall(trlBuild) end
+		if trlObj and trlObj.Parent then
+			pcall(function()
+				trlObj.Lifetime=math.clamp(tonumber(S.TrailDur) or 1.5,0.1,12)
+				trlObj.Color=ColorSequence.new(S.TrailC.Col)
+				if trlPE then trlPE.Color=ColorSequence.new(S.TrailC.Col) end
+			end)
+		end
+	else
+		if trlObj or trlPE then pcall(trlKill) end
+	end
+end)
+LP.CharacterAdded:Connect(function()
+	task.wait(1)
+	if S.TrailOn then pcall(trlBuild) else pcall(trlKill) end
+end)
+T(pgB,"角色拖尾","TrailOn",false)
+cr(pgB,"拖尾颜色",S.TrailC)
+nb(pgB,"拖尾滞留(秒)","TrailDur",1.5,"0.1 - 12",0.1,12)
+sg(pgB,"拖尾形状",{"粒子形","块状型","长条形","火焰型"},S.TrailShape,function(v) S.TrailShape=v end)
+T(pgB,"角色透明","TrsOn",false)
+cr(pgB,"透明颜色",S.TrsC)
+nb(pgB,"透明程度","TrsV",0.72,"0.15 - 0.95",0.15,0.95)
