@@ -128,7 +128,8 @@ local C={
  dim=Color3.fromRGB(108,103,95)
 }
 local S={SpOn=false,SpV=50,JpOn=false,JpInf=false,JpH=50,FlOn=false,FlV=35,FlMd="物理",NcOn=false,ESMax=5000,TrPos="顶部",AiOn=false,AiTeam=false,AiVis=false,AiWall=false,AiMiss=false,AiAcc=100,AiType="玩家",AiPart="Head",AiPrio="准星最近",AiMax=500,SilentMode="Raycast",AiSilent=true,FovOn=true,FovR=55,FovFixed=true,ShowT=true,TgtC={Col=Color3.fromRGB(60,90,255),Rain=false},RainOn=false,RainSpd=1,InfoStyle="独立面板",ShowName=true,ShowHp=true,ShowDist=true,ShowType=true,AiHl=false,ArR=55,BoxMd="2D",HlC={Col=W,Rain=false},HlRain=false,DmgOn=false,HitSnd="关闭",TLine=false,TrC={Col=YEL,Rain=false},Lock="无",NameHunt=false,NameInput="",SecOn=false,AutoOn=false,IRange=false,IVal=20,NpcOn=false,NpcHl=false,NpcBx=false,NpcNm=false,NpcHp=false,NpcDs=false,NV=false,LPlOn=false,NoFog=false,NoShake=false,FC=false,FCSpd=10,ESPInt=false,GravOn=false,GravV=196.2,InvisOn=false}
-    S.InfoOn=true
+ _G.wxS=S  
+S.InfoOn=true
 S.XrV=55
 -- [反检测伪装层参数]
 S.SafeOn   = false   -- 伪装总开关（关闭）
@@ -1895,168 +1896,9 @@ function apK(k)
 						elseif k=="TpOn" then tpSet() elseif k=="RevOn" then wxRev() elseif k=="AutoJp" then wxAutoJump() elseif k=="AimOn" then S.FovOn=S.AimOn or S.FovOn S.FovR=55 elseif k=="XrOn" or k=="XrV" then wxXRSet(S) end
 end
 function T(par,l,k,dv) TGS=TGS or {} local rw,pl,kn,set2=tg(par,l,dv,function(v) S[k]=v apK(k) end) TGS[k]=set2 end
---==================== 美化：拖尾 / 透明 ====================
-S.TrsOn=S.TrsOn or false
-S.TrsV=tonumber(S.TrsV) or 0.72
-S.TrsC=S.TrsC or {Col=Color3.fromRGB(210,210,255)}
-S.TrailOn=S.TrailOn or false
-S.TrailC=S.TrailC or {Col=Color3.new(1,1,1)}
-S.TrailDur=tonumber(S.TrailDur) or 1.5
-S.TrailShape=S.TrailShape or "长条形"
-
-local function bTgl(par,label,key)
-	local rw=B("TextButton",{Size=UDim2.new(1,0,0,28),BackgroundColor3=C.row,BorderSizePixel=0,Text="",AutoButtonColor=false,LayoutOrder=nxt(),Parent=par})
-	R(rw,8) SK(rw,C.off,0.35)
-	B("TextLabel",{Size=UDim2.new(1,-60,1,0),Position=UDim2.fromOffset(8,0),BackgroundTransparency=1,Text=label,Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=16,Parent=rw})
-	local sw=B("TextButton",{Size=UDim2.fromOffset(40,18),Position=UDim2.new(1,-48,0.5,0),AnchorPoint=Vector2.new(0,0.5),BackgroundColor3=S[key] and C.accent or C.off,BorderSizePixel=0,Text="",AutoButtonColor=false,ZIndex=16,Parent=rw}) R(sw,9)
-	local lb=B("TextLabel",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text=S[key] and "开" or "关",Font=Enum.Font.GothamBold,TextSize=9,TextColor3=Color3.new(1,1,1),Parent=sw})
-	sw.MouseButton1Click:Connect(function()
-		S[key]=not S[key]
-		sw.BackgroundColor3=S[key] and C.accent or C.off
-		lb.Text=S[key] and "开" or "关"
-	end)
+_G.wxPickColor=function(tb,sw)
+	cpt=tb cps=sw if sw then swA.BackgroundColor3=tb.Col end cpH,cpS,cpV=tb.Col:ToHSV() cpA=1 cpTitle.Text="颜色" cpSync() cpv.Visible=true cpBlock.Visible=true
 end
-local function bSlide(par,txt,mn,mx,def,cb)
-	local r=B("Frame",{Size=UDim2.new(1,0,0,50),BackgroundColor3=C.row,BorderSizePixel=0,LayoutOrder=nxt(),ZIndex=25,Parent=par})
-	R(r,8) SK(r,C.off,0.4)
-	B("TextLabel",{Size=UDim2.new(1,-86,0,16),Position=UDim2.fromOffset(10,4),BackgroundTransparency=1,Text=txt,Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=26,Parent=r})
-	local val=B("TextLabel",{Size=UDim2.fromOffset(58,16),Position=UDim2.new(1,-66,0,4),BackgroundTransparency=1,Text="",Font=Enum.Font.GothamBold,TextSize=10,TextColor3=C.accent,TextXAlignment=Enum.TextXAlignment.Right,ZIndex=26,Parent=r})
-	local track=B("TextButton",{Size=UDim2.new(1,-20,0,14),Position=UDim2.fromOffset(10,26),BackgroundColor3=C.off,Text="",AutoButtonColor=false,ZIndex=26,Parent=r})
-	R(track,5)
-	local fill=B("Frame",{Size=UDim2.fromScale(0,1),BackgroundColor3=C.accent,BorderSizePixel=0,ZIndex=27,Parent=track})
-	R(fill,5)
-	local knob=B("Frame",{Size=UDim2.fromOffset(16,16),AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0,0.5),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=28,Parent=track})
-	R(knob,1)
-	local function setv(v)
-		local c=math.clamp(v,mn,mx)
-		local f=(c-mn)/(mx-mn)
-		knob.Position=UDim2.fromScale(f,0.5)
-		fill.Size=UDim2.fromScale(f,1)
-		val.Text=tostring(math.floor(c*100+0.5)/100)
-		cb(c)
-	end
-	local dragging=false
-	track.InputBegan:Connect(function(i)
-		if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
-			dragging=true
-			local rel=math.clamp((i.Position.X-track.AbsolutePosition.X)/track.AbsoluteSize.X,0,1)
-			setv(mn+rel*(mx-mn))
-		end
-	end)
-	UI.InputChanged:Connect(function(i)
-		if dragging and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then
-			local rel=math.clamp((i.Position.X-track.AbsolutePosition.X)/track.AbsoluteSize.X,0,1)
-			setv(mn+rel*(mx-mn))
-		end
-	end)
-	UI.InputEnded:Connect(function() dragging=false end)
-	setv(def)
-end
-
-bTgl(pgB,"角色拖尾","TrailOn")
-cr(pgB,"拖尾颜色",S.TrailC)
-bSlide(pgB,"拖尾滞留(秒)",0.1,12,tonumber(S.TrailDur) or 1.5,function(v) S.TrailDur=v end)
-sg(pgB,"拖尾形状",{"粒子形","块状型","长条形","火焰型"},S.TrailShape,function(v) S.TrailShape=v end)
-bTgl(pgB,"角色透明","TrsOn")
-cr(pgB,"透明颜色",S.TrsC)
-bSlide(pgB,"透明程度",0.15,0.95,tonumber(S.TrsV) or 0.72,function(v) S.TrsV=v end)
-
-local TXT_SMOKE="rbxasset://textures/particles/smoke_main.dds"
-local TXT_FIRE="rbxasset://textures/particles/fire_main.dds"
-local trlObj=nil local trlPE=nil local trlCh=nil local trlShape=nil
-local function trlKill()
-	if trlObj then pcall(function() trlObj:Destroy() end) trlObj=nil end
-	if trlPE then pcall(function() trlPE:Destroy() end) trlPE=nil end
-	trlCh=nil trlShape=nil
-end
-local function trlBuild()
-	trlKill()
-	local ch=LP.Character
-	if not ch then return end
-	local hr=ch:FindFirstChild("HumanoidRootPart")
-	if not hr then return end
-	local a0=Instance.new("Attachment") a0.Name="wxT0" a0.Position=Vector3.new(0,0.6,0) a0.Parent=hr
-	local a1=Instance.new("Attachment") a1.Name="wxT1" a1.Position=Vector3.new(0,-0.6,0) a1.Parent=hr
-	local t=Instance.new("Trail")
-	t.Name="wxTrail"
-	t.Attachment0=a0 t.Attachment1=a1
-	t.FaceCamera=true t.MinLength=0 t.LightEmission=1
-	t.Lifetime=math.clamp(tonumber(S.TrailDur) or 1.5,0.1,12)
-	t.Color=ColorSequence.new(S.TrailC.Col)
-	local sh=S.TrailShape
-	if sh=="块状型" then
-		t.Texture=TXT_SMOKE t.WidthScale=NumberSequence.new(2,1) t.Transparency=NumberSequence.new(0.2,1)
-	elseif sh=="长条形" then
-		t.Texture="" t.WidthScale=NumberSequence.new(0.35,0.15) t.Transparency=NumberSequence.new(0,0.9)
-	elseif sh=="火焰型" then
-		t.Texture=TXT_FIRE t.WidthScale=NumberSequence.new(1.6,0.4) t.Transparency=NumberSequence.new(0.15,1)
-	else
-		t.Texture=TXT_SMOKE t.WidthScale=NumberSequence.new(0.8,0.2) t.Transparency=NumberSequence.new(0.3,1)
-	end
-	t.Parent=ch
-	trlObj=t trlCh=ch trlShape=sh
-	if sh=="粒子形" or sh=="火焰型" then
-		local pe=Instance.new("ParticleEmitter")
-		pe.Name="wxTrailPE"
-		pe.Texture=(sh=="火焰型") and TXT_FIRE or TXT_SMOKE
-		pe.Rate=60
-		pe.Lifetime=NumberRange.new(0.4,math.clamp(tonumber(S.TrailDur) or 1.5,0.1,12))
-		pe.Speed=NumberRange.new(0.5,2)
-		pe.SpreadAngle=Vector2.new(180,180)
-		pe.Size=NumberSequence.new(0.6,0.05)
-		pe.Transparency=NumberSequence.new(0.15,1)
-		pe.Color=ColorSequence.new(S.TrailC.Col)
-		pe.LightEmission=1
-		pe.Parent=hr
-		trlPE=pe
-	end
-end
-RS.Heartbeat:Connect(function()
-	if dead then return end
-	if S.TrailOn then
-		if not trlObj or not trlObj.Parent or trlCh~=LP.Character or trlShape~=S.TrailShape then pcall(trlBuild) end
-		if trlObj and trlObj.Parent then
-			pcall(function()
-				trlObj.Lifetime=math.clamp(tonumber(S.TrailDur) or 1.5,0.1,12)
-				trlObj.Color=ColorSequence.new(S.TrailC.Col)
-				if trlPE then trlPE.Color=ColorSequence.new(S.TrailC.Col) end
-			end)
-		end
-	elseif trlObj or trlPE then
-		pcall(trlKill)
-	end
-end)
-LP.CharacterAdded:Connect(function()
-	task.wait(1)
-	if S.TrailOn then pcall(trlBuild) else pcall(trlKill) end
-end)
-
-local trsDirty=false
-task.spawn(function()
-	while task.wait(0.2) do
-		if dead then break end
-		local ch=LP.Character
-		if ch then
-			if S.TrsOn then
-				for _,d in ipairs(ch:GetDescendants()) do
-					if d:IsA("BasePart") then
-						pcall(function()
-							d.LocalTransparencyModifier=math.clamp(S.TrsV,0.15,0.95)
-							d.Color=S.TrsC.Col
-						end)
-					end
-				end
-				trsDirty=true
-			elseif trsDirty then
-				for _,d in ipairs(ch:GetDescendants()) do
-					if d:IsA("BasePart") then pcall(function() d.LocalTransparencyModifier=0 end) end
-				end
-				trsDirty=false
-			end
-		end
-	end
-end)
---==================== 美化结束 ====================
 --===== 范围修改页 =====
 do
 	local pr=_G.wxR
@@ -4093,3 +3935,280 @@ do
 		end)
 	end
 end
+--====== 美化追加：角色拖尾 / 角色透明 ======
+do
+	local P0=game:GetService("Players")
+	local RS0=game:GetService("RunService")
+	local UIS0=game:GetService("UserInputService")
+	local TS0=game:GetService("TweenService")
+	local LP0=P0.LocalPlayer
+	local pgB=_G.wxB
+	local S=_G.wxS
+	if not (pgB and S) then return end
+
+	S.TrsOn=S.TrsOn or false
+	S.TrsV=tonumber(S.TrsV) or 0.72
+	S.TrsC=S.TrsC or {Col=Color3.fromRGB(210,210,255)}
+	S.TrailOn=S.TrailOn or false
+	S.TrailC=S.TrailC or {Col=Color3.new(1,1,1)}
+	S.TrailDur=tonumber(S.TrailDur) or 1.5
+	S.TrailShape=S.TrailShape or "长条形"
+
+	local ROW=Color3.fromRGB(243,237,227)
+	local OFF=Color3.fromRGB(212,204,191)
+	local ACC=Color3.fromRGB(190,74,64)
+	local TXT=Color3.fromRGB(40,40,40)
+
+	local ord=900
+	local function nr()
+		ord=ord+1
+		local r=Instance.new("TextButton")
+		r.Size=UDim2.new(1,0,0,28) r.BackgroundColor3=ROW r.BorderSizePixel=0 r.Text=""
+		r.AutoButtonColor=false r.LayoutOrder=ord r.ZIndex=15 r.Parent=pgB
+		local a=Instance.new("UICorner") a.CornerRadius=UDim.new(0,8) a.Parent=r
+		local b=Instance.new("UIStroke") b.Color=OFF b.Thickness=1 b.Transparency=0.4 b.Parent=r
+		return r
+	end
+	local function lbl(r,t,cut)
+		local l=Instance.new("TextLabel")
+		l.Size=UDim2.new(1,cut or -60,1,0) l.Position=UDim2.fromOffset(8,0) l.BackgroundTransparency=1
+		l.Text=t l.Font=Enum.Font.GothamMedium l.TextSize=9 l.TextColor3=TXT
+		l.TextXAlignment=Enum.TextXAlignment.Left l.TextTruncate=Enum.TextTruncate.AtEnd l.ZIndex=16 l.Parent=r
+		return l
+	end
+	local function tgl(t,k)
+		local r=nr() lbl(r,t)
+		local sw=Instance.new("TextButton")
+		sw.Size=UDim2.fromOffset(40,18) sw.Position=UDim2.new(1,-48,0.5,0) sw.AnchorPoint=Vector2.new(0,0.5)
+		sw.BackgroundColor3=S[k] and ACC or OFF sw.BorderSizePixel=0 sw.Text="" sw.AutoButtonColor=false sw.ZIndex=16 sw.Parent=r
+		local a=Instance.new("UICorner") a.CornerRadius=UDim.new(0,9) a.Parent=sw
+		local tx=Instance.new("TextLabel")
+		tx.Size=UDim2.fromScale(1,1) tx.BackgroundTransparency=1 tx.Text=S[k] and "开" or "关"
+		tx.Font=Enum.Font.GothamBold tx.TextSize=9 tx.TextColor3=Color3.new(1,1,1) tx.Parent=sw
+		sw.MouseButton1Click:Connect(function()
+			S[k]=not S[k]
+			sw.BackgroundColor3=S[k] and ACC or OFF
+			tx.Text=S[k] and "开" or "关"
+		end)
+	end
+	local function col(t,tb)
+		local r=nr() lbl(r,t,-44)
+		local blk=Instance.new("Frame")
+		blk.Size=UDim2.fromOffset(24,14) blk.Position=UDim2.new(1,-32,0.5,-7)
+		blk.BackgroundColor3=tb.Col blk.BorderSizePixel=0 blk.ZIndex=16 blk.Parent=r
+		local a=Instance.new("UICorner") a.CornerRadius=UDim.new(0,4) a.Parent=blk
+		r.MouseButton1Click:Connect(function()
+			if _G.wxPickColor then _G.wxPickColor(tb,blk) end
+		end)
+	end
+
+	local pickGui=Instance.new("ScreenGui")
+	pickGui.Name="wx_shape_pick" pickGui.ResetOnSpawn=false pickGui.IgnoreGuiInset=true pickGui.DisplayOrder=9000 pickGui.Enabled=false
+	pcall(function() pickGui.Parent=(gethui and gethui()) or LP0.PlayerGui end)
+	local shade=Instance.new("TextButton")
+	shade.Size=UDim2.fromScale(1,1) shade.BackgroundTransparency=1 shade.Text="" shade.AutoButtonColor=false shade.ZIndex=1 shade.Parent=pickGui
+	local box=Instance.new("Frame")
+	box.Size=UDim2.fromOffset(150,190) box.Position=UDim2.fromScale(0.5,0.5) box.AnchorPoint=Vector2.new(0.5,0.5)
+	box.BackgroundColor3=Color3.fromRGB(238,233,223) box.BackgroundTransparency=1 box.BorderSizePixel=0 box.ZIndex=2 box.Parent=pickGui
+	local bc=Instance.new("UICorner") bc.CornerRadius=UDim.new(0,10) bc.Parent=box
+	local bs=Instance.new("UIStroke") bs.Color=Color3.fromRGB(150,140,128) bs.Thickness=1 bs.Transparency=0.4 bs.Parent=box
+	local optsBtns={}
+	local function closeP()
+		TS0:Create(box,TweenInfo.new(0.15),{BackgroundTransparency=1}):Play()
+		for _,b in ipairs(optsBtns) do TS0:Create(b,TweenInfo.new(0.12),{BackgroundTransparency=1,TextTransparency=1}):Play() end
+		task.delay(0.16,function() pickGui.Enabled=false end)
+	end
+	local function openP(list,cur,cb)
+		for _,b in ipairs(optsBtns) do b:Destroy() end
+		optsBtns={}
+		box.Size=UDim2.fromOffset(150,#list*44+12)
+		for i=1,#list do
+			local val=list[i]
+			local b=Instance.new("TextButton")
+			b.Size=UDim2.new(1,-12,0,40) b.Position=UDim2.fromOffset(6,(i-1)*44+6)
+			b.BackgroundColor3=Color3.fromRGB(243,237,227) b.Text=val
+			b.Font=Enum.Font.GothamMedium b.TextSize=11
+			b.TextColor3=(val==cur) and Color3.fromRGB(190,74,64) or Color3.fromRGB(40,40,40)
+			b.AutoButtonColor=false b.BackgroundTransparency=1 b.TextTransparency=1 b.ZIndex=3 b.Parent=box
+			local c=Instance.new("UICorner") c.CornerRadius=UDim.new(0,7) c.Parent=b
+			optsBtns[#optsBtns+1]=b
+			b.MouseButton1Click:Connect(function()
+				for _,o in ipairs(optsBtns) do o.TextColor3=(o==b) and Color3.fromRGB(190,74,64) or Color3.fromRGB(40,40,40) end
+				closeP()
+				cb(val)
+			end)
+		end
+		pickGui.Enabled=true
+		box.BackgroundTransparency=1
+		TS0:Create(box,TweenInfo.new(0.22,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=0.03}):Play()
+		task.delay(0.04,function()
+			for _,b in ipairs(optsBtns) do TS0:Create(b,TweenInfo.new(0.18),{BackgroundTransparency=0,TextTransparency=0}):Play() end
+		end)
+	end
+	shade.MouseButton1Click:Connect(closeP)
+
+	local function sel(t,opts,cur,cb)
+		local r=nr()
+		local l=Instance.new("TextLabel")
+		l.Size=UDim2.new(1,-124,1,0) l.Position=UDim2.fromOffset(8,0) l.BackgroundTransparency=1
+		l.Text=t l.Font=Enum.Font.GothamMedium l.TextSize=9 l.TextColor3=TXT
+		l.TextXAlignment=Enum.TextXAlignment.Left l.ZIndex=16 l.Parent=r
+		local v=Instance.new("TextLabel")
+		v.Size=UDim2.fromOffset(104,1) v.Position=UDim2.new(1,-110,0,8) v.BackgroundTransparency=1
+		v.Text=tostring(cur) v.Font=Enum.Font.GothamMedium v.TextSize=9 v.TextColor3=ACC
+		v.TextXAlignment=Enum.TextXAlignment.Right v.ZIndex=16 v.Parent=r
+		r.MouseButton1Click:Connect(function()
+			openP(opts,v.Text,function(x) v.Text=x cb(x) end)
+		end)
+	end
+
+	local function sld(t,mn,mx,def,cb)
+		local r=Instance.new("Frame")
+		r.Size=UDim2.new(1,0,0,50) r.BackgroundColor3=ROW r.BorderSizePixel=0
+		ord=ord+1 r.LayoutOrder=ord r.ZIndex=15 r.Parent=pgB
+		local a=Instance.new("UICorner") a.CornerRadius=UDim.new(0,8) a.Parent=r
+		local b=Instance.new("UIStroke") b.Color=OFF b.Thickness=1 b.Transparency=0.4 b.Parent=r
+		local l=Instance.new("TextLabel")
+		l.Size=UDim2.new(1,-86,0,16) l.Position=UDim2.fromOffset(10,4) l.BackgroundTransparency=1
+		l.Text=t l.Font=Enum.Font.GothamMedium l.TextSize=10 l.TextColor3=TXT
+		l.TextXAlignment=Enum.TextXAlignment.Left l.ZIndex=16 l.Parent=r
+		local vv=Instance.new("TextLabel")
+		vv.Size=UDim2.fromOffset(58,16) vv.Position=UDim2.new(1,-66,0,4) vv.BackgroundTransparency=1
+		vv.Font=Enum.Font.GothamBold vv.TextSize=10 vv.TextColor3=ACC
+		vv.TextXAlignment=Enum.TextXAlignment.Right vv.ZIndex=16 vv.Parent=r
+		local tk=Instance.new("TextButton")
+		tk.Size=UDim2.new(1,-20,0,14) tk.Position=UDim2.fromOffset(10,26) tk.BackgroundColor3=OFF
+		tk.Text="" tk.AutoButtonColor=false tk.ZIndex=16 tk.Parent=r
+		local ac=Instance.new("UICorner") ac.CornerRadius=UDim.new(0,7) ac.Parent=tk
+		local fl=Instance.new("Frame")
+		fl.Size=UDim2.fromScale(0,1) fl.BackgroundColor3=ACC fl.BorderSizePixel=0 fl.ZIndex=17 fl.Parent=tk
+		local fc=Instance.new("UICorner") fc.CornerRadius=UDim.new(0,7) fc.Parent=fl
+		local kn=Instance.new("Frame")
+		kn.Size=UDim2.fromOffset(16,16) kn.AnchorPoint=Vector2.new(0.5,0.5) kn.Position=UDim2.fromScale(0,0.5)
+		kn.BackgroundColor3=Color3.new(1,1,1) kn.BorderSizePixel=0 kn.ZIndex=18 kn.Parent=tk
+		local kc=Instance.new("UICorner") kc.CornerRadius=UDim.new(0.5,0) kc.Parent=kn
+		local function setv(x)
+			local c=math.clamp(x,mn,mx)
+			local f=(c-mn)/(mx-mn)
+			kn.Position=UDim2.fromScale(f,0.5)
+			fl.Size=UDim2.fromScale(f,1)
+			vv.Text=tostring(math.floor(c*100+0.5)/100)
+			cb(c)
+		end
+		local dg=false
+		tk.InputBegan:Connect(function(i)
+			if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
+				dg=true
+				setv(mn+math.clamp((i.Position.X-tk.AbsolutePosition.X)/tk.AbsoluteSize.X,0,1)*(mx-mn))
+			end
+		end)
+		UIS0.InputChanged:Connect(function(i)
+			if dg and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then
+				setv(mn+math.clamp((i.Position.X-tk.AbsolutePosition.X)/tk.AbsoluteSize.X,0,1)*(mx-mn))
+			end
+		end)
+		UIS0.InputEnded:Connect(function() dg=false end)
+		setv(def)
+	end
+
+	tgl("角色拖尾","TrailOn")
+	col("拖尾颜色",S.TrailC)
+	sld("拖尾滞留(秒)",0.1,12,tonumber(S.TrailDur) or 1.5,function(x) S.TrailDur=x end)
+	sel("拖尾形状",{"粒子形","块状型","长条形","火焰型"},S.TrailShape,function(x) S.TrailShape=x end)
+	tgl("角色透明","TrsOn")
+	col("透明颜色",S.TrsC)
+	sld("透明程度",0.15,0.95,tonumber(S.TrsV) or 0.72,function(x) S.TrsV=x end)
+
+	local SMK="rbxasset://textures/particles/smoke_main.dds"
+	local FIR="rbxasset://textures/particles/fire_main.dds"
+	local tObj,tPE,tCh,tSh=nil,nil,nil,nil
+	local function tKill()
+		if tObj then pcall(function() tObj:Destroy() end) tObj=nil end
+		if tPE then pcall(function() tPE:Destroy() end) tPE=nil end
+		tCh=nil tSh=nil
+	end
+	local function tBuild()
+		tKill()
+		local ch=LP0.Character
+		if not ch then return end
+		local hr=ch:FindFirstChild("HumanoidRootPart")
+		if not hr then return end
+		local a0=Instance.new("Attachment") a0.Name="wxT0" a0.Position=Vector3.new(0,0.6,0) a0.Parent=hr
+		local a1=Instance.new("Attachment") a1.Name="wxT1" a1.Position=Vector3.new(0,-0.6,0) a1.Parent=hr
+		local t=Instance.new("Trail")
+		t.Name="wxTrail" t.Attachment0=a0 t.Attachment1=a1 t.FaceCamera=true t.MinLength=0 t.LightEmission=1
+		t.Lifetime=math.clamp(tonumber(S.TrailDur) or 1.5,0.1,12)
+		t.Color=ColorSequence.new(S.TrailC.Col)
+		local sh=S.TrailShape
+		if sh=="块状型" then
+			t.Texture=SMK t.WidthScale=NumberSequence.new(2,1) t.Transparency=NumberSequence.new(0.2,1)
+		elseif sh=="火焰型" then
+			t.Texture=FIR t.WidthScale=NumberSequence.new(1.6,0.4) t.Transparency=NumberSequence.new(0.15,1)
+		elseif sh=="粒子形" then
+			t.Texture=SMK t.WidthScale=NumberSequence.new(0.8,0.2) t.Transparency=NumberSequence.new(0.3,1)
+		else
+			t.Texture="" t.WidthScale=NumberSequence.new(0.35,0.15) t.Transparency=NumberSequence.new(0,0.9)
+		end
+		t.Parent=ch
+		tObj=t tCh=ch tSh=sh
+		if sh=="粒子形" or sh=="火焰型" then
+			local pe=Instance.new("ParticleEmitter")
+			pe.Name="wxTrailPE"
+			pe.Texture=(sh=="火焰型") and FIR or SMK
+			pe.Rate=60
+			pe.Lifetime=NumberRange.new(0.4,math.clamp(tonumber(S.TrailDur) or 1.5,0.1,12))
+			pe.Speed=NumberRange.new(0.5,2)
+			pe.SpreadAngle=Vector2.new(180,180)
+			pe.Size=NumberSequence.new(0.6,0.05)
+			pe.Transparency=NumberSequence.new(0.15,1)
+			pe.Color=ColorSequence.new(S.TrailC.Col)
+			pe.LightEmission=1
+			pe.Parent=hr
+			tPE=pe
+		end
+	end
+	RS0.Heartbeat:Connect(function()
+		if S.TrailOn then
+			if not tObj or not tObj.Parent or tCh~=LP0.Character or tSh~=S.TrailShape then pcall(tBuild) end
+			if tObj and tObj.Parent then
+				pcall(function()
+					tObj.Lifetime=math.clamp(tonumber(S.TrailDur) or 1.5,0.1,12)
+					tObj.Color=ColorSequence.new(S.TrailC.Col)
+					if tPE then tPE.Color=ColorSequence.new(S.TrailC.Col) end
+				end)
+			end
+		elseif tObj or tPE then
+			pcall(tKill)
+		end
+	end)
+	LP0.CharacterAdded:Connect(function()
+		task.wait(1)
+		if S.TrailOn then pcall(tBuild) else pcall(tKill) end
+	end)
+
+	local dirty=false
+	task.spawn(function()
+		while task.wait(0.2) do
+			local ch=LP0.Character
+			if ch then
+				if S.TrsOn then
+					for _,d in ipairs(ch:GetDescendants()) do
+						if d:IsA("BasePart") then
+							pcall(function()
+								d.LocalTransparencyModifier=math.clamp(S.TrsV,0.15,0.95)
+								d.Color=S.TrsC.Col
+							end)
+						end
+					end
+					dirty=true
+				elseif dirty then
+					for _,d in ipairs(ch:GetDescendants()) do
+						if d:IsA("BasePart") then pcall(function() d.LocalTransparencyModifier=0 end) end
+					end
+					dirty=false
+				end
+			end
+		end
+	end)
+end
+--====== 美化追加结束 ======
