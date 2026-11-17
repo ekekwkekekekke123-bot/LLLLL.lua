@@ -3948,7 +3948,7 @@ do
 
 	S.TrsOn=S.TrsOn or false
 	S.TrsV=tonumber(S.TrsV) or 0.72
-	S.TrsC=S.TrsC or {Col=Color3.fromRGB(210,210,255)}
+		S.TrsC=S.TrsC or {Col=Color3.new(1,1,1)}
 	S.TrailOn=S.TrailOn or false
 	S.TrailC=S.TrailC or {Col=Color3.new(1,1,1)}
 	S.TrailDur=tonumber(S.TrailDur) or 1.5
@@ -3976,22 +3976,33 @@ do
 		l.TextXAlignment=Enum.TextXAlignment.Left l.TextTruncate=Enum.TextTruncate.AtEnd l.ZIndex=16 l.Parent=r
 		return l
 	end
-	local function tgl(t,k)
+		local function tgl(t,k)
 		local r=nr() lbl(r,t)
-		local sw=Instance.new("TextButton")
-		sw.Size=UDim2.fromOffset(40,18) sw.Position=UDim2.new(1,-48,0.5,0) sw.AnchorPoint=Vector2.new(0,0.5)
-		sw.BackgroundColor3=S[k] and ACC or OFF sw.BorderSizePixel=0 sw.Text="" sw.AutoButtonColor=false sw.ZIndex=16 sw.Parent=r
-		local a=Instance.new("UICorner") a.CornerRadius=UDim.new(0,9) a.Parent=sw
-		local tx=Instance.new("TextLabel")
-		tx.Size=UDim2.fromScale(1,1) tx.BackgroundTransparency=1 tx.Text=S[k] and "开" or "关"
-		tx.Font=Enum.Font.GothamBold tx.TextSize=9 tx.TextColor3=Color3.new(1,1,1) tx.Parent=sw
-		sw.MouseButton1Click:Connect(function()
+		local tr=Instance.new("TextButton")
+		tr.Size=UDim2.fromOffset(40,18) tr.Position=UDim2.new(1,-48,0.5,0) tr.AnchorPoint=Vector2.new(0,0.5)
+		tr.BackgroundColor3=S[k] and ACC or OFF tr.BorderSizePixel=0 tr.Text="" tr.AutoButtonColor=false tr.ZIndex=16 tr.Parent=r
+		local a=Instance.new("UICorner") a.CornerRadius=UDim.new(0.5,0) a.Parent=tr
+		local sk2=Instance.new("UIStroke") sk2.Color=Color3.fromRGB(150,140,128) sk2.Thickness=1 sk2.Transparency=0.5 sk2.Parent=tr
+		local kn=Instance.new("Frame")
+		kn.Size=UDim2.fromOffset(14,14) kn.AnchorPoint=Vector2.new(0,0.5) kn.Position=UDim2.new(0,2,0.5,0)
+		kn.BackgroundColor3=Color3.new(1,1,1) kn.BorderSizePixel=0 kn.ZIndex=17 kn.Parent=tr
+		local kc=Instance.new("UICorner") kc.CornerRadius=UDim.new(0.5,0) kc.Parent=kn
+		local function paint(on,anim)
+			local to=on and UDim2.new(0,24,0.5,0) or UDim2.new(0,2,0.5,0)
+			if anim then
+				TS0:Create(kn,TweenInfo.new(0.18,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Position=to}):Play()
+				TS0:Create(tr,TweenInfo.new(0.18),{BackgroundColor3=on and ACC or OFF}):Play()
+			else
+				kn.Position=to tr.BackgroundColor3=on and ACC or OFF
+			end
+		end
+		paint(S[k],false)
+		tr.MouseButton1Click:Connect(function()
 			S[k]=not S[k]
-			sw.BackgroundColor3=S[k] and ACC or OFF
-			tx.Text=S[k] and "开" or "关"
+			paint(S[k],true)
 		end)
 	end
-	local function col(t,tb)
+local function col(t,tb)
 		local r=nr() lbl(r,t,-44)
 		local blk=Instance.new("Frame")
 		blk.Size=UDim2.fromOffset(24,14) blk.Position=UDim2.new(1,-32,0.5,-7)
@@ -4054,7 +4065,7 @@ do
 		l.Text=t l.Font=Enum.Font.GothamMedium l.TextSize=9 l.TextColor3=TXT
 		l.TextXAlignment=Enum.TextXAlignment.Left l.ZIndex=16 l.Parent=r
 		local v=Instance.new("TextLabel")
-		v.Size=UDim2.fromOffset(104,1) v.Position=UDim2.new(1,-110,0,8) v.BackgroundTransparency=1
+				v.Size=UDim2.fromOffset(100,14) v.AnchorPoint=Vector2.new(1,0.5) v.Position=UDim2.new(1,-10,0.5,0) v.BackgroundTransparency=1
 		v.Text=tostring(cur) v.Font=Enum.Font.GothamMedium v.TextSize=9 v.TextColor3=ACC
 		v.TextXAlignment=Enum.TextXAlignment.Right v.ZIndex=16 v.Parent=r
 		r.MouseButton1Click:Connect(function()
@@ -4186,25 +4197,35 @@ do
 		if S.TrailOn then pcall(tBuild) else pcall(tKill) end
 	end)
 
+		local origC=setmetatable({},{__mode="k"})
 	local dirty=false
 	task.spawn(function()
 		while task.wait(0.2) do
 			local ch=LP0.Character
 			if ch then
 				if S.TrsOn then
+					local tc=S.TrsC.Col
+					local white=(tc.R>0.98 and tc.G>0.98 and tc.B>0.98)
 					for _,d in ipairs(ch:GetDescendants()) do
 						if d:IsA("BasePart") then
 							pcall(function()
+								if origC[d]==nil then origC[d]=d.Color end
 								d.LocalTransparencyModifier=math.clamp(S.TrsV,0.15,0.95)
-								d.Color=S.TrsC.Col
+								d.Color=white and origC[d] or tc
 							end)
 						end
 					end
 					dirty=true
 				elseif dirty then
 					for _,d in ipairs(ch:GetDescendants()) do
-						if d:IsA("BasePart") then pcall(function() d.LocalTransparencyModifier=0 end) end
+						if d:IsA("BasePart") then
+							pcall(function()
+								d.LocalTransparencyModifier=0
+								if origC[d]~=nil then d.Color=origC[d] end
+							end)
+						end
 					end
+					origC=setmetatable({},{__mode="k"})
 					dirty=false
 				end
 			end
