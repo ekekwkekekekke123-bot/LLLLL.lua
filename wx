@@ -4036,10 +4036,47 @@ LP.CharacterAdded:Connect(function()
 	task.wait(1)
 	if S.TrailOn then pcall(trlBuild) else pcall(trlKill) end
 end)
+local function bSlide(par,txt,mn,mx,def,cb)
+	local r=B("Frame",{Size=UDim2.new(1,0,0,50),BackgroundColor3=C.row,BorderSizePixel=0,LayoutOrder=nxt(),ZIndex=25,Parent=par})
+	R(r,8) SK(r,C.off,0.4)
+	B("TextLabel",{Size=UDim2.new(1,-86,0,16),Position=UDim2.fromOffset(10,4),BackgroundTransparency=1,Text=txt,Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=26,Parent=r})
+	local val=B("TextLabel",{Size=UDim2.fromOffset(58,16),Position=UDim2.new(1,-66,0,4),BackgroundTransparency=1,Text="",Font=Enum.Font.GothamBold,TextSize=10,TextColor3=C.accent,TextXAlignment=Enum.TextXAlignment.Right,ZIndex=26,Parent=r})
+	local track=B("TextButton",{Size=UDim2.new(1,-20,0,14),Position=UDim2.fromOffset(10,26),BackgroundColor3=C.off,Text="",AutoButtonColor=false,ZIndex=26,Parent=r})
+	R(track,5)
+	local fill=B("Frame",{Size=UDim2.fromScale(0,1),BackgroundColor3=C.accent,BorderSizePixel=0,ZIndex=27,Parent=track})
+	R(fill,5)
+	local knob=B("Frame",{Size=UDim2.fromOffset(16,16),AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0,0.5),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=28,Parent=track})
+	R(knob,1)
+	local function setv(v)
+		local c=math.clamp(v,mn,mx)
+		local f=(c-mn)/(mx-mn)
+		knob.Position=UDim2.fromScale(f,0.5)
+		fill.Size=UDim2.fromScale(f,1)
+		val.Text=tostring(math.floor(c*100+0.5)/100)
+		cb(c)
+	end
+	local dragging=false
+	track.InputBegan:Connect(function(i)
+		if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
+			dragging=true
+			local rel=math.clamp((i.Position.X-track.AbsolutePosition.X)/track.AbsoluteSize.X,0,1)
+			setv(mn+rel*(mx-mn))
+		end
+	end)
+	UI.InputChanged:Connect(function(i)
+		if dragging and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then
+			local rel=math.clamp((i.Position.X-track.AbsolutePosition.X)/track.AbsoluteSize.X,0,1)
+			setv(mn+rel*(mx-mn))
+		end
+	end)
+	UI.InputEnded:Connect(function() dragging=false end)
+	setv(def)
+end
+
 T(pgB,"角色拖尾","TrailOn",false)
 cr(pgB,"拖尾颜色",S.TrailC)
-nb(pgB,"拖尾滞留(秒)","TrailDur",1.5,"0.1 - 12",0.1,12)
+bSlide(pgB,"拖尾滞留(秒)",0.1,12,tonumber(S.TrailDur) or 1.5,function(v) S.TrailDur=v end)
 sg(pgB,"拖尾形状",{"粒子形","块状型","长条形","火焰型"},S.TrailShape,function(v) S.TrailShape=v end)
 T(pgB,"角色透明","TrsOn",false)
 cr(pgB,"透明颜色",S.TrsC)
-nb(pgB,"透明程度","TrsV",0.72,"0.15 - 0.95",0.15,0.95)
+bSlide(pgB,"透明程度",0.15,0.95,tonumber(S.TrsV) or 0.72,function(v) S.TrsV=v end)
