@@ -50,7 +50,7 @@ local slay=Instance.new("UIListLayout") slay.Padding=UDim.new(0,4) slay.SortOrde
 local spad=Instance.new("UIPadding") spad.PaddingLeft=UDim.new(0,6) spad.PaddingRight=UDim.new(0,6) spad.PaddingTop=UDim.new(0,6) spad.Parent=side
 local espBtn=B("TextButton",{Size=UDim2.new(1,0,0,26),BackgroundColor3=C.accent,BorderSizePixel=0,Text="ESP",Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=Color3.new(1,1,1),AutoButtonColor=false,LayoutOrder=1,ZIndex=301,Parent=side})
 local body=B("ScrollingFrame",{Size=UDim2.new(1,-84,1,-44),Position=UDim2.fromOffset(80,38),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=2,CanvasSize=UDim2.new(0,0,0,0),AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollBarImageColor3=C.off,ZIndex=108,Parent=pn})
-local ES={Killer=false,Police=false,Civ=false,Trap=false,Gun=false,Time=false,Line=false}
+local ES={Killer=false,Police=false,Civ=false,Trap=false,Gun=false,Time=false,Line=false,offScr=false}
 local CLR={Killer=Color3.fromRGB(255,60,60),Police=Color3.fromRGB(60,140,255),Civ=Color3.fromRGB(60,220,110),Trap=Color3.fromRGB(255,232,120),Gun=Color3.fromRGB(90,220,255)}
 local yv=0
 local function mkToggle(name,key)
@@ -75,6 +75,7 @@ mkToggle("陷阱ESP","Trap")
 mkToggle("枪ESP","Gun")
 mkToggle("时间ESP","Time")
 mkToggle("射线ESP","Line")
+mkToggle("超出屏幕也绘制","OffScr")
 local posV="顶部"
 B("TextLabel",{Size=UDim2.new(1,0,0,14),Position=UDim2.fromOffset(10,yv),BackgroundTransparency=1,Text="射线的颜色取决于ESP颜色",Font=Enum.Font.GothamMedium,TextSize=9,TextColor3=C.dim,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=131,Parent=body})
 yv=yv+18
@@ -122,6 +123,7 @@ local function mkOpt(name,val,order)
 end
 mkOpt("顶部","顶部",0)
 mkOpt("底部","底部",1)
+mkOpt("头部","头部",2)
 shade.MouseButton1Click:Connect(function() closePick() end)
 pRow.MouseButton1Click:Connect(function() openPick() end)
 local function mmToast(msg)
@@ -753,7 +755,13 @@ task.spawn(function()
 			local sawRole=false
 			local cam=workspace.CurrentCamera
 			local vps=cam.ViewportSize
-			local fromP=(posV=="顶部") and Vector2.new(vps.X/2,0) or Vector2.new(vps.X/2,vps.Y)
+						local fromP
+			if posV=="顶部" then fromP=Vector2.new(vps.X/2,0)
+			elseif posV=="头部" then
+				local hh=LP.Character and LP.Character:FindFirstChild("Head")
+				local sp2=hh and cam:WorldToViewportPoint(hh.Position)
+				fromP=sp2 and Vector2.new(sp2.X,sp2.Y) or Vector2.new(vps.X/2,0)
+			else fromP=Vector2.new(vps.X/2,vps.Y) end
 			local anyW=false
 			for _,p2 in ipairs(P:GetPlayers()) do
 				local c2=p2.Character
@@ -801,7 +809,7 @@ task.spawn(function()
 							li=li+1
 							if hr and ES.Line then
 								local sp,onv=cam:WorldToViewportPoint(hr.Position)
-								drawLine(li,fromP,Vector2.new(sp.X,sp.Y),col,onv)
+																drawLine(li,fromP,Vector2.new(sp.X,sp.Y),col,(onv or ES.OffScr))
 							else
 								drawLine(li,fromP,fromP,col,false)
 							end
@@ -815,8 +823,6 @@ task.spawn(function()
 			local gList={}
 			for _,pl in ipairs(P:GetPlayers()) do
 				local ch=pl.Character
-				if ch then for _,c in ipairs(ch:GetChildren()) do gList[#gList+1]=c end end
-				if pl.Backpack then for _,c in ipairs(pl.Backpack:GetChildren()) do gList[#gList+1]=c end end
 			end
 			for _,o in ipairs(workspace:GetChildren()) do
 				gList[#gList+1]=o
@@ -831,20 +837,20 @@ task.spawn(function()
 					if hd then
 						vis=(hd.Transparency<0.95 and hd.LocalTransparencyModifier<0.95)
 					end
-					if vis then
+										if vis then
 						gunOn=true
 						hl(o,CLR.Gun,ES.Gun)
-						if ES.Gun and hd then
-							local bg=hd:FindFirstChild("mm2_gdist")
+						local bg=hd:FindFirstChild("mm2_gdist")
+						if ES.Gun and myHRg then
 							if not bg then
 								bg=B("BillboardGui",{Name="mm2_gdist",Size=UDim2.fromOffset(70,18),StudsOffset=Vector3.new(0,1.8,0),AlwaysOnTop=true,Parent=hd})
 								B("TextLabel",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="",Font=Enum.Font.GothamBold,TextSize=11,TextColor3=CLR.Gun,Parent=bg})
 							end
 							bg.Enabled=true
 							local tl=bg:FindFirstChildOfClass("TextLabel")
-							if tl and myHRg then
-								tl.Text=math.floor((hd.Position-myHRg.Position).Magnitude).."m"
-							end
+							if tl then tl.Text=math.floor((hd.Position-myHRg.Position).Magnitude).."m" end
+						elseif bg then
+							bg.Enabled=false
 						end
 					end
 				elseif string.find(nm,"trap") or string.find(nm,"beartrap") then
