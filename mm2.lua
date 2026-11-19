@@ -608,62 +608,60 @@ rowButton(bodySh, ySh, "传送到杀手身后", function()
 	tpBehind(pl)
 end)
 rowToggle(bodySh, ySh, "循环传送到杀手身后", "ShLoop", tpLoopSet)
-local BTR={tgt=nil}
-local function btrHasKnife(pl)
-	if not pl then return false end
-	local function has(c)
-		if not c then return false end
-		for _,o in ipairs(c:GetChildren()) do
-			if o:IsA("Tool") and string.lower(o.Name)=="knife" then return true end
-		end
-		return false
-	end
-	return has(pl:FindFirstChild("Backpack")) or has(pl.Character)
-end
-local function btrPick()
-	for _,pl in ipairs(P:GetPlayers()) do
-		if pl~=LP and btrHasKnife(pl) then return pl end
-	end
-	return nil
-end
-local function btrAim()
-	local t=BTR.tgt
-	if not t or not t.Parent or not btrHasKnife(t) then BTR.tgt=btrPick() t=BTR.tgt end
-	if not t then return nil end
-	local ch=t.Character
-	local bd=ch and (ch:FindFirstChild("UpperTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("HumanoidRootPart"))
-	return bd and bd.Position or nil
-end
-pcall(function()
-	local old
-	old=hookmetamethod(game,"__namecall",function(self,...)
-		local ok,res=pcall(function()
-			if not CFG.ShAim then return nil end
-			if getnamecallmethod()~="FireServer" then return nil end
-			if not (typeof(self)=="Instance" and self.Name=="Shoot" and self:IsA("RemoteEvent")) then return nil end
-			local pos=btrAim()
-			if not pos then return nil end
-			local a={...}
-			local n=#a
-			if n<2 then return nil end
-			if typeof(a[1])=="CFrame" and typeof(a[2])=="CFrame" then
-				a[2]=CFrame.new(pos)*(a[2]-a[2].Position)
-				return {a=a,n=n}
+local btrOK,btrErr=pcall(function()
+	local BTR={tgt=nil}
+	local function btrHasKnife(pl)
+		if not pl then return false end
+		local function has(c)
+			if not c then return false end
+			for _,o in ipairs(c:GetChildren()) do
+				if o:IsA("Tool") and string.lower(o.Name)=="knife" then return true end
 			end
-			return nil
+			return false
+		end
+		return has(pl:FindFirstChild("Backpack")) or has(pl.Character)
+	end
+	local function btrPick()
+		for _,pl in ipairs(P:GetPlayers()) do
+			if pl~=LP and btrHasKnife(pl) then return pl end
+		end
+		return nil
+	end
+	local function btrAim()
+		local t=BTR.tgt
+		if not t or not t.Parent or not btrHasKnife(t) then BTR.tgt=btrPick() t=BTR.tgt end
+		if not t then return nil end
+		local ch=t.Character
+		local bd=ch and (ch:FindFirstChild("UpperTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("HumanoidRootPart"))
+		return bd and bd.Position or nil
+	end
+	local hm=hookmetamethod
+	if type(hm)=="function" then
+		local old
+		old=hm(game,"__namecall",function(self,...)
+			if CFG.ShAim and getnamecallmethod()=="FireServer" and typeof(self)=="Instance" and self.Name=="Shoot" then
+				local pos=btrAim()
+				if pos then
+					local a={...}
+					if #a>=2 and typeof(a[1])=="CFrame" and typeof(a[2])=="CFrame" then
+						a[2]=CFrame.new(pos)*(a[2]-a[2].Position)
+						return old(self,table.unpack(a,1,#a))
+					end
+				end
+			end
+			return old(self,...)
 		end)
-		if ok and res then return old(self,table.unpack(res.a,1,res.n)) end
-		return old(self,...)
+	end
+	task.spawn(function()
+		while gui.Parent do
+			task.wait(0.5)
+			if CFG.ShAim and (not BTR.tgt or not BTR.tgt.Parent or not btrHasKnife(BTR.tgt)) then
+				BTR.tgt=btrPick()
+			end
+		end
 	end)
 end)
-task.spawn(function()
-	while gui.Parent do
-		task.wait(0.5)
-		if CFG.ShAim and (not BTR.tgt or not BTR.tgt.Parent or not btrHasKnife(BTR.tgt)) then
-			BTR.tgt=btrPick()
-		end
-	end
-end)
+if not btrOK then warn("[MM2] 子弹追踪: "..tostring(btrErr)) end
 rowButton(bodyMu, yMu, "一键击杀所有人", killAll)
 rowButton(bodyMu, yMu, "击杀警长", killSheriff)
 rowButton(bodyMu, yMu, "击杀最近的人", killNearest)
