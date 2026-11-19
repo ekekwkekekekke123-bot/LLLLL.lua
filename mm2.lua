@@ -88,7 +88,7 @@ yv=yv+32
 local pickGui=B("ScreenGui",{Name="mm2_pick",IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=9000,Enabled=false,Parent=SP()})
 gui.Destroying:Connect(function() pcall(function() pickGui:Destroy() end) end)
 local shade=B("TextButton",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="",AutoButtonColor=false,ZIndex=1,Parent=pickGui})
-local box=B("Frame",{Size=UDim2.fromOffset(120,120),Position=UDim2.fromScale(0.5,0.5),AnchorPoint=Vector2.new(0.5,0.5),BackgroundColor3=C.bg,BackgroundTransparency=1,BorderSizePixel=0,Active=true,ZIndex=2,Parent=pickGui})
+local box=B("Frame",{Size=UDim2.fromOffset(120,176),Position=UDim2.fromScale(0.5,0.5),AnchorPoint=Vector2.new(0.5,0.5),BackgroundColor3=C.bg,BackgroundTransparency=1,BorderSizePixel=0,Active=true,ZIndex=2,Parent=pickGui})
 B("UIStroke",{Color=Color3.fromRGB(150,140,128),Transparency=0.35,Parent=box})
 local optBtns={}
 local closePick
@@ -96,7 +96,7 @@ local function openPick()
 	pickGui.Enabled=true
 	box.Size=UDim2.fromOffset(70,70)
 	for _,b in ipairs(optBtns) do b.BackgroundTransparency=1 b.TextTransparency=1 end
-	TS:Create(box,TweenInfo.new(0.26,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.fromOffset(120,120),BackgroundTransparency=0.03}):Play()
+	TS:Create(box,TweenInfo.new(0.26,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.fromOffset(120,176),BackgroundTransparency=0.03}):Play()
 	task.delay(0.05,function()
 		for _,b in ipairs(optBtns) do
 			TS:Create(b,TweenInfo.new(0.2),{BackgroundTransparency=0,TextTransparency=0}):Play()
@@ -608,7 +608,62 @@ rowButton(bodySh, ySh, "传送到杀手身后", function()
 	tpBehind(pl)
 end)
 rowToggle(bodySh, ySh, "循环传送到杀手身后", "ShLoop", tpLoopSet)
-
+local BTR={tgt=nil}
+local function btrHasKnife(pl)
+	if not pl then return false end
+	local function has(c)
+		if not c then return false end
+		for _,o in ipairs(c:GetChildren()) do
+			if o:IsA("Tool") and string.lower(o.Name)=="knife" then return true end
+		end
+		return false
+	end
+	return has(pl:FindFirstChild("Backpack")) or has(pl.Character)
+end
+local function btrPick()
+	for _,pl in ipairs(P:GetPlayers()) do
+		if pl~=LP and btrHasKnife(pl) then return pl end
+	end
+	return nil
+end
+local function btrAim()
+	local t=BTR.tgt
+	if not t or not t.Parent or not btrHasKnife(t) then BTR.tgt=btrPick() t=BTR.tgt end
+	if not t then return nil end
+	local ch=t.Character
+	local bd=ch and (ch:FindFirstChild("UpperTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("HumanoidRootPart"))
+	return bd and bd.Position or nil
+end
+pcall(function()
+	local old
+	old=hookmetamethod(game,"__namecall",function(self,...)
+		local ok,res=pcall(function()
+			if not CFG.ShAim then return nil end
+			if getnamecallmethod()~="FireServer" then return nil end
+			if not (typeof(self)=="Instance" and self.Name=="Shoot" and self:IsA("RemoteEvent")) then return nil end
+			local pos=btrAim()
+			if not pos then return nil end
+			local a={...}
+			local n=#a
+			if n<2 then return nil end
+			if typeof(a[1])=="CFrame" and typeof(a[2])=="CFrame" then
+				a[2]=CFrame.new(pos)*(a[2]-a[2].Position)
+				return {a=a,n=n}
+			end
+			return nil
+		end)
+		if ok and res then return old(self,table.unpack(res.a,1,res.n)) end
+		return old(self,...)
+	end)
+end)
+task.spawn(function()
+	while gui.Parent do
+		task.wait(0.5)
+		if CFG.ShAim and (not BTR.tgt or not BTR.tgt.Parent or not btrHasKnife(BTR.tgt)) then
+			BTR.tgt=btrPick()
+		end
+	end
+end)
 rowButton(bodyMu, yMu, "一键击杀所有人", killAll)
 rowButton(bodyMu, yMu, "击杀警长", killSheriff)
 rowButton(bodyMu, yMu, "击杀最近的人", killNearest)
@@ -824,13 +879,22 @@ task.spawn(function()
 			for _,pl in ipairs(P:GetPlayers()) do
 				local ch=pl.Character
 			end
-			for _,o in ipairs(workspace:GetChildren()) do
+						local function onPlr(x)
+				for _,pl in ipairs(P:GetPlayers()) do
+					local c=pl.Character
+					if c and (x==c or x:IsDescendantOf(c)) then return true end
+					local b=pl.Backpack
+					if b and (x==b or x:IsDescendantOf(b)) then return true end
+				end
+				return false
+			end
+					for _,o in ipairs(workspace:GetChildren()) do
 				gList[#gList+1]=o
 				for _,c in ipairs(o:GetChildren()) do gList[#gList+1]=c end
 			end
 			for _,o in ipairs(gList) do
 				local nm=string.lower(o.Name)
-				if (o:IsA("Tool") or o:IsA("Model") or o:IsA("BasePart")) and string.find(nm,"gun") then
+								if (o:IsA("Tool") or o:IsA("Model") or o:IsA("BasePart")) and string.find(nm,"gun") and not onPlr(o) then
 					local hd=o:FindFirstChild("Handle")
 					if not hd and o:IsA("BasePart") then hd=o end
 					local vis=false
