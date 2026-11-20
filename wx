@@ -4239,88 +4239,96 @@ do
 	local RSw=game:GetService("RunService")
 	local LPw=game:GetService("Players").LocalPlayer
 	if Sw then
-		local BV,BG
-		local SPEED=18
-		local R=3.4
+		local BP,BG
+		local on=false
+		local n,e1,e2,wpos
+		local spd=16
+		local offN=2.6
 		local ray=RaycastParams.new()
 		ray.FilterType=Enum.RaycastFilterType.Exclude
-		local freeT=0
+		local cool=0
 
-		local function killE()
-			if BV then pcall(function() BV:Destroy() end) BV=nil end
+		local function stopAll(h)
+			on=false
+			if BP then pcall(function() BP:Destroy() end) BP=nil end
 			if BG then pcall(function() BG:Destroy() end) BG=nil end
 		end
 
-		local function makeE(r)
-			BV=Instance.new("BodyVelocity")
-			BV.Name="wxWallBV"
-			BV.MaxForce=Vector3.new(1e5,1e5,1e5)
-			BV.Velocity=Vector3.zero
-			BV.Parent=r
+		local function begin(hit,r)
+			n=hit.Normal
+			local up=Vector3.new(0,1,0)
+			local t=up-n*up:Dot(n)
+			if t.Magnitude<0.1 then t=Vector3.new(1,0,0) end
+			e1=t.Unit
+			e2=n:Cross(e1).Unit
+			local base=hit.Position
+			local rel=r.Position-base
+			wpos=base+e1*(rel:Dot(e1))+e2*(rel:Dot(e2))
+			BP=Instance.new("BodyPosition")
+			BP.MaxForce=Vector3.new(1e5,1e5,1e5)
+			BP.P=4000
+			BP.D=600
+			BP.Position=wpos+n*offN
+			BP.Parent=r
 			BG=Instance.new("BodyGyro")
-			BG.Name="wxWallBG"
 			BG.MaxTorque=Vector3.new(1e5,1e5,1e5)
-			BG.P=6000
+			BG.P=8000
 			BG.CFrame=r.CFrame
 			BG.Parent=r
+			on=true
 		end
 
-		RSw.RenderStepped:Connect(function()
-			if not Sw.WallOn then killE() return end
+		RSw.RenderStepped:Connect(function(dt)
+			if not Sw.WallOn then if on then stopAll() end return end
 			local ch=LPw.Character
 			local h=ch and ch:FindFirstChildOfClass("Humanoid")
 			local r=ch and ch:FindFirstChild("HumanoidRootPart")
-			if not (h and r and h.Health>0) then killE() return end
-			if not (BV and BV.Parent) then makeE(r) end
+			if not (h and r and h.Health>0) then if on then stopAll(h) end return end
 			local cam=workspace.CurrentCamera
 			if not cam then return end
-
-			if h.Jump then freeT=os.clock()+0.3 end
-			if os.clock()<freeT then
-				BV.MaxForce=Vector3.zero
-				BG.MaxTorque=Vector3.zero
-				return
-			end
-
 			ray.FilterDescendantsInstances={ch,cam}
-			local pos=r.Position
-			local look=cam.CFrame.LookVector
-			local flat=Vector3.new(look.X,0,look.Z)
+
+			local l=cam.CFrame.LookVector
+			local flat=Vector3.new(l.X,0,l.Z)
 			if flat.Magnitude<0.05 then flat=Vector3.new(0,0,-1) end
 			flat=flat.Unit
 			local mv=h.MoveDirection
-			local dir=flat
-			if mv.Magnitude>0.1 then dir=Vector3.new(mv.X,0,mv.Z).Unit end
 
-			local function cast(origin,d,len)
-				local hit=workspace:Raycast(origin,d*len,ray)
-				if hit and math.abs(hit.Normal.Y)<0.45 then return hit end
-				return nil
-			end
+			if h.Jump and on then stopAll(h) cool=os.clock()+0.35 return end
 
-			local wall=cast(pos,dir,R)
-				or cast(pos-Vector3.new(0,1,0),(dir*0.85-Vector3.new(0,0.55,0)).Unit,R*1.5)
-				or cast(pos-Vector3.new(0,2.2,0),dir,R)
-			local floor=workspace:Raycast(pos,Vector3.new(0,-3.2,0),ray)
-			local onFloor=floor and floor.Normal.Y>0.6 and floor.Distance<2.8
-
-			if wall and not onFloor then
-				BV.MaxForce=Vector3.new(1e5,1e5,1e5)
-				BG.MaxTorque=Vector3.new(1e5,1e5,1e5)
-				local n=wall.Normal
-				local move=Vector3.zero
-				if mv.Magnitude>0.1 then
-					local m=Vector3.new(mv.X,0,mv.Z)
-					m=m-n*m:Dot(n)
-					if m.Magnitude>0.05 then move=m.Unit*SPEED end
+			if not on then
+				if os.clock()<cool then return end
+				local floor=workspace:Raycast(r.Position,Vector3.new(0,-3.2,0),ray)
+				if floor and floor.Normal.Y>0.6 and floor.Distance<2.6 then return end
+				local dir=mv.Magnitude>0.1 and Vector3.new(mv.X,0,mv.Z).Unit or flat
+				local function cast(o,d,len)
+					local hit=workspace:Raycast(o,d*len,ray)
+					if hit and math.abs(hit.Normal.Y)<0.5 then return hit end
+					return nil
 				end
-				BV.Velocity=move-n*7
-				BG.CFrame=CFrame.lookAt(pos,pos+dir,n)
-			else
-				BV.Velocity=Vector3.zero
-				BV.MaxForce=Vector3.zero
-				BG.MaxTorque=Vector3.zero
+				local hit=cast(r.Position,dir,3.6)
+					or cast(r.Position-Vector3.new(0,1.2,0),(dir*0.8-Vector3.new(0,0.6,0)).Unit,5)
+					or cast(r.Position-Vector3.new(0,2.6,0),dir,3.6)
+				if hit then begin(hit,r) end
+				return
 			end
+
+			local probe=workspace:Raycast(wpos+n*offN,-n*(offN+1.4),ray)
+			if not probe then stopAll(h) return end
+
+			local m=Vector3.zero
+			if mv.Magnitude>0.1 then
+				local f=mv:Dot(flat)
+				local s=mv:Dot(flat:Cross(Vector3.new(0,1,0)))
+				m=e1*f+e2*s
+			end
+			if m.Magnitude>1 then m=m.Unit end
+			wpos=wpos+m*spd*dt
+
+			local target=wpos+n*offN
+			BP.Position=target
+			local dirv=(m.Magnitude>0.05) and m.Unit or e1
+			BG.CFrame=CFrame.lookAt(target,target+dirv,n)
 		end)
 	end
 end
