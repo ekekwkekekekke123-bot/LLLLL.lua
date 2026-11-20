@@ -1025,15 +1025,17 @@ task.spawn(function()
 			end
 			for _,o in ipairs(gList) do
 				local nm=string.lower(o.Name)
-															local isGun=false
-								if o:IsA("Tool") and string.find(nm,"gun") then
-									local hdT=o:FindFirstChild("Handle")
-									local owner=ownerPlr(o)
+												local isGun=false
+								if string.find(nm,"gun") then
+									local owner,where=ownerPlr(o)
+									local hdT=o:FindFirstChild("Handle") or (o:IsA("BasePart") and o) or nil
 									local visT=hdT and hdT.Transparency<0.95 and hdT.LocalTransparencyModifier<0.95
-									if owner then
-										isGun=((o.Parent==owner.Character) and visT) and true or false
-									else
-										isGun=((o.Parent==workspace or (o.Parent and o.Parent.Parent==workspace)) and visT) and true or false
+									if visT then
+										if not owner then
+											isGun=(o:IsA("Tool") or o:IsA("Model") or o:IsA("BasePart"))
+										elseif where=="char" then
+											isGun=o:IsA("Tool")
+										end
 									end
 								end
 								if isGun then
@@ -1053,7 +1055,7 @@ task.spawn(function()
 									elseif bg then
 										bg.Enabled=false
 									end
-				elseif string.find(nm,"trap") or string.find(nm,"beartrap") then
+					elseif string.find(nm,"trap") or string.find(nm,"beartrap") then
 					if ES.Trap then
 						for _,d in ipairs(o:GetDescendants()) do
 							if d:IsA("BasePart") then d.Transparency=0 d.CanCollide=false end
@@ -1063,9 +1065,13 @@ task.spawn(function()
 					hl(o,CLR.Trap,ES.Trap)
 				end
 			end
-			if ES.Gun and gunOn and not lastGun then mmToast("枪械已掉落") end
-			if ES.Gun and not gunOn and lastGun then mmToast("枪械已被拾取") end
-			lastGun=gunOn
+						if gunOn~=lastGun then gunTG=os.clock() end
+			if gunOn~=lastGun and os.clock()-(gunTG or 0)>0.9 then
+				lastGun=gunOn
+				if ES.Gun then
+					if gunOn then mmToast("枪械已出现") else mmToast("枪械已消失") end
+				end
+			end
 			if anyW and not wasW then rStart=os.clock() end
 			if not anyW then rStart=0 end
 			wasW=anyW
