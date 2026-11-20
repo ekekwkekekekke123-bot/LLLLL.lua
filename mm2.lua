@@ -1025,29 +1025,34 @@ task.spawn(function()
 			end
 			for _,o in ipairs(gList) do
 				local nm=string.lower(o.Name)
-								if (o:IsA("Tool") or o:IsA("Model") or o:IsA("BasePart")) and string.find(nm,"gun") and not onPlr(o) then
-					local hd=o:FindFirstChild("Handle")
-					if not hd and o:IsA("BasePart") then hd=o end
-					local vis=false
-					if hd then
-						vis=(hd.Transparency<0.95 and hd.LocalTransparencyModifier<0.95)
-					end
-										if vis then
-						gunOn=true
-						hl(o,CLR.Gun,ES.Gun)
-						local bg=hd:FindFirstChild("mm2_gdist")
-						if ES.Gun and myHRg then
-							if not bg then
-								bg=B("BillboardGui",{Name="mm2_gdist",Size=UDim2.fromOffset(70,18),StudsOffset=Vector3.new(0,1.8,0),AlwaysOnTop=true,Parent=hd})
-								B("TextLabel",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="",Font=Enum.Font.GothamBold,TextSize=11,TextColor3=CLR.Gun,Parent=bg})
-							end
-							bg.Enabled=true
-							local tl=bg:FindFirstChildOfClass("TextLabel")
-							if tl then tl.Text=math.floor((hd.Position-myHRg.Position).Magnitude).."m" end
-						elseif bg then
-							bg.Enabled=false
-						end
-					end
+															local isGun=false
+								if o:IsA("Tool") and string.find(nm,"gun") then
+									local hdT=o:FindFirstChild("Handle")
+									local owner=ownerPlr(o)
+									local visT=hdT and hdT.Transparency<0.95 and hdT.LocalTransparencyModifier<0.95
+									if owner then
+										isGun=((o.Parent==owner.Character) and visT) and true or false
+									else
+										isGun=((o.Parent==workspace or (o.Parent and o.Parent.Parent==workspace)) and visT) and true or false
+									end
+								end
+								if isGun then
+									local hd=o:FindFirstChild("Handle")
+									if not hd and o:IsA("BasePart") then hd=o end
+									gunOn=true
+									hl(o,CLR.Gun,ES.Gun)
+									local bg=hd and hd:FindFirstChild("mm2_gdist")
+									if ES.Gun and myHRg and hd then
+										if not bg then
+											bg=B("BillboardGui",{Name="mm2_gdist",Size=UDim2.fromOffset(70,18),StudsOffset=Vector3.new(0,1.8,0),AlwaysOnTop=true,Parent=hd})
+											B("TextLabel",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="",Font=Enum.Font.GothamBold,TextSize=11,TextColor3=CLR.Gun,Parent=bg})
+										end
+										bg.Enabled=true
+										local tl=bg:FindFirstChildOfClass("TextLabel")
+										if tl then tl.Text=math.floor((hd.Position-myHRg.Position).Magnitude).."m" end
+									elseif bg then
+										bg.Enabled=false
+									end
 				elseif string.find(nm,"trap") or string.find(nm,"beartrap") then
 					if ES.Trap then
 						for _,d in ipairs(o:GetDescendants()) do
