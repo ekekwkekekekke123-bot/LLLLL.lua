@@ -1010,15 +1010,15 @@ task.spawn(function()
 			for _,pl in ipairs(P:GetPlayers()) do
 				local ch=pl.Character
 			end
-						local function onPlr(x)
-				for _,pl in ipairs(P:GetPlayers()) do
-					local c=pl.Character
-					if c and (x==c or x:IsDescendantOf(c)) then return true end
-					local b=pl.Backpack
-					if b and (x==b or x:IsDescendantOf(b)) then return true end
-				end
-				return false
-			end
+											local function ownerPlr(x)
+							for _,pl in ipairs(P:GetPlayers()) do
+								local c=pl.Character
+								if c and (x==c or x:IsDescendantOf(c)) then return pl,"char" end
+								local b=pl.Backpack
+								if b and (x==b or x:IsDescendantOf(b)) then return pl,"bp" end
+							end
+							return nil
+						end
 					for _,o in ipairs(workspace:GetChildren()) do
 				gList[#gList+1]=o
 				for _,c in ipairs(o:GetChildren()) do gList[#gList+1]=c end
