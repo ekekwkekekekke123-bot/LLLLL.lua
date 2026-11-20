@@ -393,33 +393,64 @@ local function stabOne(pl)
 	return true
 end
 
-local function killAll()
+local function suckKill(list, label)
 	if not isMurderer() then mmToast("你不是杀手") return end
 	local c, h, r = myChar()
 	local tool = myKnife()
 	if not (r and tool) then mmToast("手里没刀") return end
-	local save = r.CFrame
-	local n = 0
-	for _, pl in ipairs(P:GetPlayers()) do
-		if pl ~= LP and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
-			r.CFrame = pl.Character.HumanoidRootPart.CFrame
-			pcall(function() tool:Activate() end)
-			n = n + 1
-			task.wait(0.06)
+
+	local spot = r.Position + r.CFrame.LookVector * 2
+	local live = {}
+	for _, pl in ipairs(list) do
+		local tc = pl and pl.Character
+		local tr = tc and tc:FindFirstChild("HumanoidRootPart")
+		local th = tc and tc:FindFirstChildOfClass("Humanoid")
+		if tr and th and th.Health > 0 then
+			live[#live + 1] = {tr = tr, th = th}
 		end
 	end
-	r.CFrame = save
-	r.AssemblyLinearVelocity = Vector3.zero
-	r.AssemblyAngularVelocity = Vector3.zero
-	mmToast("一键击杀 · " .. n .. " 人")
+	if #live == 0 then mmToast("附近没人") return end
+
+	local hold = os.clock() + 1
+	local con
+	con = RS.RenderStepped:Connect(function()
+		local okk = false
+		for _, o in ipairs(live) do
+			if o.tr and o.tr.Parent then
+				o.tr.CFrame = CFrame.new(spot)
+				o.tr.AssemblyLinearVelocity = Vector3.zero
+				o.tr.AssemblyAngularVelocity = Vector3.zero
+				okk = true
+			end
+		end
+		if not okk or os.clock() >= hold then
+			con:Disconnect()
+		end
+	end)
+
+	task.spawn(function()
+		while os.clock() < hold do
+			pcall(function() tool:Activate() end)
+			task.wait(0.09)
+		end
+	end)
+	mmToast((label or "吸取击杀") .. " · " .. #live .. " 人")
+end
+
+local function killAll()
+	if not isMurderer() then mmToast("你不是杀手") return end
+	local list = {}
+	for _, pl in ipairs(P:GetPlayers()) do
+		if pl ~= LP then list[#list + 1] = pl end
+	end
+	suckKill(list, "吸取击杀全部")
 end
 
 local function killSheriff()
 	if not isMurderer() then mmToast("你不是杀手") return end
 	local pl = findSheriff()
 	if not pl then mmToast("没找到警长") return end
-	stabOne(pl)
-	mmToast("已击杀警长 " .. pl.Name)
+	suckKill({pl}, "吸取击杀警长")
 end
 
 local function killNearest()
@@ -437,8 +468,7 @@ local function killNearest()
 		end
 	end
 	if not best then mmToast("附近没人") return end
-	stabOne(best)
-	mmToast("已击杀最近 " .. best.Name)
+	suckKill({best}, "吸取击杀最近")
 end
 
 local function flingSheriff()
