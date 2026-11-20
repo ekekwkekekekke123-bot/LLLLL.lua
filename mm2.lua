@@ -608,6 +608,109 @@ rowButton(bodySh, ySh, "传送到杀手身后", function()
 	tpBehind(pl)
 end)
 rowToggle(bodySh, ySh, "循环传送到杀手身后", "ShLoop", tpLoopSet)
+-- ---------- 开枪音效替换 ----------
+local SNDS = {
+	{ n = "开门音", id = "rbxassetid://140294865036206" },
+	{ n = "静音",   id = "rbxassetid://0" },
+}
+CFG.SndOn = false
+CFG.SndIdx = 1
+local sndOrig = setmetatable({}, {__mode = "k"})
+
+local function sndBack()
+	for d, v in pairs(sndOrig) do
+		if d.Parent then pcall(function() d.SoundId = v end) end
+	end
+	sndOrig = setmetatable({}, {__mode = "k"})
+end
+
+local function sndOne(s)
+	if not CFG.SndOn or not s:IsA("Sound") then return end
+	if s.Name ~= "Beep" and not string.find(s.SoundId, "104560954", 1, true) then return end
+	if sndOrig[s] == nil then sndOrig[s] = s.SoundId end
+	local id = SNDS[CFG.SndIdx].id
+	if s.SoundId ~= id then pcall(function() s.SoundId = id end) end
+end
+
+local function sndScan()
+	for _, p in ipairs(P:GetPlayers()) do
+		local c = p.Character
+		if c then
+			for _, d in ipairs(c:GetDescendants()) do sndOne(d) end
+		end
+		local bk = p:FindFirstChild("Backpack")
+		if bk then
+			for _, d in ipairs(bk:GetDescendants()) do sndOne(d) end
+		end
+	end
+end
+
+task.spawn(function()
+	while gui.Parent do
+		task.wait(0.4)
+		if CFG.SndOn then pcall(sndScan) end
+	end
+end)
+
+-- 开关行
+local sndRow = B("TextButton",{Size=UDim2.new(1,0,0,30),Position=UDim2.fromOffset(0,ySh.v),BackgroundColor3=C.row,BorderSizePixel=0,Text="",AutoButtonColor=false,ZIndex=130,Parent=bodySh})
+ySh.v = ySh.v + 34
+B("UIStroke",{Color=Color3.fromRGB(150,140,128),Transparency=0.4,Parent=sndRow})
+B("TextLabel",{Size=UDim2.new(1,-56,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text="修改开枪音效",Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=131,Parent=sndRow})
+local ssw = B("Frame",{Size=UDim2.fromOffset(32,18),Position=UDim2.new(1,-42,0.5,-9),BackgroundColor3=C.off,BorderSizePixel=0,ZIndex=131,Parent=sndRow})
+B("UIStroke",{Color=Color3.fromRGB(95,88,80),Transparency=0.3,Parent=ssw})
+local skn = B("Frame",{Size=UDim2.fromOffset(14,14),Position=UDim2.fromOffset(2,2),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,ZIndex=132,Parent=ssw})
+sndRow.MouseButton1Click:Connect(function()
+	CFG.SndOn = not CFG.SndOn
+	ssw.BackgroundColor3 = CFG.SndOn and C.accent or C.off
+	TS:Create(skn,TweenInfo.new(0.18,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Position=UDim2.fromOffset(CFG.SndOn and 16 or 2,2)}):Play()
+	if CFG.SndOn then
+		task.spawn(sndScan)
+		mmToast("开枪音效 · " .. SNDS[CFG.SndIdx].n)
+	else
+		sndBack()
+		mmToast("开枪音效已关闭")
+	end
+end)
+
+-- 音效选择行
+local sndPick = B("TextButton",{Size=UDim2.new(1,0,0,28),Position=UDim2.fromOffset(0,ySh.v),BackgroundColor3=C.row,BorderSizePixel=0,Text="",AutoButtonColor=false,ZIndex=130,Parent=bodySh})
+ySh.v = ySh.v + 32
+B("UIStroke",{Color=Color3.fromRGB(150,140,128),Transparency=0.4,Parent=sndPick})
+B("TextLabel",{Size=UDim2.new(1,-86,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text="开枪音效",Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=131,Parent=sndPick})
+local sndVal = B("TextLabel",{Size=UDim2.new(0,72,1,0),Position=UDim2.new(1,-78,0,0),BackgroundTransparency=1,Text=SNDS[CFG.SndIdx].n,Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=C.accent,TextXAlignment=Enum.TextXAlignment.Right,ZIndex=131,Parent=sndPick})
+
+local sg2 = B("ScreenGui",{Name="mm2_sndpick",IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=9200,Enabled=false,Parent=SP()})
+gui.Destroying:Connect(function() pcall(function() sg2:Destroy() end) end)
+local sh2 = B("TextButton",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Text="",AutoButtonColor=false,ZIndex=1,Parent=sg2})
+local bx2 = B("Frame",{Size=UDim2.fromOffset(160,34*#SNDS+14),Position=UDim2.fromScale(0.5,0.5),AnchorPoint=Vector2.new(0.5,0.5),BackgroundColor3=C.bg,BorderSizePixel=0,Active=true,ZIndex=2,Parent=sg2})
+B("UIStroke",{Color=Color3.fromRGB(150,140,128),Transparency=0.3,Parent=bx2})
+local lay2 = Instance.new("UIListLayout") lay2.Padding=UDim.new(0,4) lay2.SortOrder=Enum.SortOrder.LayoutOrder lay2.Parent=bx2
+local pad2 = Instance.new("UIPadding") pad2.PaddingTop=UDim.new(0,7) pad2.PaddingBottom=UDim.new(0,7) pad2.PaddingLeft=UDim.new(0,7) pad2.PaddingRight=UDim.new(0,7) pad2.Parent=bx2
+
+for i, it in ipairs(SNDS) do
+	local b2 = B("TextButton",{Size=UDim2.new(1,0,0,30),BackgroundColor3=(i==CFG.SndIdx) and C.accent or C.row,BorderSizePixel=0,Text=it.n,Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=(i==CFG.SndIdx) and Color3.new(1,1,1) or C.txt,AutoButtonColor=false,LayoutOrder=i,ZIndex=3,Parent=bx2})
+	B("UIStroke",{Color=Color3.fromRGB(150,140,128),Transparency=0.45,Parent=b2})
+	b2.MouseButton1Click:Connect(function()
+		CFG.SndIdx = i
+		sndVal.Text = it.n
+		for _, o in ipairs(bx2:GetChildren()) do
+			if o:IsA("TextButton") then
+				local on = (o.LayoutOrder == i)
+				o.BackgroundColor3 = on and C.accent or C.row
+				o.TextColor3 = on and Color3.new(1,1,1) or C.txt
+			end
+		end
+		sg2.Enabled = false
+		if CFG.SndOn then
+			sndBack()
+			task.spawn(sndScan)
+			mmToast("开枪音效 · " .. it.n)
+		end
+	end)
+end
+sndPick.MouseButton1Click:Connect(function() sg2.Enabled = true end)
+sh2.MouseButton1Click:Connect(function() sg2.Enabled = false end)
 local btrOK,btrErr=pcall(function()
 	local BTR={tgt=nil}
 	local function btrHasKnife(pl)
