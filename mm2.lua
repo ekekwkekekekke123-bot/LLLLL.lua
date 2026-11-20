@@ -1025,22 +1025,45 @@ task.spawn(function()
 			end
 			for _,o in ipairs(gList) do
 				local nm=string.lower(o.Name)
-												local isGun=false
+																local isGun=false
 								if string.find(nm,"gun") then
-									local owner,where=ownerPlr(o)
-									local hdT=o:FindFirstChild("Handle") or (o:IsA("BasePart") and o) or nil
-									local visT=hdT and hdT.Transparency<0.95 and hdT.LocalTransparencyModifier<0.95
-									if visT then
-										if not owner then
-											isGun=(o:IsA("Tool") or o:IsA("Model") or o:IsA("BasePart"))
-										elseif where=="char" then
-											isGun=o:IsA("Tool")
+									local owner=ownerPlr(o)
+									if not owner then
+										local inHum=false
+										local pp=o
+										for _=1,6 do
+											pp=pp and pp.Parent
+											if pp and pp:IsA("Model") and pp:FindFirstChildOfClass("Humanoid") then inHum=true break end
+										end
+										local welded=false
+										for _,w in ipairs(o:GetChildren()) do
+											if w:IsA("Weld") or w:IsA("WeldConstraint") or w:IsA("Motor6D") then
+												local a=w.Part0 or w.Part1
+												local m=a and a:FindFirstAncestorOfClass("Model")
+												if m and m:FindFirstChildOfClass("Humanoid") then welded=true break end
+											end
+										end
+										if not inHum and not welded then
+											local hdT=o:FindFirstChild("Handle") or (o:IsA("BasePart") and o) or (o:IsA("Model") and o.PrimaryPart) or nil
+											local pos0=hdT and hdT.Position
+											local far=true
+											if pos0 then
+												for _,pl in ipairs(P:GetPlayers()) do
+													local c=pl.Character
+													local hr=c and c:FindFirstChild("HumanoidRootPart")
+													if hr and (hr.Position-pos0).Magnitude<3 then far=false break end
+												end
+											else
+												far=false
+											end
+											isGun=far and hdT~=nil and hdT.Transparency<0.95 and hdT.LocalTransparencyModifier<0.95
 										end
 									end
 								end
 								if isGun then
 									local hd=o:FindFirstChild("Handle")
 									if not hd and o:IsA("BasePart") then hd=o end
+									if not hd and o:IsA("Model") then hd=o.PrimaryPart end
 									gunOn=true
 									hl(o,CLR.Gun,ES.Gun)
 									local bg=hd and hd:FindFirstChild("mm2_gdist")
