@@ -4252,29 +4252,41 @@ do
 			on=false
 			if BP then pcall(function() BP:Destroy() end) BP=nil end
 			if BG then pcall(function() BG:Destroy() end) BG=nil end
+			if h then pcall(function() h:ChangeState(Enum.HumanoidStateType.GettingUp) end) end
 		end
 
-		local function begin(hit,r)
+		local function basis(hit,fwd)
 			n=hit.Normal
-			local up=Vector3.new(0,1,0)
-			local t=up-n*up:Dot(n)
-			if t.Magnitude<0.1 then t=Vector3.new(1,0,0) end
-			e1=t.Unit
+			local f=fwd-(n*fwd:Dot(n))
+			if f.Magnitude<0.1 then
+				local up=Vector3.new(0,1,0)
+				f=up-n*up:Dot(n)
+			end
+			if f.Magnitude<0.1 then f=Vector3.new(1,0,0) end
+			e1=f.Unit
 			e2=n:Cross(e1).Unit
-			local base=hit.Position
-			local rel=r.Position-base
-			wpos=base+e1*(rel:Dot(e1))+e2*(rel:Dot(e2))
+			wpos=hit.Position
+		end
+
+		local function makeBody(r)
+			if BP then pcall(function() BP:Destroy() end) end
+			if BG then pcall(function() BG:Destroy() end) end
 			BP=Instance.new("BodyPosition")
 			BP.MaxForce=Vector3.new(1e5,1e5,1e5)
 			BP.P=4000
 			BP.D=600
-			BP.Position=wpos+n*offN
+			BP.Position=r.Position
 			BP.Parent=r
 			BG=Instance.new("BodyGyro")
 			BG.MaxTorque=Vector3.new(1e5,1e5,1e5)
 			BG.P=8000
 			BG.CFrame=r.CFrame
 			BG.Parent=r
+		end
+
+		local function begin(hit,r,fwd)
+			basis(hit,fwd)
+			makeBody(r)
 			on=true
 		end
 
@@ -4309,12 +4321,9 @@ do
 				local hit=cast(r.Position,dir,3.6)
 					or cast(r.Position-Vector3.new(0,1.2,0),(dir*0.8-Vector3.new(0,0.6,0)).Unit,5)
 					or cast(r.Position-Vector3.new(0,2.6,0),dir,3.6)
-				if hit then begin(hit,r) end
+				if hit then begin(hit,r,dir) end
 				return
 			end
-
-			local probe=workspace:Raycast(wpos+n*offN,-n*(offN+1.4),ray)
-			if not probe then stopAll(h) return end
 
 			local m=Vector3.zero
 			if mv.Magnitude>0.1 then
@@ -4322,13 +4331,31 @@ do
 				local s=mv:Dot(flat:Cross(Vector3.new(0,1,0)))
 				m=e1*f+e2*s
 			end
-			if m.Magnitude>1 then m=m.Unit end
-			wpos=wpos+m*spd*dt
+			local moving=m.Magnitude>0.05
+			if moving then m=m.Unit end
+			wpos=wpos+(moving and m*spd*dt or Vector3.zero)
 
 			local target=wpos+n*offN
+			local probe=workspace:Raycast(target,-n*(offN+1.6),ray)
+
+			if not probe then
+				local mdir=moving and m or e1
+				local nh=workspace:Raycast(target,mdir*4,ray)
+				if nh and math.abs(nh.Normal:Dot(n))<0.7 then
+					basis(nh,mdir)
+					target=wpos+n*offN
+					BP.Position=target
+					BG.CFrame=CFrame.lookAt(target,target+mdir,n)
+					return
+				else
+					stopAll(h) return
+				end
+			end
+
 			BP.Position=target
-			local dirv=(m.Magnitude>0.05) and m.Unit or e1
-			BG.CFrame=CFrame.lookAt(target,target+dirv,n)
+			BG.CFrame=CFrame.lookAt(target,target+(moving and m or e1),n)
+			r.AssemblyLinearVelocity=moving and (m*spd) or Vector3.zero
+			if moving then h:ChangeState(Enum.HumanoidStateType.Running) end
 		end)
 	end
 end
