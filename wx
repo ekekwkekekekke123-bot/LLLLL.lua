@@ -2253,7 +2253,7 @@ hd(pgP,"移动") nb(pgP,"移动速度","SpV",S.SpV,"16-500",16,500) T(pgP,"启�
 hd(pgP,"跳跃") T(pgP,"自动跳跃","AutoJp",false) T(pgP,"无限跳跃","JpInf",false) T(pgP,"跳跃增强","JpOn",false) nb(pgP,"跳跃高度","JpH",S.JpH,"20-500",20,500)
 hd(pgP,"重力") T(pgP,"重力修改","GravOn",false) nb(pgP,"自定义重力","GravV",S.GravV,"重力越低跳的越高",0,500)
 hd(pgP,"穿墙") T(pgP,"启用穿墙","NcOn",false)
-hd(pgP,"其他") T(pgP,"隐身","InvisOn",false)
+hd(pgP,"其他") T(pgP,"隐身","InvisOn",false) T(pgP,"爬墙","WallOn",false)
 hd(pgP,"特殊") T(pgP,"自转","SpinOn",false) nb(pgP,"自转速度","SpinV",100,"10-200",10,200) T(pgP,"抽搐（不通用）","TwOn",false) T(pgP,"强制第三人称","TpOn",false) T(pgP,"反着来","RevOn",false)
 hd(pgP,"透视建筑") T(pgP,"X-Ray","XrOn",false) N(pgP,"建筑透明","XrV",0,100)
 local _revCon
