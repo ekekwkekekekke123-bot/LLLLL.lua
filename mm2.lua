@@ -141,6 +141,29 @@ local function mmToast(msg)
 	end)
 	task.delay(1.65,function() pcall(function() g:Destroy() end) end)
 end
+-- 屏幕日志（手机端看不到控制台，用它看诊断，10 秒无新消息自动隐藏）
+local DBG={lines={},shown=0}
+local function mmDbg(msg)
+	pcall(function()
+		msg=tostring(msg)
+		DBG.lines[#DBG.lines+1]=msg
+		if #DBG.lines>5 then table.remove(DBG.lines,1) end
+		DBG.shown=os.clock()
+		if not DBG.gui then
+			local sg=B("ScreenGui",{Name="mm2_dbg",IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=9500,Parent=SP()})
+			local f=B("Frame",{Size=UDim2.fromOffset(300,92),Position=UDim2.new(0,8,1,-100),BackgroundColor3=Color3.fromRGB(18,18,18),BackgroundTransparency=0.3,BorderSizePixel=0,ZIndex=9000,Parent=sg})
+			B("UIStroke",{Color=Color3.fromRGB(210,210,210),Transparency=0.55,Parent=f})
+			DBG.label=B("TextLabel",{Size=UDim2.new(1,-12,1,-8),Position=UDim2.fromOffset(6,4),BackgroundTransparency=1,Text="",Font=Enum.Font.Code,TextSize=10,TextColor3=Color3.fromRGB(235,235,235),TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Top,TextWrapped=true,ZIndex=9001,Parent=f})
+			DBG.gui=sg
+		end
+		DBG.gui.Enabled=true
+		DBG.label.Text=table.concat(DBG.lines,"\n")
+		local shown=DBG.shown
+		task.delay(10,function()
+			if DBG.gui and DBG.shown==shown then DBG.gui.Enabled=false end
+		end)
+	end)
+end
 -- ============================================================
 -- [新增] 警长功能 / 杀手功能
 -- 依赖本文件已有: B TS C pn side body LP P mmToast
@@ -526,7 +549,7 @@ local function knTry(m)
 	local key = tostring(m.Name) .. "/" .. tostring(boxes[1].Name)
 	if not KNLOG[key] then
 		KNLOG[key] = true
-		warn("[mm2] 飞刀判定盒已扩大: " .. key .. " -> " .. tostring(R) .. " 格")
+		mmDbg("[飞刀] 判定盒: "..key.." -> "..tostring(R).."格")
 	end
 end
 local function knifeRangeSet()
@@ -686,7 +709,7 @@ local function sndOne(s)
 	local sid = tostring(s.SoundId)
 	if CAP[sid] == nil then
 		CAP[sid] = true
-		warn("[mm2] 抓到枪声素材: " .. sid .. " / " .. tostring(s.Name))
+		mmDbg("[音效] 抓到: "..sid.." / "..tostring(s.Name))
 	end
 	if not CFG.SndOn then return end
 	if sndOrig[s] == nil then sndOrig[s] = s.SoundId end
@@ -758,9 +781,9 @@ task.spawn(function()
 		end
 	end)
 	if #hits > 0 then
-		warn("[mm2] 疑似音效 Remote: " .. table.concat(hits, " | "))
+		mmDbg("[音效] 疑似Remote: "..table.concat(hits, " | "))
 	else
-		warn("[mm2] 未发现音效类 Remote —— 替换只能本地生效")
+		mmDbg("[音效] 无音效Remote，仅本地生效")
 	end
 end)
 
@@ -1320,12 +1343,12 @@ task.spawn(function()
 						end
 					end
 					look(workspace)
-					if not found then if os.clock()-(GPSay or 0)>8 then GPSay=os.clock() warn("[mm2] 捡枪: 视野内没有掉落枪(未被识别)") end return end
+					if not found then if os.clock()-(GPSay or 0)>60 then GPSay=os.clock() mmDbg("[捡枪] 未识别到掉落枪") end return end
 
 					gpT=os.clock()
 					local origin=hr.CFrame
 					local go=found.o
-					local gp=found.p TPBusy=os.clock() pcall(function() warn("[mm2] 捡枪: "..tostring(go:GetFullName()).." 距离约 "..tostring(math.floor((gp.Position-hr.Position).Magnitude)).." 格") hr.CFrame=CFrame.new(gp.Position) end)
+					local gp=found.p TPBusy=os.clock() pcall(function() mmDbg("[捡枪] "..tostring(go.Name).." 距离"..tostring(math.floor((gp.Position-hr.Position).Magnitude)).."格") hr.CFrame=CFrame.new(gp.Position) end)
 
 					task.spawn(function()
 						for _,d in ipairs(go:GetDescendants()) do
@@ -1335,7 +1358,7 @@ task.spawn(function()
 						end
 						local parts={} local t0=os.clock() pcall(function() local ccx=LP.Character if ccx then for _,bp in ipairs(ccx:GetDescendants()) do if bp:IsA("BasePart") then parts[#parts+1]=bp end end end end) while os.clock()-t0<1.2 and gp and gp.Parent and not isHeldVis() do for i=1,#parts do local bp=parts[i] if bp and bp.Parent and firetouchinterest then pcall(firetouchinterest,gp,bp,0) pcall(firetouchinterest,gp,bp,1) end end for _,d in ipairs(go:GetDescendants()) do if d:IsA("ProximityPrompt") then pcall(function() d.Enabled=true d:InputHoldBegin() end) end end task.wait(0.05) end
 						if not isHeldVis() then local cc2=LP.Character local rr3=nil end
-						if not isHeldVis() then GWBAD[go]=true pcall(function() warn("[mm2] 原地触碰失败: "..tostring(go:GetFullName()).." 距离约 "..tostring(math.floor((gp.Position-hr.Position).Magnitude)).." 格") end) end
+						if not isHeldVis() then GWBAD[go]=true pcall(function() mmDbg("[捡枪] 失败 "..tostring(go.Name).." 距离"..tostring(math.floor((gp.Position-hr.Position).Magnitude)).."格") end) end
 						local c2=LP.Character
 						local r2=c2 and (c2:FindFirstChild("HumanoidRootPart") or c2:FindFirstChild("Torso"))
 						if r2 then pcall(function() r2.CFrame=origin end) end
