@@ -525,6 +525,9 @@ local function knBadName(n)
 end
 local function knApply()
 	if not (CFG.KnOn and KN_BOX and KN_BOX.Parent) then return end
+	-- 关键：等刀离手再放大。刚生成时套 20 格的碰撞体，会把投掷初始化糊在自己身上，导致只有动画、刀出不来
+	local hr = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+	if hr and (KN_BOX.Position - hr.Position).Magnitude < 6 then return end
 	local R = math.clamp(tonumber(CFG.KnR) or 20, 10, 60)
 	pcall(function()
 		if KN[KN_BOX] == nil then KN[KN_BOX] = KN_BOX.Size end
