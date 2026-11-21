@@ -1250,7 +1250,10 @@ task.spawn(function()
 			end
 			if AU.GunPick then
 				pcall(function()
-					local function sub(s) return string.find(string.lower(tostring(s)),"gun")~=nil end
+					local GUNKEY={"gun","fusil","pompe","shotgun","枪","pistol","revolver","deagle","rifle","smg","sniper","beretta"}
+					local function sub(s) local x=string.lower(tostring(s)) for i=1,#GUNKEY do if string.find(x,GUNKEY[i],1,true) then return true end end return false end
+					local function isGunObj(o) if sub(o.Name) then return true end local ok,c=pcall(function() return o:FindFirstChild("ClientFusil",true) end) return ok and c~=nil end
+					GWSnap=true
 					local function isHeldVis()
 						local ch=LP.Character
 						if ch then
@@ -1282,7 +1285,7 @@ task.spawn(function()
 					local found=nil
 					local function look(par)
 						for _,o in ipairs(par:GetChildren()) do
-							if (o:IsA("Tool") or o:IsA("Model")) and sub(o.Name) and not GWI[o] and not GWBAD[o] then
+							if (o:IsA("Tool") or o:IsA("Model")) and isGunObj(o) and not GWBAD[o] then
 								local par2=o.Parent
 								local onP=false
 								if par2 then
@@ -1315,7 +1318,7 @@ task.spawn(function()
 					task.spawn(function()
 						for _,d in ipairs(go:GetDescendants()) do
 							if d:IsA("ProximityPrompt") then
-								pcall(function() d.InputHoldBegin() task.wait(0.05) d.InputHoldEnd() end)
+								pcall(function() d.Enabled=true d:InputHoldBegin() task.wait((d.HoldDuration or 0)+0.15) d:InputHoldEnd() end)
 							end
 						end
 						task.wait(0.45)
