@@ -4240,10 +4240,21 @@ do
 	local LPw=game:GetService("Players").LocalPlayer
 	if Sw then
 		Sw.WallOn=false
+
+		local bodyNames={
+			Head=true,Torso=true,["Left Arm"]=true,["Right Arm"]=true,
+			["Left Leg"]=true,["Right Leg"]=true,["Left Foot"]=true,["Right Foot"]=true,
+			["Left Hand"]=true,["Right Hand"]=true,
+			UpperTorso=true,LowerTorso=true,HumanoidRootPart=true,
+			LeftUpperArm=true,RightUpperArm=true,LeftLowerArm=true,RightLowerArm=true,
+			LeftUpperLeg=true,RightUpperLeg=true,LeftLowerLeg=true,RightLowerLeg=true
+		}
+
 		local ch0=LPw.Character
 		if ch0 then
 			for _,d in ipairs(ch0:GetDescendants()) do
 				if string.sub(d.Name,1,6)=="wxWall" then pcall(function() d:Destroy() end) end
+				if d:IsA("BasePart") and bodyNames[d.Name] then pcall(function() d.CanCollide=true end) end
 			end
 		end
 
@@ -4256,9 +4267,30 @@ do
 		ray.FilterType=Enum.RaycastFilterType.Exclude
 		local cool=0
 		local lastT=0
+		local cols=nil
+
+		local function noCol(ch)
+			cols=cols or {}
+			for _,d in ipairs(ch:GetDescendants()) do
+				if d:IsA("BasePart") and d.CanCollide then
+					cols[d]=true
+					d.CanCollide=false
+				end
+			end
+		end
+
+		local function reCol()
+			if cols then
+				for p,_ in pairs(cols) do
+					if p and p.Parent then pcall(function() p.CanCollide=true end) end
+				end
+			end
+			cols=nil
+		end
 
 		local function stopAll(h)
 			st=nil
+			reCol()
 			if BV then pcall(function() BV:Destroy() end) BV=nil end
 			if BG then pcall(function() BG:Destroy() end) BG=nil end
 			if h then pcall(function() h.AutoRotate=true end) end
@@ -4330,6 +4362,7 @@ do
 					st="lift"
 					base=flat
 					n=wall.Normal
+					noCol(ch)
 					ensureBV(r)
 				end
 			end
