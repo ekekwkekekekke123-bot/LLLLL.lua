@@ -1368,7 +1368,7 @@ task.spawn(function()
 								end
 								if not onP then
 									local hb=o:IsA("BasePart") and o or o.PrimaryPart or o:FindFirstChild("Handle") or o:FindFirstChildWhichIsA("BasePart")
-									if hb and (not hb.Anchored) and hb.Transparency<0.95 and hb.LocalTransparencyModifier<0.95 then
+									if hb and hb.Transparency<0.95 and hb.LocalTransparencyModifier<0.95 then
 										found={o=o,p=hb}
 										return true
 									end
@@ -1378,12 +1378,12 @@ task.spawn(function()
 						end
 					end
 					look(workspace)
-					if not found then return end
+					if not found then if os.clock()-(GPSay or 0)>8 then GPSay=os.clock() warn("[mm2] 捡枪: 视野内没有掉落枪(未被识别)") end return end
 
 					gpT=os.clock()
 					local origin=hr.CFrame
 					local go=found.o
-					hr.CFrame=CFrame.new(found.p.Position+Vector3.new(0,1.5,0))
+					hr.CFrame=CFrame.new(found.p.Position) pcall(function() warn("[mm2] 尝试捡枪: "..tostring(found.o:GetFullName())) local cc=LP.Character local rr2=cc and (cc:FindFirstChild("HumanoidRootPart") or cc:FindFirstChild("Torso")) if rr2 and firetouchinterest then firetouchinterest(found.p,rr2,0) task.wait() firetouchinterest(found.p,rr2,1) end end)
 
 					task.spawn(function()
 						for _,d in ipairs(go:GetDescendants()) do
@@ -1391,7 +1391,8 @@ task.spawn(function()
 								pcall(function() d.Enabled=true d:InputHoldBegin() task.wait((d.HoldDuration or 0)+0.15) d:InputHoldEnd() end)
 							end
 						end
-						task.wait(0.45)
+						task.wait(0.9)
+						if not isHeldVis() then local cc2=LP.Character local rr3=cc2 and (cc2:FindFirstChild("HumanoidRootPart") or cc2:FindFirstChild("Torso")) if rr3 and found.p and found.p.Parent then rr3.CFrame=CFrame.new(found.p.Position) task.wait(0.5) end end
 						if not isHeldVis() then GWBAD[go]=true end
 						local c2=LP.Character
 						local r2=c2 and (c2:FindFirstChild("HumanoidRootPart") or c2:FindFirstChild("Torso"))
