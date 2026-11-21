@@ -1100,6 +1100,18 @@ task.spawn(function()
 			local sawRole=false
 			local cam=workspace.CurrentCamera
 			local vps=cam.ViewportSize
+			-- 屏幕外目标：把终点钳到屏幕边缘，而不是甩到画布外的一个荒唐坐标
+			local function edgePoint(pos)
+				local rel=cam.CFrame:PointToObjectSpace(pos)
+				local d=Vector2.new(rel.X,-rel.Y)
+				if rel.Z>0 then d=-d end
+				if d.Magnitude<1e-3 then d=Vector2.new(0,-1) end
+				d=d.Unit
+				local cx,cy=vps.X/2,vps.Y/2
+				local hw,hh=math.max(cx-18,1),math.max(cy-18,1)
+				local s=math.min(hw/math.max(math.abs(d.X),1e-4),hh/math.max(math.abs(d.Y),1e-4))
+				return Vector2.new(cx+d.X*s,cy+d.Y*s)
+			end
 						local fromP
 			if posV=="顶部" then fromP=Vector2.new(vps.X/2,0)
 			elseif posV=="头部" then
@@ -1154,7 +1166,10 @@ task.spawn(function()
 							li=li+1
 							if hr and ES.Line then
 								local sp,onv=cam:WorldToViewportPoint(hr.Position)
-																drawLine(li,fromP,Vector2.new(sp.X,sp.Y),col,(onv or ES.OffScr))
+								local ep=nil
+								if onv then ep=Vector2.new(sp.X,sp.Y)
+								elseif ES.OffScr then ep=edgePoint(hr.Position) end
+								drawLine(li,fromP,ep or fromP,col,(ep~=nil))
 							else
 								drawLine(li,fromP,fromP,col,false)
 							end
