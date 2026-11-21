@@ -143,7 +143,35 @@ local RT={cm={}} local aimPart=nil local PC=nil local SS=game:GetService("SoundS
 pcall(function() PC=require(LP.PlayerScripts:WaitForChild("PlayerModule",3)):GetControls() end)
 local function chr() local ch=LP.Character if not ch then return end local h=ch:FindFirstChildOfClass("Humanoid") local r=ch:FindFirstChild("HumanoidRootPart") or ch:FindFirstChild("Torso") if h and r then return ch,h,r end end
 local function mv() if PC then local ok,v=pcall(function() return PC:GetMoveVector() end) if ok and typeof(v)=="Vector3" then return v end end local v=Vector3.zero if UI:IsKeyDown(Enum.KeyCode.W) then v=v+Vector3.new(0,0,-1) end if UI:IsKeyDown(Enum.KeyCode.S) then v=v+Vector3.new(0,0,1) end if UI:IsKeyDown(Enum.KeyCode.A) then v=v+Vector3.new(-1,0,0) end if UI:IsKeyDown(Enum.KeyCode.D) then v=v+Vector3.new(1,0,0) end return v end
-local function vv() if UI:IsKeyDown(Enum.KeyCode.Space) then return 1 end if UI:IsKeyDown(Enum.KeyCode.LeftControl) or UI:IsKeyDown(Enum.KeyCode.LeftShift) then return -1 end return 0 end
+local function vv() if UI:IsKeyDown(Enum.KeyCode.Space) or RT.mUp then return 1 end if UI:IsKeyDown(Enum.KeyCode.LeftControl) or UI:IsKeyDown(Enum.KeyCode.LeftShift) or RT.mDown then return -1 end return 0 end
+-- 移动端：屏幕右侧飞行升降按钮（触屏没有键盘，长按升降）
+task.spawn(function()
+	if not UI.TouchEnabled then return end
+	local sg=Instance.new("ScreenGui") sg.Name="wx_mfly" sg.ResetOnSpawn=false sg.IgnoreGuiInset=true sg.DisplayOrder=9999
+	local ok=pcall(function() sg.Parent=game:GetService("CoreGui") end)
+	if not ok or not sg.Parent then
+		local pg=LP:FindFirstChildOfClass("PlayerGui") or LP:WaitForChild("PlayerGui",5)
+		if pg then sg.Parent=pg else return end
+	end
+	local function mk(y,txt,key)
+		local b=Instance.new("TextButton")
+		b.Size=UDim2.fromOffset(46,46) b.Position=UDim2.new(1,-60,0.5,y) b.AnchorPoint=Vector2.new(0,0.5)
+		b.BackgroundColor3=Color3.fromRGB(28,28,28) b.BackgroundTransparency=0.25 b.BorderSizePixel=0
+		b.Text=txt b.TextColor3=Color3.new(1,1,1) b.Font=Enum.Font.GothamBold b.TextSize=20 b.AutoButtonColor=true
+		b.Visible=false b.ZIndex=9999 b.Parent=sg
+		b.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseButton1 then RT[key]=true end end)
+		b.InputEnded:Connect(function() RT[key]=false end)
+		b.MouseLeave:Connect(function() RT[key]=false end)
+		return b
+	end
+	local up=mk(-60,"▲","mUp")
+	local dn=mk(-6,"▼","mDown")
+	RS.RenderStepped:Connect(function()
+		local on=S.FlOn and true or false
+		up.Visible=on dn.Visible=on
+		if not on then RT.mUp=false RT.mDown=false end
+	end)
+end)
 local function walk()
 	if RT.wc then RT.wc:Disconnect() RT.wc=nil end
 	if RT.spd then RT.spd:Disconnect() RT.spd=nil end
@@ -2820,7 +2848,7 @@ task.delay(0.35,function() pcall(function() powerState(true) end) end)
 			local m=mv()
 			local wd=Vector3.new(m.X,0,m.Z)
 			if wd.Magnitude>0.05 then RT.proxyH:Move(wd,false) else RT.proxyH:Move(Vector3.zero,false) end
-			if UI:IsKeyDown(Enum.KeyCode.Space) then RT.proxyH.Jump=true end
+			local rh=LP.Character and LP.Character:FindFirstChildOfClass("Humanoid") if (rh and rh.Jump) or UI:IsKeyDown(Enum.KeyCode.Space) then RT.proxyH.Jump=true end
 		end
 		sand(st)
 		for p,ch in pairs(Q) do Q[p]=nil if p.Character==ch then mk(p) end break end
