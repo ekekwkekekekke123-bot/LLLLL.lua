@@ -731,6 +731,26 @@ pcall(function()
 	end
 end)
 
+-- 探测游戏有没有"客户端驱动播放"的音效 Remote：有才可能让服务端放你给的素材
+task.spawn(function()
+	local hits = {}
+	pcall(function()
+		for _, o in ipairs(game:GetService("ReplicatedStorage"):GetDescendants()) do
+			if o:IsA("RemoteEvent") or o:IsA("RemoteFunction") then
+				local n = string.lower(o.Name)
+				if string.find(n,"sound",1,true) or string.find(n,"play",1,true) or string.find(n,"music",1,true) then
+					hits[#hits+1] = o:GetFullName()
+				end
+			end
+		end
+	end)
+	if #hits > 0 then
+		warn("[mm2] 疑似音效 Remote: " .. table.concat(hits, " | "))
+	else
+		warn("[mm2] 未发现音效类 Remote —— 替换只能本地生效")
+	end
+end)
+
 -- 开关行
 local sndRow = B("TextButton",{Size=UDim2.new(1,0,0,30),Position=UDim2.fromOffset(0,ySh.v),BackgroundColor3=C.row,BorderSizePixel=0,Text="",AutoButtonColor=false,ZIndex=130,Parent=bodySh})
 ySh.v = ySh.v + 34
