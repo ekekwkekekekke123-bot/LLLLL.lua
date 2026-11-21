@@ -514,77 +514,52 @@ end
 
 -- ---------- 5. 修改飞刀范围 ----------
 local KN = setmetatable({}, {__mode="k"})
-local KNLOG = {}
-local KNCNT = 0
--- 安全模式：默认只登记候选、不改尺寸。确认盒子真实名字后把 KN_HIT 改成那个名字即可动手
-local KN_HIT = nil
-local KBAN = {"spawn","coin","area","door","wall","floor","base","lobby","humanoidroot","torso","head","seat","vehicle"}
+local KN_BOX = nil
+local KBAN = {"spawn","coin","area","door","wall","floor","base","lobby","humanoidroot","torso","head","seat","vehicle","trail","display","decal","hitbox"}
 local function knBadName(n)
 	n = string.lower(tostring(n))
 	for _, w in ipairs(KBAN) do if string.find(n, w, 1, true) then return true end end
 	return false
 end
-local function knHasHum(p)
-	local a = p:FindFirstAncestorWhichIsA("Model")
-	while a do
-		if a:FindFirstChildOfClass("Humanoid") then return true end
-		a = a:FindFirstAncestorWhichIsA("Model")
-	end
-	return false
-end
-local function knTry(m)
-	if not (m and m.Parent) then return end
-	if m:FindFirstChildOfClass("Humanoid") then return end
-	if knBadName(m.Name) then return end
+local function knApply()
+	if not (CFG.KnOn and KN_BOX and KN_BOX.Parent) then return end
 	local R = math.clamp(tonumber(CFG.KnR) or 20, 10, 60)
-	local hr = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-	for _, p in ipairs(m:GetChildren()) do
-		if p:IsA("BasePart") and not knHasHum(p) and not knBadName(p.Name) and (not hr or (p.Position - hr.Position).Magnitude <= 80) then
-			local s = p.Size
-			if math.max(s.X, s.Y, s.Z) <= 6 then
-				local key = tostring(m.Name) .. "/" .. tostring(p.Name)
-				if not KNLOG[key] and KNCNT < 12 then
-					KNLOG[key] = true
-					KNCNT = KNCNT + 1
-					if KN_HIT and string.lower(p.Name) == string.lower(KN_HIT) then
-						if KN[p] == nil then KN[p] = s end
-						pcall(function()
-							p.Size = Vector3.new(R, R, R)
-							p.CanTouch = true
-							p.CanCollide = false
-						end)
-						mmDbg("[飞刀] 已放大 " .. key)
-					else
-						mmDbg("[飞刀] 候选 " .. key .. " | S=" .. tostring(math.floor(math.max(s.X, s.Y, s.Z))) .. " | T=" .. tostring(p.Transparency))
-					end
-				end
-			end
-		end
+	pcall(function()
+		if KN[KN_BOX] == nil then KN[KN_BOX] = KN_BOX.Size end
+		KN_BOX.Size = Vector3.new(R, R, R)
+		KN_BOX.CanTouch = true
+		KN_BOX.CanCollide = false
+	end)
+end
+local function knRestore()
+	for pt, sz in pairs(KN) do
+		if pt and pt.Parent then pcall(function() pt.Size = sz end) end
 	end
+	KN = setmetatable({}, {__mode="k"})
+	KN_BOX = nil
 end
 local function knifeRangeSet()
-	if not CFG.KnOn then
-		for pt, o in pairs(KN) do
-			if pt and pt.Parent then pcall(function() pt.Size = o end) end
-		end
-		KN = setmetatable({}, {__mode="k"})
-		KNLOG = {}
-		KNCNT = 0
-		return
-	end
-	for _, m in ipairs(workspace:GetChildren()) do
-		-- 只在开关打开时不主动扫全图，避免把地图物件当候选
-	end
+	if not CFG.KnOn then knRestore() end
 end
 workspace.DescendantAdded:Connect(function(d)
 	if not CFG.KnOn then return end
-	local m = d
-	if d:IsA("BasePart") then m = d.Parent end
-	if not (m and (m:IsA("Model") or m:IsA("Tool") or m:IsA("Folder"))) then return end
-	task.delay(0.15, function()
-		if not CFG.KnOn then return end
-		pcall(knTry, m)
-	end)
+	if not d:IsA("BasePart") then return end
+	if d.Parent ~= workspace then return end
+	if knBadName(d.Name) then return end
+	local hr = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+	if hr and (d.Position - hr.Position).Magnitude > 60 then return end
+	local s = d.Size
+	if d.Transparency >= 0.95 and math.max(s.X, s.Y, s.Z) <= 2 then
+		KN_BOX = d
+		mmDbg("[飞刀] 锁定: " .. tostring(d.Name) .. " | S=" .. tostring(math.floor(math.max(s.X, s.Y, s.Z))) .. " T=" .. tostring(d.Transparency))
+		knApply()
+	end
+end)
+task.spawn(function()
+	while true do
+		task.wait(0.1)
+		if CFG.KnOn then pcall(knApply) end
+	end
 end)
 -- ---------- 统一 namecall hook（已修复语法错误） ----------
 pcall(function()
