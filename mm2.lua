@@ -1303,7 +1303,7 @@ task.spawn(function()
 						local c=coinCache[i]
 						if not c or not c.Parent then table.remove(coinCache,i) end
 					end
-					if now-lastTp>=0.5 and #coinCache>0 then
+					if now-lastTp>=0.5 and #coinCache>0 and (os.clock()-(TPBusy or 0)>1.6) then
 						local best,bd=nil,300
 						for _,o in ipairs(coinCache) do
 							if o.Parent then
@@ -1383,7 +1383,7 @@ task.spawn(function()
 					gpT=os.clock()
 					local origin=hr.CFrame
 					local go=found.o
-					local gp=found.p pcall(function() warn("[mm2] 尝试捡枪: "..tostring(found.o:GetFullName())) local cc=LP.Character local rr2=cc and (cc:FindFirstChild("HumanoidRootPart") or cc:FindFirstChild("Torso")) if rr2 and firetouchinterest then firetouchinterest(found.p,rr2,0) task.wait() firetouchinterest(found.p,rr2,1) end end)
+					local gp=found.p TPBusy=os.clock() pcall(function() warn("[mm2] 捡枪: "..tostring(go:GetFullName()).." 距离约 "..tostring(math.floor((gp.Position-hr.Position).Magnitude)).." 格") hr.CFrame=CFrame.new(gp.Position) end)
 
 					task.spawn(function()
 						for _,d in ipairs(go:GetDescendants()) do
@@ -1391,12 +1391,12 @@ task.spawn(function()
 								pcall(function() d.Enabled=true d:InputHoldBegin() task.wait((d.HoldDuration or 0)+0.15) d:InputHoldEnd() end)
 							end
 						end
-						local parts={} local t0=os.clock() pcall(function() local ccx=LP.Character if ccx then for _,bp in ipairs(ccx:GetDescendants()) do if bp:IsA("BasePart") then parts[#parts+1]=bp end end end end) while os.clock()-t0<2.5 and gp and gp.Parent and not isHeldVis() do for i=1,#parts do local bp=parts[i] if bp and bp.Parent and firetouchinterest then pcall(firetouchinterest,gp,bp,0) pcall(firetouchinterest,gp,bp,1) end end for _,d in ipairs(go:GetDescendants()) do if d:IsA("ProximityPrompt") then pcall(function() d.Enabled=true d:InputHoldBegin() end) end end task.wait(0.05) end
+						local parts={} local t0=os.clock() pcall(function() local ccx=LP.Character if ccx then for _,bp in ipairs(ccx:GetDescendants()) do if bp:IsA("BasePart") then parts[#parts+1]=bp end end end end) while os.clock()-t0<1.2 and gp and gp.Parent and not isHeldVis() do for i=1,#parts do local bp=parts[i] if bp and bp.Parent and firetouchinterest then pcall(firetouchinterest,gp,bp,0) pcall(firetouchinterest,gp,bp,1) end end for _,d in ipairs(go:GetDescendants()) do if d:IsA("ProximityPrompt") then pcall(function() d.Enabled=true d:InputHoldBegin() end) end end task.wait(0.05) end
 						if not isHeldVis() then local cc2=LP.Character local rr3=nil end
 						if not isHeldVis() then GWBAD[go]=true pcall(function() warn("[mm2] 原地触碰失败: "..tostring(go:GetFullName()).." 距离约 "..tostring(math.floor((gp.Position-hr.Position).Magnitude)).." 格") end) end
 						local c2=LP.Character
 						local r2=c2 and (c2:FindFirstChild("HumanoidRootPart") or c2:FindFirstChild("Torso"))
-						if r2 then pcall(function() r2.CFrame=r2.CFrame end) end
+						if r2 then pcall(function() r2.CFrame=origin end) end
 					end)
 				end)
 			end
