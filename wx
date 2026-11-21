@@ -301,7 +301,7 @@ function invisSet(v)
 	local ch,h,r=chr()
 	if not ch or not r then return end
 	if v then
-		if S.InvisOn then return end
+		if RT.invOn then return end
 		RT.invCF=r.CFrame
 		RT.invHp=h and h.Health or 100
 		local proxy=ch:Clone()
@@ -324,9 +324,10 @@ function invisSet(v)
 			local okk=rr and (rr.Position.Y>RT.invCF.Y+5000)
 			if wxToast then wxToast(okk and "隐身已生效 · 本体无碰撞" or "隐身无效 · 服务器拉回本体") end
 		end)
-S.InvisOn=true
+S.InvisOn=true RT.invOn=true
 	else
-		if not S.InvisOn then return end
+		if not RT.invOn then return end
+		RT.invOn=false
 		S.InvisOn=false
 		local cam=workspace.CurrentCamera
 		if RT.proxy then pcall(function() RT.proxy:Destroy() end) RT.proxy=nil end
@@ -2844,7 +2845,7 @@ LP.CharacterAdded:Connect(function()
 	task.wait(1)
 	RT.cm={} RT.jp0=nil
 	S.SpOn=false S.JpOn=false S.JpInf=false S.FlOn=false
-	S.InvisOn=false RT.invCF=nil if RT.proxy then pcall(function() RT.proxy:Destroy() end) RT.proxy=nil end
+	S.InvisOn=false RT.invOn=false RT.invCF=nil if RT.proxy then pcall(function() RT.proxy:Destroy() end) RT.proxy=nil end
 	for _,k in ipairs({"SpOn","JpOn","JpInf","FlOn"}) do local f=TGS[k] if f then f(false) end end
 	pcall(function() walk() jump() if S.NcOn then clip() end end)
 end)
