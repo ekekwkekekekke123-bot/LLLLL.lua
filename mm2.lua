@@ -654,12 +654,31 @@ local function sndBack()
 	sndOrig = setmetatable({}, {__mode = "k"})
 end
 
+local GUN_PAT = {"gun","shoot","fire","shot","pistol","revolver","fusil","pompe","tir","beretta","deagle","rifle","smg","枪"}
+local CAP = {}   -- 已抓到的枪声素材 SoundId
+local function isGunNm(n)
+	n = string.lower(tostring(n))
+	for i = 1, #GUN_PAT do if string.find(n, GUN_PAT[i], 1, true) then return true end end
+	return false
+end
+local function looksGun(s)
+	if isGunNm(s.Name) then return true end
+	local ok, anc = pcall(function() return s:FindFirstAncestorOfClass("Tool") end)
+	if ok and anc and isGunNm(anc.Name) then return true end
+	return CAP[tostring(s.SoundId)] == true
+end
 local function sndOne(s)
-	if not CFG.SndOn or not s:IsA("Sound") then return end
-	if s.Name ~= "Beep" and not string.find(s.SoundId, "104560954", 1, true) then return end
+	if not s:IsA("Sound") then return end
+	if not looksGun(s) then return end
+	local sid = tostring(s.SoundId)
+	if CAP[sid] == nil then
+		CAP[sid] = true
+		warn("[mm2] 抓到枪声素材: " .. sid .. " / " .. tostring(s.Name))
+	end
+	if not CFG.SndOn then return end
 	if sndOrig[s] == nil then sndOrig[s] = s.SoundId end
 	local id = SNDS[CFG.SndIdx].id
-	if s.SoundId ~= id then pcall(function() s.SoundId = id end) end
+	if s.SoundId ~= id then pcall(function() local was=s.Playing if was then s:Stop() end s.SoundId=id if was then s:Play() end end) end
 end
 
 local function sndScan()
@@ -682,6 +701,36 @@ task.spawn(function()
 	end
 end)
 
+-- ---------- 后台静默抓取：新出现的枪声一冒头就判定，开着替换就当场换掉 ----------
+local function sndWatch(o)
+	if not o:IsA("Sound") then return end
+	pcall(sndOne, o)
+	pcall(function()
+		o:GetPropertyChangedSignal("Playing"):Connect(function()
+			if o.Playing then pcall(sndOne, o) end
+		end)
+	end)
+end
+pcall(function() workspace.DescendantAdded:Connect(sndWatch) end)
+for _, o in ipairs(workspace:GetDescendants()) do pcall(sndWatch, o) end
+-- 本地播放通道（有些枪声走 SoundService:PlayLocalSound，不落在 workspace 里）
+pcall(function()
+	local SS = game:GetService("SoundService")
+	if hookfunction then
+		local old = SS.PlayLocalSound
+		hookfunction(old, function(snd, ...)
+			pcall(sndOne, snd)
+			return old(snd, ...)
+		end)
+	else
+		local old = SS.PlayLocalSound
+		SS.PlayLocalSound = function(snd, ...)
+			pcall(sndOne, snd)
+			return old(snd, ...)
+		end
+	end
+end)
+
 -- 开关行
 local sndRow = B("TextButton",{Size=UDim2.new(1,0,0,30),Position=UDim2.fromOffset(0,ySh.v),BackgroundColor3=C.row,BorderSizePixel=0,Text="",AutoButtonColor=false,ZIndex=130,Parent=bodySh})
 ySh.v = ySh.v + 34
@@ -695,6 +744,7 @@ sndRow.MouseButton1Click:Connect(function()
 	ssw.BackgroundColor3 = CFG.SndOn and C.accent or C.off
 	TS:Create(skn,TweenInfo.new(0.18,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Position=UDim2.fromOffset(CFG.SndOn and 16 or 2,2)}):Play()
 	if CFG.SndOn then
+		for _, o in ipairs(workspace:GetDescendants()) do pcall(sndOne, o) end
 		task.spawn(sndScan)
 		mmToast("开枪音效 · " .. SNDS[CFG.SndIdx].n)
 	else
