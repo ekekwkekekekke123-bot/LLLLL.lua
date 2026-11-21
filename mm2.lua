@@ -515,10 +515,12 @@ end
 -- ---------- 5. 修改飞刀范围 ----------
 local KN = setmetatable({}, {__mode="k"})
 local KN_BOX = nil
-local KBAN = {"spawn","coin","area","door","wall","floor","base","lobby","humanoidroot","torso","head","seat","vehicle","trail","display","decal","hitbox"}
+local KN_SEEN = 0
+local KNLOG = {}
+local KNBAN = {"spawn","coin","area","door","wall","floor","base","lobby","humanoidroot","torso","head","seat","vehicle"}
 local function knBadName(n)
 	n = string.lower(tostring(n))
-	for _, w in ipairs(KBAN) do if string.find(n, w, 1, true) then return true end end
+	for _, w in ipairs(KNBAN) do if string.find(n, w, 1, true) then return true end end
 	return false
 end
 local function knApply()
@@ -539,26 +541,40 @@ local function knRestore()
 	KN_BOX = nil
 end
 local function knifeRangeSet()
-	if not CFG.KnOn then knRestore() end
+	if not CFG.KnOn then knRestore() return end
+	KNLOG = {}
+	KN_SEEN = 0
 end
-workspace.DescendantAdded:Connect(function(d)
-	if not CFG.KnOn then return end
-	if not d:IsA("BasePart") then return end
-	if d.Parent ~= workspace then return end
-	if knBadName(d.Name) then return end
-	local hr = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-	if hr and (d.Position - hr.Position).Magnitude > 60 then return end
-	local s = d.Size
-	if d.Transparency >= 0.95 and math.max(s.X, s.Y, s.Z) <= 2 then
-		KN_BOX = d
-		mmDbg("[飞刀] 锁定: " .. tostring(d.Name) .. " | S=" .. tostring(math.floor(math.max(s.X, s.Y, s.Z))) .. " T=" .. tostring(d.Transparency))
-		knApply()
-	end
-end)
 task.spawn(function()
 	while true do
-		task.wait(0.1)
-		if CFG.KnOn then pcall(knApply) end
+		task.wait(0.12)
+		if CFG.KnOn then
+			pcall(function()
+				local found = nil
+				for _, c in ipairs(workspace:GetChildren()) do
+					if c:IsA("BasePart") and c.Transparency >= 0.95 and not knBadName(c.Name) then
+						local s = c.Size
+						if math.max(s.X, s.Y, s.Z) <= 2 then
+							local nm = string.lower(c.Name)
+							if not KNLOG[nm] and KN_SEEN < 6 then
+								KNLOG[nm] = true
+								KN_SEEN = KN_SEEN + 1
+								mmDbg("[飞刀] 见: " .. tostring(c.Name) .. " S=" .. tostring(math.floor(math.max(s.X, s.Y, s.Z))) .. " T=" .. tostring(c.Transparency))
+							end
+							if nm == "part" then found = c end
+						end
+					end
+				end
+				if found then
+					KN_BOX = found
+					knApply()
+					if not KNLOG.__locked then
+						KNLOG.__locked = true
+						mmDbg("[飞刀] 已锁定 Part")
+					end
+				end
+			end)
+		end
 	end
 end)
 -- ---------- 统一 namecall hook（已修复语法错误） ----------
