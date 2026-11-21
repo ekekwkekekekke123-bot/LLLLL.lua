@@ -291,23 +291,35 @@ local function flingOne(pl, tag)
 	if not (r and tr) then mmToast("甩飞失败 · 目标无效") return end
 	RT.flingSave = r.CFrame
 	RT.flingSize = r.Size
+	RT.flingWeld = nil
 	pcall(function() r.Size = Vector3.new(10, 10, 10) end)
-	local endT = os.clock() + 1.25
+	-- 先直接重叠到目标身上，再焊死，避免跟不上
+	pcall(function() r.CFrame = tr.CFrame end)
+	pcall(function()
+		local w = Instance.new("WeldConstraint")
+		w.Part0 = r
+		w.Part1 = tr
+		w.Parent = r
+		RT.flingWeld = w
+	end)
+	local endT = os.clock() + 1.5
 	RT.flingC = RS.RenderStepped:Connect(function()
 		local c2, h2, r2 = myChar()
 		if not r2 then
+			if RT.flingWeld then pcall(function() RT.flingWeld:Destroy() end) RT.flingWeld = nil end
 			if RT.flingC then RT.flingC:Disconnect() RT.flingC = nil end
 			return
 		end
 		local cur = pl.Character and pl.Character:FindFirstChild("HumanoidRootPart")
 		if cur then
-			r2.CFrame = cur.CFrame
+			pcall(function() r2.CFrame = cur.CFrame end)
 			r2.AssemblyLinearVelocity = Vector3.new(0, 6e4, 0)
 			r2.AssemblyAngularVelocity = Vector3.new(6e4, 6e4, 6e4)
 		end
 		if os.clock() >= endT then
 			RT.flingC:Disconnect() RT.flingC = nil
 			local c3, h3, r3 = myChar()
+			if RT.flingWeld then pcall(function() RT.flingWeld:Destroy() end) RT.flingWeld = nil end
 			if r3 then
 				if RT.flingSave then r3.CFrame = RT.flingSave end
 				if RT.flingSize then pcall(function() r3.Size = RT.flingSize end) end
