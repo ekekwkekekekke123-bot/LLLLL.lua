@@ -4233,17 +4233,32 @@ local function col(t,tb)
 	end)
 end
 --====== 美化追加结束 ======
---====== 爬墙（蜘蛛侠）开始 ======
+--====== 爬墙 ======
 do
 	local Sw=_G.wxS
 	local RSw=game:GetService("RunService")
 	local LPw=game:GetService("Players").LocalPlayer
 	if Sw then
+		Sw.WallOn=false
+		local function clean()
+			local ch=LPw.Character
+			if ch then
+				for _,d in ipairs(ch:GetDescendants()) do
+					if string.sub(d.Name,1,6)=="wxWall" then pcall(function() d:Destroy() end) end
+				end
+			end
+		end
+		clean()
+
 		local BP,BG
 		local on=false
-		local n,e1,e2,wpos
+		local n=Vector3.new(0,1,0)
+		local e1=Vector3.new(1,0,0)
+		local e2=Vector3.new(0,0,-1)
+		local wpos
 		local spd=16
 		local offN=2.6
+		local upS=Vector3.new(0,1,0)
 		local ray=RaycastParams.new()
 		ray.FilterType=Enum.RaycastFilterType.Exclude
 		local cool=0
@@ -4252,15 +4267,16 @@ do
 			on=false
 			if BP then pcall(function() BP:Destroy() end) BP=nil end
 			if BG then pcall(function() BG:Destroy() end) BG=nil end
-			if h then pcall(function() h:ChangeState(Enum.HumanoidStateType.GettingUp) end) end
+			upS=Vector3.new(0,1,0)
+			if h then pcall(function() h.AutoRotate=true end) end
 		end
 
 		local function basis(hit,fwd)
 			n=hit.Normal
 			local f=fwd-(n*fwd:Dot(n))
 			if f.Magnitude<0.1 then
-				local up=Vector3.new(0,1,0)
-				f=up-n*up:Dot(n)
+				local u=Vector3.new(0,1,0)
+				f=u-n*u:Dot(n)
 			end
 			if f.Magnitude<0.1 then f=Vector3.new(1,0,0) end
 			e1=f.Unit
@@ -4268,27 +4284,32 @@ do
 			wpos=hit.Position
 		end
 
-		local function makeBody(r)
+		local function body(r)
 			if BP then pcall(function() BP:Destroy() end) end
 			if BG then pcall(function() BG:Destroy() end) end
 			BP=Instance.new("BodyPosition")
 			BP.MaxForce=Vector3.new(1e5,1e5,1e5)
-			BP.P=4000
-			BP.D=600
-			BP.Position=r.Position
+			BP.P=6000
+			BP.D=900
 			BP.Parent=r
 			BG=Instance.new("BodyGyro")
 			BG.MaxTorque=Vector3.new(1e5,1e5,1e5)
-			BG.P=8000
+			BG.P=9000
 			BG.CFrame=r.CFrame
 			BG.Parent=r
 		end
 
-		local function begin(hit,r,fwd)
-			basis(hit,fwd)
-			makeBody(r)
-			on=true
-		end
+		RSw:BindToRenderStep("wxWallCam",Enum.RenderPriority.Camera.Value+10,function(dt)
+			if not on then return end
+			local cam=workspace.CurrentCamera
+			if not cam then return end
+			upS=upS:Lerp(n,math.clamp(dt*6,0,1))
+			if upS.Magnitude<0.05 then upS=n end
+			upS=upS.Unit
+			local cf=cam.CFrame
+			if math.abs(cf.LookVector:Dot(upS))>0.98 then return end
+			cam.CFrame=CFrame.lookAt(cf.Position,cf.Position+cf.LookVector,upS)
+		end)
 
 		RSw.RenderStepped:Connect(function(dt)
 			if not Sw.WallOn then if on then stopAll() end return end
@@ -4306,22 +4327,34 @@ do
 			flat=flat.Unit
 			local mv=h.MoveDirection
 
-			if h.Jump and on then stopAll(h) cool=os.clock()+0.35 return end
+			if h.Jump and on then stopAll(h) cool=os.clock()+0.4 return end
 
 			if not on then
 				if os.clock()<cool then return end
 				local floor=workspace:Raycast(r.Position,Vector3.new(0,-3.2,0),ray)
-				if floor and floor.Normal.Y>0.6 and floor.Distance<2.6 then return end
-				local dir=mv.Magnitude>0.1 and Vector3.new(mv.X,0,mv.Z).Unit or flat
+				if floor and floor.Normal.Y>0.6 and floor.Distance<3 then return end
+				local dir=flat
+				if mv.Magnitude>0.1 then dir=Vector3.new(mv.X,0,mv.Z).Unit end
 				local function cast(o,d,len)
 					local hit=workspace:Raycast(o,d*len,ray)
-					if hit and math.abs(hit.Normal.Y)<0.5 then return hit end
-					return nil
+					if not hit then return nil end
+					local ins=hit.Instance
+					if ins and ins:IsA("BasePart") then
+						local s=ins.Size
+						if math.max(s.X,s.Y,s.Z)<4 then return nil end
+					end
+					if math.abs(hit.Normal.Y)>0.5 then return nil end
+					return hit
 				end
-				local hit=cast(r.Position,dir,3.6)
-					or cast(r.Position-Vector3.new(0,1.2,0),(dir*0.8-Vector3.new(0,0.6,0)).Unit,5)
-					or cast(r.Position-Vector3.new(0,2.6,0),dir,3.6)
-				if hit then begin(hit,r,dir) end
+				local hit=cast(r.Position,dir,3)
+					or cast(r.Position-Vector3.new(0,1.2,0),(dir*0.8-Vector3.new(0,0.6,0)).Unit,4.5)
+					or cast(r.Position-Vector3.new(0,2.6,0),dir,3)
+				if hit then
+					basis(hit,dir)
+					body(r)
+					on=true
+					h.AutoRotate=false
+				end
 				return
 			end
 
@@ -4337,26 +4370,23 @@ do
 
 			local target=wpos+n*offN
 			local probe=workspace:Raycast(target,-n*(offN+1.6),ray)
-
 			if not probe then
 				local mdir=moving and m or e1
-				local nh=workspace:Raycast(target,mdir*4,ray)
+				local nh=workspace:Raycast(target,mdir*4.2,ray)
 				if nh and math.abs(nh.Normal:Dot(n))<0.7 then
 					basis(nh,mdir)
 					target=wpos+n*offN
-					BP.Position=target
-					BG.CFrame=CFrame.lookAt(target,target+mdir,n)
-					return
 				else
 					stopAll(h) return
 				end
 			end
 
 			BP.Position=target
-			BG.CFrame=CFrame.lookAt(target,target+(moving and m or e1),n)
+			local want=CFrame.lookAt(target,target+(moving and m or e1),n)
+			BG.CFrame=BG.CFrame:Lerp(want,math.clamp(dt*12,0,1))
 			r.AssemblyLinearVelocity=moving and (m*spd) or Vector3.zero
 			if moving then h:ChangeState(Enum.HumanoidStateType.Running) end
 		end)
 	end
 end
---====== 爬墙（蜘蛛侠）结束 ======
+--====== 爬墙结束 ======
