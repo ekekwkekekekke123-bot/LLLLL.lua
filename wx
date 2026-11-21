@@ -316,8 +316,11 @@ function invisSet(v)
 		RT.proxy=proxy RT.proxyH=ph
 		local cam=workspace.CurrentCamera
 		if cam and ph then cam.CameraSubject=ph end
-		r.Anchored=true
-		r.CFrame=CFrame.new(r.Position+Vector3.new(0,10000,0))
+		-- 不要 Anchored：客户端把锚定改成 true 不会同步给服务器，服务器那边仍按原位置算，
+		-- 你看起来藏起来了，别人眼里你还站在原地 —— 这就是"隐身没效果"的真正原因。
+		-- 改成每帧把本体钉在高空，位置变化才会被复制出去。
+		RT.invPos=CFrame.new(r.Position+Vector3.new(0,10000,0))
+		r.CFrame=RT.invPos
 				task.delay(0.8,function()
 			local c=LP.Character
 			local rr=c and c:FindFirstChild("HumanoidRootPart")
@@ -338,7 +341,7 @@ S.InvisOn=true RT.invOn=true
 			r.AssemblyLinearVelocity=Vector3.zero r.AssemblyAngularVelocity=Vector3.zero
 		end
 		if cam and h then cam.CameraSubject=h end
-		local hp0=RT.invHp RT.invCF=nil
+		local hp0=RT.invHp RT.invCF=nil RT.invPos=nil
 		if h then
 			task.delay(0.35,function()
 				if h and h.Parent and hp0 and h.Health<hp0 then h.Health=hp0 end
@@ -2413,73 +2416,6 @@ bt(pgW,"重新进入服务器",function()
 		wxToast ("重进失败：该服务器可能已满人")
 	end
 end)
---===== 危险页 · 服务器压力测试（漏洞抓取 + 精准打击）=====
-hd(pgW,"服务器压力测试")
-local VH={scanning=false,status="idle",found={},running=false,interval=0.12,batch=2,hits=0}
-local vhBox=B("Frame",{Size=UDim2.new(1,0,0,84),BackgroundColor3=C.row,BackgroundTransparency=0.35,BorderSizePixel=0,LayoutOrder=nxt(),ZIndex=15,Parent=pgW})
-R(vhBox,8)
-local vhS=B("TextLabel",{Size=UDim2.new(1,-12,0,16),Position=UDim2.fromOffset(6,5),BackgroundTransparency=1,Text="抓取状态：待扫描",Font=Enum.Font.GothamBold,TextSize=10,TextColor3=C.dim,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=16,Parent=vhBox})
-local vhL=B("TextLabel",{Size=UDim2.new(1,-12,0,56),Position=UDim2.fromOffset(6,23),BackgroundTransparency=1,Text="　（无）",Font=Enum.Font.Code,TextSize=8,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Top,TextWrapped=true,ZIndex=16,Parent=vhBox})
-local function vhUI()
-	if VH.status=="scanning" then vhS.Text="抓取状态：扫描中 ..." vhS.TextColor3=Color3.fromRGB(255,190,60)
-	elseif VH.status=="ok" then vhS.Text=("抓取状态：✓ 命中 %d 个高开销接口"):format(#VH.found) vhS.TextColor3=Color3.fromRGB(70,200,110)
-	elseif VH.status=="fail" then vhS.Text="抓取状态：✗ 未发现可利用接口" vhS.TextColor3=Color3.fromRGB(220,70,70)
-	else vhS.Text="抓取状态：待扫描" vhS.TextColor3=C.dim end
-	if #VH.found==0 then vhL.Text="　（无）" else
-		local t={}
-		for i=1,math.min(#VH.found,4) do local f=VH.found[i] t[i]=("　%d. %s  +%d实例 / %.2fs"):format(i,f.remote.Name,f.gain,f.cost) end
-		vhL.Text=table.concat(t,"\n")
-	end
-end
-local function vhCnt() local n=0 for _ in pairs(workspace:GetDescendants()) do n=n+1 end return n end
-function VH.scan()
-	if VH.scanning then return end
-	VH.scanning=true VH.status="scanning" VH.found={} vhUI()
-	task.spawn(function()
-		local rs={}
-		for _,v in pairs(game:GetDescendants()) do if v:IsA("RemoteEvent") then table.insert(rs,v) end end
-		local pr={kill=1,hit=1,damage=1,spawn=2,create=2,give=2,drop=2,effect=3,particle=3,sound=4}
-		table.sort(rs,function(a,b)
-			local ka,kb=9,9 local la,lb=a.Name:lower(),b.Name:lower()
-			for k,v in pairs(pr) do if la:find(k) then ka=v end if lb:find(k) then kb=v end end
-			return ka<kb
-		end)
-		for i,r in ipairs(rs) do
-			if not VH.scanning then break end
-			local b=vhCnt() local t0=os.clock()
-			pcall(function() r:FireServer() end)
-			task.wait(0.22)
-			local a=vhCnt() local cost=os.clock()-t0 local gain=a-b
-			if gain>25 or cost>0.28 then table.insert(VH.found,{remote=r,gain=gain,cost=cost}) vhUI() end
-			if i%20==0 then task.wait() end
-		end
-		VH.scanning=false VH.status=(#VH.found>0) and "ok" or "fail"
-		table.sort(VH.found,function(a,b) return a.cost>b.cost end)
-		vhUI()
-		if #VH.found>0 and setclipboard then
-			local o={}
-			for _,f in ipairs(VH.found) do table.insert(o,f.remote:GetFullName().."  cost="..string.format("%.2f",f.cost)) end
-			pcall(setclipboard,table.concat(o,"\n"))
-		end
-	end)
-end
-function VH.strike()
-	if #VH.found==0 then pcall(function() WM("压力测试","先扫描到接口",false) end) return end
-	if VH.running then VH.running=false pcall(function() WM("压力测试","已停止",true) end) return end
-	VH.running=true
-	task.spawn(function()
-		local idx=1
-		while VH.running do
-			local f=VH.found[idx] or VH.found[1]
-			for _=1,VH.batch do pcall(function() f.remote:FireServer() end) end
-			VH.hits=VH.hits+VH.batch idx=idx+1
-			task.wait(VH.interval)
-		end
-	end)
-	pcall(function() WM("压力测试","开始打击",true) end)
-end
-bt(pgW,"开始抓取漏洞",function() VH.scan() end)
-bt(pgW,"打击服务器 / 停止",function() VH.strike() end)
 selp(1)
                                                                                function wxInitIntro()
 	local Drawing=rawget(getfenv(),"Drawing") or Drawing
@@ -2883,6 +2819,15 @@ task.delay(0.35,function() pcall(function() powerState(true) end) end)
 		local st=math.min(dt,0.05)
 		hue=(hue+st*0.06*((S.RainOn and S.RainSpd or 1)))%1
 		ttl.TextColor3=Color3.fromHSV(hue,1,1)
+		if S.InvisOn and RT.invCF then
+			local c4=LP.Character
+			local r4=c4 and c4:FindFirstChild("HumanoidRootPart")
+			if r4 and RT.invPos then
+				r4.CFrame=RT.invPos
+				r4.AssemblyLinearVelocity=Vector3.zero
+				r4.AssemblyAngularVelocity=Vector3.zero
+			end
+		end
 		if S.InvisOn and RT.proxyH and RT.proxyH.Parent then
 			local m=mv()
 			local wd=Vector3.new(m.X,0,m.Z)
