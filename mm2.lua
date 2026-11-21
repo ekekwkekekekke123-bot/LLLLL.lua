@@ -626,7 +626,6 @@ end)
 local ySh = {v = 0}
 local yMu = {v = 0}
 
-rowToggle(bodySh, ySh, "子弹追踪（杀手）", "ShAim")
 rowButton(bodySh, ySh, "甩飞杀手", function()
 	local pl = findKiller()
 	if not pl then mmToast("没找到杀手") return end
@@ -1195,7 +1194,7 @@ task.spawn(function()
 	end
 end)
 --==== 自动 栏目 ====
-local AU={Coin=false,GunPick=false,NoFling=false}
+local AU={Coin=false,GunPick=false}
 autoBtn=B("TextButton",{Size=UDim2.new(1,0,0,26),BackgroundColor3=C.row,BorderSizePixel=0,Text="自动",Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.txt,AutoButtonColor=false,LayoutOrder=4,ZIndex=301,Parent=side})
 bodyAuto=B("Frame",{Size=UDim2.new(1,-84,1,-44),Position=UDim2.fromOffset(80,38),BackgroundTransparency=1,Visible=false,ZIndex=108,Parent=pn})
 autoBtn.MouseButton1Click:Connect(function()
@@ -1217,79 +1216,8 @@ local function mkToggle2(name,key,cb)
 		if cb then pcall(cb, AU[key]) end
 	end)
 end
--- ---------- 防甩飞 ----------
-local nfMode="持续关闭"
-local NF={cols={},parts={},loopC=nil,watchC=nil}
-local function nfRefresh()
-	NF.parts={}
-	local c=LP.Character
-	if c then
-		for _,d in ipairs(c:GetDescendants()) do
-			if d:IsA("BasePart") then NF.parts[#NF.parts+1]=d end
-		end
-	end
-end
-local function nfRestore()
-	if NF.loopC then pcall(task.cancel,NF.loopC) NF.loopC=nil end
-	if NF.watchC then NF.watchC:Disconnect() NF.watchC=nil end
-	for p,o in pairs(NF.cols) do
-		if p and p.Parent then pcall(function() p.CanCollide=o end) end
-	end
-	NF.cols={}
-	NF.parts={}
-end
-local function nfApply()
-	local ch=LP.Character
-	if not ch then return end
-	if nfMode=="持续关闭" then
-		nfRefresh()
-		NF.loopC=task.spawn(function()
-			while AU.NoFling and nfMode=="持续关闭" do
-				for i=1,#NF.parts do
-					local d=NF.parts[i]
-					if d and d.Parent and d.CanCollide then
-						if NF.cols[d]==nil then NF.cols[d]=true end
-						d.CanCollide=false
-					end
-				end
-				task.wait(0.05)
-			end
-		end)
-	else
-		local function kill(d)
-			if d:IsA("BasePart") then
-				if NF.cols[d]==nil then NF.cols[d]=d.CanCollide end
-				d.CanCollide=false
-			end
-		end
-		for _,d in ipairs(ch:GetDescendants()) do kill(d) end
-		NF.watchC=ch.DescendantAdded:Connect(function(d)
-			task.wait(0.05)
-			if AU.NoFling and nfMode=="完全关闭" then kill(d) end
-		end)
-	end
-end
-local function nfSet(on)
-	nfRestore()
-	if on then nfApply() end
-end
 mkToggle2("自动拾取金币","Coin")
 mkToggle2("自动传送捡枪","GunPick")
-mkToggle2("防甩飞","NoFling", nfSet)
-local nfRow=B("TextButton",{Size=UDim2.new(1,0,0,28),Position=UDim2.fromOffset(0,ay),BackgroundColor3=C.row,BorderSizePixel=0,Text="",AutoButtonColor=false,ZIndex=130,Parent=bodyAuto})
-ay=ay+32
-B("UIStroke",{Color=Color3.fromRGB(150,140,128),Transparency=0.4,Parent=nfRow})
-B("TextLabel",{Size=UDim2.new(1,-110,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text="防甩飞模式",Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=131,Parent=nfRow})
-local nfVal=B("TextLabel",{Size=UDim2.new(0,96,1,0),Position=UDim2.new(1,-106,0,0),BackgroundTransparency=1,Text=nfMode,Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=C.accent,TextXAlignment=Enum.TextXAlignment.Right,ZIndex=131,Parent=nfRow})
-nfRow.MouseButton1Click:Connect(function()
-	nfMode=(nfMode=="持续关闭") and "完全关闭" or "持续关闭"
-	nfVal.Text=nfMode
-	if AU.NoFling then nfSet(true) end
-end)
-LP.CharacterAdded:Connect(function()
-	task.wait(0.3)
-	if AU.NoFling then nfSet(true) end
-end)
 task.spawn(function()
 	while true do
 		task.wait(0.2)
