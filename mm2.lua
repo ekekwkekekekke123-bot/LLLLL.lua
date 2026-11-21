@@ -1331,6 +1331,8 @@ task.spawn(function()
 						end
 						if best then
 							lastTp=now
+							-- 踩上去就立刻标记为已拿，不等服务器那 0.5 秒删除碰撞箱，否则会被同一枚金币反复吸回去
+							COINBAD[best]=now
 							-- 落在金币本体上，不是悬在头顶
 							hr.CFrame=CFrame.new(best.Position)
 							-- 主动补一次触碰，省掉“站在原地等服务器结算”的那几秒
@@ -1347,8 +1349,7 @@ task.spawn(function()
 								end
 							end)
 							-- 0.35 秒还没被收走就跳过它，别在原地干等
-							task.delay(0.35,function() if best and best.Parent then COINBAD[best]=os.clock() end end)
-						end
+							task.delay(0.35,function() if best and best.Parent then COINBAD[best]=os.clock() end end)						end
 					end
 				end)
 			end
