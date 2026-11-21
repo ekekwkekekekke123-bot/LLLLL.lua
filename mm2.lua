@@ -490,56 +490,59 @@ local function flingSheriff()
 end
 
 -- ---------- 5. 修改飞刀范围 ----------
-local KN = {}
-local function knifeRangeSet()
-	if not CFG.KnOn then
-		for p, o in pairs(KN) do
-			if p and p.Parent then pcall(function() p.Size = o end) end
-		end
-		KN = {}
-		return
+local KN = setmetatable({}, {__mode="k"})
+local KNLOG = {}
+local function knRestore()
+	for p, o in pairs(KN) do
+		if p and p.Parent then pcall(function() p.Size = o end) end
 	end
-	local range = math.clamp(tonumber(CFG.KnR) or 20, 10, 60)
-	local mult = math.max(1, range / 4)
-	local function blow(t)
-		if not t then return end
-		for _, d in ipairs(t:GetDescendants()) do
-			if d:IsA("BasePart") and KN[d] == nil then
-				KN[d] = d.Size
-				d.Size = d.Size * mult
-				d.CanTouch = true
+	KN = setmetatable({}, {__mode="k"})
+end
+local function knTry(m)
+	if not (m and m.Parent) then return end
+	local R = math.clamp(tonumber(CFG.KnR) or 20, 10, 60)
+	local vis = false
+	local boxes = {}
+	for _, p in ipairs(m:GetDescendants()) do
+		if p:IsA("BasePart") then
+			local s = p.Size
+			if p.Transparency < 0.75 and p.LocalTransparencyModifier < 0.75 then
+				vis = true
+			elseif math.max(s.X, s.Y, s.Z) <= 6 then
+				boxes[#boxes+1] = p
 			end
 		end
 	end
-	blow(myKnife())
-	local cc = LP.Character
-	if cc then
-		for _, d in ipairs(cc:GetDescendants()) do
-			if d:IsA("Tool") then blow(d) end
-		end
+	if not vis or #boxes == 0 then return end
+	for _, b in ipairs(boxes) do
+		if KN[b] == nil then KN[b] = b.Size end
+		pcall(function()
+			b.Size = Vector3.new(R, R, R)
+			b.CanTouch = true
+			b.CanCollide = false
+			b.Massless = true
+		end)
 	end
-	local bp = LP:FindFirstChild("Backpack")
-	if bp then
-		for _, d in ipairs(bp:GetChildren()) do
-			if d:IsA("Tool") then blow(d) end
-		end
+	local key = tostring(m.Name) .. "/" .. tostring(boxes[1].Name)
+	if not KNLOG[key] then
+		KNLOG[key] = true
+		warn("[mm2] 飞刀判定盒已扩大: " .. key .. " -> " .. tostring(R) .. " 格")
+	end
+end
+local function knifeRangeSet()
+	if not CFG.KnOn then knRestore() return end
+	for _, m in ipairs(workspace:GetChildren()) do
+		if (m:IsA("Model") or m:IsA("Tool")) and not m:FindFirstChildOfClass("Humanoid") then pcall(knTry, m) end
 	end
 end
 workspace.DescendantAdded:Connect(function(d)
-	if not (CFG.KnOn and CFG.KnR) then return end
-	if not d:IsA("BasePart") then return end
-	local nm = string.lower(d.Name or "")
-	if string.find(nm, "knife") or string.find(nm, "blade") or string.find(nm, "throw") then
-		task.delay(0.15, function()
-			if not CFG.KnOn then return end
-			if KN[d] == nil and d.Parent then
-				KN[d] = d.Size
-				local range = math.clamp(tonumber(CFG.KnR) or 20, 10, 60)
-				d.Size = Vector3.new(range * 0.5, range * 0.5, range * 0.5)
-				d.CanTouch = true
-			end
-		end)
-	end
+	if not CFG.KnOn then return end
+	if not (d:IsA("BasePart") or d:IsA("Model") or d:IsA("Tool")) then return end
+	local m = d:IsA("BasePart") and (d:FindFirstAncestorOfClass("Model") or d.Parent) or d
+	task.delay(0.12, function()
+		if not CFG.KnOn then return end
+		pcall(knTry, m)
+	end)
 end)
 
 -- ---------- 统一 namecall hook（已修复语法错误） ----------
