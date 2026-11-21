@@ -172,7 +172,7 @@ end
 local UIS = game:GetService("UserInputService")
 local RS = game:GetService("RunService")
 
-local CFG = { ShAim = false, ShLoop = false, KnOn = false, KnR = 20 }
+local CFG = { ShAim = false, ShLoop = false, KnOn = false, KnR = 20, FastKnife = false }
 local RT = {}
 
 -- ---------- 角色 / 道具 ----------
@@ -580,7 +580,46 @@ task.spawn(function()
 		end
 	end
 end)
--- ---------- 统一 namecall hook（已修复语法错误） ----------
+-- ---------- 5.1 快速扔刀：把投掷动画加速，让"出手"那一下提前到来 ----------
+local FK = { tool = nil, conn = nil }
+local function fkSpeed(anim, spd)
+	if not anim then return end
+	pcall(function()
+		for _, tr in ipairs(anim:GetPlayingAnimationTracks()) do
+			pcall(function() tr.Speed = spd end)
+		end
+	end)
+end
+local function fkAttach()
+	local ch = LP.Character
+	if not ch then return end
+	local t = ch:FindFirstChild("Knife")
+	if not (t and t:IsA("Tool")) then return end
+	if FK.tool == t and FK.conn then return end
+	if FK.conn then pcall(function() FK.conn:Disconnect() end) FK.conn = nil end
+	FK.tool = t
+	FK.conn = t.Activated:Connect(function()
+		if not CFG.FastKnife then return end
+		pcall(function()
+			local hum = ch:FindFirstChildOfClass("Humanoid")
+			local anim = hum and hum:FindFirstChildOfClass("Animator")
+			if not anim then return end
+			fkSpeed(anim, 6)
+			mmDbg("[飞刀] 快速投掷")
+			task.delay(0.45, function() fkSpeed(anim, 1) end)
+		end)
+	end)
+end
+LP.CharacterAdded:Connect(function()
+	task.wait(0.4)
+	if CFG.FastKnife then pcall(fkAttach) end
+end)
+task.spawn(function()
+	while true do
+		task.wait(1)
+		if CFG.FastKnife then pcall(fkAttach) end
+	end
+end)
 pcall(function()
 	local atkKeys = {"shoot", "fire", "bullet", "gun", "hit", "attack", "damage", "ray", "swing", "stab", "slash"}
 	local function isAtkRemote(nm)
@@ -919,6 +958,7 @@ rowButton(bodyMu, yMu, "击杀最近的人", killNearest)
 rowButton(bodyMu, yMu, "甩飞警长", flingSheriff)
 rowToggle(bodyMu, yMu, "修改飞刀范围", "KnOn", function() knifeRangeSet() end)
 rowNum(bodyMu, yMu, "飞刀范围", "KnR", "10-60", 10, 60, function() knifeRangeSet() end)
+rowToggle(bodyMu, yMu, "快速扔刀", "FastKnife", function() if CFG.FastKnife then pcall(fkAttach) end end)
 local iconPos=Vector2.new(12,12)
 minBtn.MouseButton1Click:Connect(function()
 	pn.Visible=false
