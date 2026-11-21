@@ -472,7 +472,6 @@ local function killNearest()
 end
 
 local function flingSheriff()
-	if not isMurderer() then mmToast("你不是杀手") return end
 	local pl = findSheriff()
 	if not pl then mmToast("没找到警长") return end
 	flingOne(pl, "警长")
