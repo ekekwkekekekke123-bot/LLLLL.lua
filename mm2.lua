@@ -1040,6 +1040,7 @@ local timeLbl=B("TextLabel",{Size=UDim2.fromOffset(200,26),Position=UDim2.new(0.
 local roundEnd=0
 local lastGun=false
 local rStart=0 local wasW=false local gpT=0 local lastLookup=0 local coinCache={} local lastScan=0 local lastTp=0
+local COINBAD=setmetatable({},{__mode="k"})
 local function wxCoin(o)
 	if not o:IsA("BasePart") then return false end
 	local nm=string.lower(o.Name)
@@ -1320,17 +1321,33 @@ task.spawn(function()
 						local c=coinCache[i]
 						if not c or not c.Parent then table.remove(coinCache,i) end
 					end
-					if now-lastTp>=0.5 and #coinCache>0 and (os.clock()-(TPBusy or 0)>1.6) then
+					if now-lastTp>=0.12 and #coinCache>0 and (os.clock()-(TPBusy or 0)>1.6) then
 						local best,bd=nil,300
 						for _,o in ipairs(coinCache) do
-							if o.Parent then
+							if o.Parent and not (COINBAD[o] and (os.clock()-COINBAD[o])<2) then
 								local d=(o.Position-hr.Position).Magnitude
 								if d<bd then bd=d best=o end
 							end
 						end
 						if best then
 							lastTp=now
-							hr.CFrame=CFrame.new(best.Position+Vector3.new(0,1.5,0))
+							-- 落在金币本体上，不是悬在头顶
+							hr.CFrame=CFrame.new(best.Position)
+							-- 主动补一次触碰，省掉“站在原地等服务器结算”的那几秒
+							pcall(function()
+								if firetouchinterest then
+									local cc=LP.Character
+									if cc then
+										for _,bp in ipairs(cc:GetDescendants()) do
+											if bp:IsA("BasePart") and bp.Parent then
+												firetouchinterest(best,bp,0) firetouchinterest(best,bp,1)
+											end
+										end
+									end
+								end
+							end)
+							-- 0.35 秒还没被收走就跳过它，别在原地干等
+							task.delay(0.35,function() if best and best.Parent then COINBAD[best]=os.clock() end end)
 						end
 					end
 				end)
