@@ -1789,28 +1789,34 @@ local function spinSet()
 	local r=c and c:FindFirstChild("HumanoidRootPart")
 	if r then
 		for _,v in ipairs(r:GetChildren()) do
-			if v:IsA("BodyAngularVelocity") or v.Name=="wxSpinAO" or v.Name=="wxSpinAtt" then v:Destroy() end
+			if v:IsA("BodyAngularVelocity") or v:IsA("AlignOrientation") or v.Name=="wxSpinAO" or v.Name=="wxSpinAtt" or v.Name=="wxSpinAV" then v:Destroy() end
 		end
 	end
 	if h then h.AutoRotate=true end
 	if not S.SpinOn then return end
 	if not (r and h) then return end
 	h.AutoRotate=false
-	local att=Instance.new("Attachment")
-	att.Name="wxSpinAtt"
-	att.Parent=r
-	local ao=Instance.new("AlignOrientation")
-	ao.Name="wxSpinAO"
-	ao.Mode=Enum.OrientationAlignmentMode.OneAttachment
-	ao.Attachment0=att
-	ao.MaxTorque=20000
-	ao.Responsiveness=200
-	ao.CFrame=CFrame.Angles(0,spinAng,0)
-	ao.Parent=r
+	-- 用 BodyAngularVelocity（相对角速度）而不是 AlignOrientation（绝对朝向）：
+	-- 绝对朝向会跟你本身的站立朝向、地面坡度互相较劲，一走路就顶住 → 抽搐 / 转圈被打断
+	local bav=Instance.new("BodyAngularVelocity")
+	bav.Name="wxSpinAV"
+	bav.MaxTorque=Vector3.new(0,4e5,0)
+	bav.AngularVelocity=Vector3.zero
+	bav.Parent=r
 	S.spinC=RS.RenderStepped:Connect(function(dt)
-		if not S.SpinOn or not ao.Parent then return end
-		spinAng=spinAng+math.rad((tonumber(S.SpinV) or 100)*10)*dt
-		ao.CFrame=CFrame.Angles(0,spinAng,0)
+		if not S.SpinOn then return end
+		local cc=LP.Character
+		local rr=cc and cc:FindFirstChild("HumanoidRootPart")
+		local hh=cc and cc:FindFirstChildOfClass("Humanoid")
+		if not (rr and hh) then return end
+		if bav.Parent~=rr then bav.Parent=rr end
+		if hh.AutoRotate then hh.AutoRotate=false end
+		local lv=math.clamp(tonumber(S.SpinV) or 100,10,200)
+		local w=math.rad(lv*4)
+		-- 一帧最多转 18 度：超过这个量，画面就是"抖"而不是"转"（30 帧的手机上尤其明显）
+		local cap=math.rad(18)/math.max(dt,0.001)
+		if w>cap then w=cap end
+		bav.AngularVelocity=Vector3.new(0,w,0)
 	end)
 end
 local function twSet()
@@ -2860,6 +2866,7 @@ LP.CharacterAdded:Connect(function()
 	S.InvisOn=false RT.invOn=false RT.invCF=nil if RT.proxy then pcall(function() RT.proxy:Destroy() end) RT.proxy=nil end
 	for _,k in ipairs({"SpOn","JpOn","JpInf","FlOn"}) do local f=TGS[k] if f then f(false) end end
 	pcall(function() walk() jump() if S.NcOn then clip() end end)
+	if S.SpinOn then pcall(spinSet) end
 end)
 pcall(function() local p=safeParent() local g=p and p:FindFirstChild("wx_toast") if g then g:Destroy() end end)
 print("[wx] 加载完成")
