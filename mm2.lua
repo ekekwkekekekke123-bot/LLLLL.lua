@@ -735,10 +735,10 @@ local function sndTest(id, cb)
 	end)
 	pcall(function() conn = snd.Loaded:Connect(function() fin(true) end) end)
 	pcall(function() snd:Play() end)
-	task.delay(3, function()
+	task.delay(6, function()
 		if done then return end
 		local loaded = false
-		pcall(function() loaded = snd.IsLoaded end)
+		pcall(function() loaded = (snd.IsLoaded == true) or ((snd.TimeLength or 0) > 0.01) end)
 		fin(loaded == true)
 	end)
 end
@@ -916,6 +916,33 @@ ySh.v = ySh.v + 30
 B("UIStroke",{Color=Color3.fromRGB(150,140,128),Transparency=0.4,Parent=sndPick})
 B("TextLabel",{Size=UDim2.new(1,-86,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text="开枪音效",Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=131,Parent=sndPick})
 local sndVal = B("TextLabel",{Size=UDim2.new(0,72,1,0),Position=UDim2.new(1,-78,0,0),BackgroundTransparency=1,Text=SNDS[CFG.SndIdx].n,Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=C.accent,TextXAlignment=Enum.TextXAlignment.Right,ZIndex=131,Parent=sndPick})
+-- 自定义音效 ID 输入（填数字，自动补 rbxassetid://）
+local sndIn = B("TextBox",{Size=UDim2.new(1,0,0,26),Position=UDim2.fromOffset(0,ySh.v),BackgroundColor3=C.row,BorderSizePixel=0,Text="",PlaceholderText="自定义音效ID（填数字）",Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=C.txt,PlaceholderColor3=Color3.fromRGB(140,130,120),ClearTextOnFocus=false,ZIndex=130,Parent=bodySh})
+B("UIStroke",{Color=Color3.fromRGB(150,140,128),Transparency=0.4,Parent=sndIn})
+ySh.v = ySh.v + 30
+sndIn.FocusLost:Connect(function()
+	local raw=tostring(sndIn.Text or "")
+	local num=string.match(raw,"(%d+)")
+	if not num then mmToast("没识别到数字ID") return end
+	local id="rbxassetid://"..num
+	SNDS[#SNDS+1]={ n="自定义"..string.sub(num,-4), id=id }
+	CFG.SndIdx=#SNDS
+	sndIn.Text=""
+	mmToast("检测中…")
+	sndTest(id,function(ok)
+		if not ok then
+			mmToast("加载失败：这ID在你这个游戏里没权限，或不是音频")
+			return
+		end
+		sndVal.Text=SNDS[CFG.SndIdx].n
+		CFG.SndOn=true
+		ssw.BackgroundColor3=C.accent
+		pcall(function() TS:Create(skn,TweenInfo.new(0.18,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Position=UDim2.fromOffset(16,2)}):Play() end)
+		for _,o in ipairs(workspace:GetDescendants()) do pcall(sndOne,o) end
+		task.spawn(sndScan)
+		mmToast("已启用 自定义"..string.sub(num,-4))
+	end)
+end)
 
 local sg2 = B("ScreenGui",{Name="mm2_sndpick",IgnoreGuiInset=true,ResetOnSpawn=false,DisplayOrder=9200,Enabled=false,Parent=SP()})
 gui.Destroying:Connect(function() pcall(function() sg2:Destroy() end) end)
