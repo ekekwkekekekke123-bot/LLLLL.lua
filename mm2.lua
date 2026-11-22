@@ -1306,12 +1306,28 @@ task.spawn(function()
 									end
 					elseif string.find(nm,"trap") or string.find(nm,"beartrap") then
 					if ES.Trap then
-						for _,d in ipairs(o:GetDescendants()) do
-							if d:IsA("BasePart") then d.Transparency=0 d.CanCollide=false end
+						local anyVis=false
+						local function markT(d)
+							if not d:IsA("BasePart") then return end
+							pcall(function() d.CanCollide=false end)
+							-- 只把"本来就能看见"的零件露出来。夹子外面那个透明触发箱保持透明，
+							-- 否则它会被一起显示出来，就是地上一坨灰方块。
+							if d.Transparency<0.9 then
+								pcall(function() d.Transparency=0 d.LocalTransparencyModifier=0 end)
+								hl(d,CLR.Trap,true)
+								anyVis=true
+							end
 						end
-						if o:IsA("BasePart") then o.Transparency=0 end
+						if o:IsA("BasePart") then markT(o) end
+						for _,d in ipairs(o:GetDescendants()) do markT(d) end
+						-- 整个夹子没有任何可见零件（纯碰撞箱）才退回整体描边
+						if not anyVis then hl(o,CLR.Trap,true) end
+					else
+						hl(o,CLR.Trap,false)
+						for _,d in ipairs(o:GetDescendants()) do
+							if d:IsA("BasePart") then hl(d,CLR.Trap,false) end
+						end
 					end
-					hl(o,CLR.Trap,ES.Trap)
 				end
 			end
 						if gunOn~=lastGun then gunTG=os.clock() end
