@@ -1306,22 +1306,35 @@ task.spawn(function()
 									end
 					elseif string.find(nm,"trap") or string.find(nm,"beartrap") then
 					if ES.Trap then
-						local anyVis=false
-						local function markT(d)
-							if not d:IsA("BasePart") then return end
+						local function isBox(d)
+							local n=string.lower(d.Name)
+							if string.find(n,"hitbox") or string.find(n,"touch") or string.find(n,"trigger") or string.find(n,"zone") or string.find(n,"detect") or string.find(n,"region") or string.find(n,"collider") or string.find(n,"sensor") then return true end
+							return false
+						end
+						local ps={}
+						if o:IsA("BasePart") then ps[#ps+1]=o end
+						for _,d in ipairs(o:GetDescendants()) do if d:IsA("BasePart") then ps[#ps+1]=d end end
+						local shown=0
+						-- 夹子对非杀手是完全隐形的（只有放的人看得见），所以不能只按"原本可见"来判断。
+						-- 爪子一定是 MeshPart；外面那个透明触发箱一般是普通 Part，名字还带 hitbox/touch 之类，跳过。
+						for _,d in ipairs(ps) do
 							pcall(function() d.CanCollide=false end)
-							-- 只把"本来就能看见"的零件露出来。夹子外面那个透明触发箱保持透明，
-							-- 否则它会被一起显示出来，就是地上一坨灰方块。
-							if d.Transparency<0.9 then
+							if not isBox(d) and (d:IsA("MeshPart") or d.Transparency<0.9) then
 								pcall(function() d.Transparency=0 d.LocalTransparencyModifier=0 end)
 								hl(d,CLR.Trap,true)
-								anyVis=true
+								shown=shown+1
 							end
 						end
-						if o:IsA("BasePart") then markT(o) end
-						for _,d in ipairs(o:GetDescendants()) do markT(d) end
-						-- 整个夹子没有任何可见零件（纯碰撞箱）才退回整体描边
-						if not anyVis then hl(o,CLR.Trap,true) end
+						if shown==0 then
+							for _,d in ipairs(ps) do
+								if not isBox(d) then
+									pcall(function() d.Transparency=0 d.LocalTransparencyModifier=0 end)
+									hl(d,CLR.Trap,true)
+									shown=shown+1
+								end
+							end
+						end
+						if shown==0 then hl(o,CLR.Trap,true) end
 					else
 						hl(o,CLR.Trap,false)
 						for _,d in ipairs(o:GetDescendants()) do
