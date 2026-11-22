@@ -143,7 +143,8 @@ local function mmToast(msg)
 end
 -- 屏幕日志（手机端看不到控制台，用它看诊断，10 秒无新消息自动隐藏）
 local DBG={lines={},shown=0}
-local function mmDbg(msg)
+local function mmDbg(msg) do return end
+pcall(function() for _,g in ipairs(SP():GetChildren()) do if g.Name=="mm2_dbg" then pcall(function() g:Destroy() end) end end end)
 	pcall(function()
 		msg=tostring(msg)
 		DBG.lines[#DBG.lines+1]=msg
