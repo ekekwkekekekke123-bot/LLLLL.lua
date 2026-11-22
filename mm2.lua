@@ -303,37 +303,34 @@ local function flingOne(pl, tag)
 	local tc = pl and pl.Character
 	local tr = tc and tc:FindFirstChild("HumanoidRootPart")
 	if not (r and tr) then mmToast("甩飞失败 · 目标无效") return end
-	RT.flingSave = r.CFrame
-	RT.flingSize = r.Size
-	pcall(function() r.Size = Vector3.new(8, 8, 8) end)
-	local endT = os.clock() + 1.2
-	RT.flingC = RS.RenderStepped:Connect(function()
-		local c2, h2, r2 = myChar()
-		if not r2 then
-			if RT.flingC then RT.flingC:Disconnect() RT.flingC = nil end
-			return
+	local save = r.CFrame
+	RT.flingC = true
+	task.spawn(function()
+		local t0 = os.clock()
+		while os.clock() - t0 < 1.25 do
+			local c2, h2, r2 = myChar()
+			if not r2 then break end
+			local cur = pl.Character and pl.Character:FindFirstChild("HumanoidRootPart")
+			if not cur then break end
+			-- 关键：线速度必须清 0（这就是原来把自己甩上天摔死的原因），只给超大角速度。
+			-- 每帧把自己贴到他身上，靠极速旋转的碰撞把人挤飞 —— 这是 wx 主脚本里验证可行的那套。
+			pcall(function()
+				r2.CFrame = cur.CFrame
+				r2.AssemblyLinearVelocity = Vector3.zero
+				r2.AssemblyAngularVelocity = Vector3.new(12000, 12000, 12000)
+			end)
+			task.wait()
 		end
-		local cur = pl.Character and pl.Character:FindFirstChild("HumanoidRootPart")
-		if cur then
-			pcall(function() r2.CFrame = cur.CFrame end)
-			-- 只给一点点向上的力，别把自己送上天
-			pcall(function() r2.AssemblyLinearVelocity = Vector3.new(0,25,0) end)
+		local c3, h3, r3 = myChar()
+		if r3 then
+			pcall(function()
+				r3.AssemblyAngularVelocity = Vector3.zero
+				r3.AssemblyLinearVelocity = Vector3.zero
+			end)
 		end
-		if os.clock() >= endT then
-			RT.flingC:Disconnect() RT.flingC = nil
-			local c3, h3, r3 = myChar()
-			if r3 then
-				if RT.flingSave then pcall(function() r3.CFrame = RT.flingSave end) end
-				if RT.flingSize then pcall(function() r3.Size = RT.flingSize end) end
-				pcall(function()
-					r3.AssemblyLinearVelocity = Vector3.zero
-					r3.AssemblyAngularVelocity = Vector3.zero
-				end)
-			end
-			RT.flingSave = nil
-			RT.flingSize = nil
-			mmToast((tag or "目标") .. " · 已尝试甩飞")
-		end
+		if c3 then pcall(function() c3:PivotTo(save) end) end
+		RT.flingC = nil
+		mmToast((tag or "目标") .. " · 已甩飞")
 	end)
 end
 
