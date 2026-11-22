@@ -4652,3 +4652,113 @@ do
 	end
 end
 --====== 走墙 / 走天花板结束 ======
+
+--====== 隐身驱动（独立循环，不依赖主 pcall） ======
+-- 为什么单独写一套：原来的"每帧钉住本体"塞在主循环那个大 pcall 里，
+-- 前面任何一个调用报错，后面的钉人逻辑就一起被跳过 —— 表现就是"开了完全没效果"。
+;(function()
+	local RSv=game:GetService("RunService")
+	local UIf=game:GetService("UserInputService")
+	local offs={Vector3.new(0,10000,0),Vector3.new(0,-2600,0),Vector3.new(0,5200,0)}
+	local oi=1
+	local pull=0
+	local warm=0
+	local lastOn=false
+	local okAnn=false
+	local failAnn=false
+
+	local function root()
+		local c=LP.Character
+		if not c then return end
+		return c, c:FindFirstChild("HumanoidRootPart"), c:FindFirstChildOfClass("Humanoid")
+	end
+	local function org()
+		if RT.invCF then return RT.invCF.Position end
+		local _,r=root()
+		return r and r.Position
+	end
+	local function setPos()
+		local o=org()
+		if not o then return end
+		RT.invPos=CFrame.new(o+offs[oi])
+		warm=0
+	end
+	local function say(s)
+		if wxToast then pcall(wxToast,s) end
+	end
+
+	RSv.RenderStepped:Connect(function()
+		if dead then return end
+		local on=(S.InvisOn==true)
+		if on and not lastOn then
+			lastOn=true oi=1 pull=0 warm=0 okAnn=false failAnn=false
+			if not RT.invPos then setPos() end
+		elseif (not on) and lastOn then
+			lastOn=false
+			if RT.camAnchor then pcall(function() RT.camAnchor:Destroy() end) RT.camAnchor=nil end
+			return
+		end
+		if not on then return end
+		local _,r4,h=root()
+		if not (r4 and h) then return end
+		if not RT.invPos then setPos() if not RT.invPos then return end end
+
+		-- 钉住本体：位置会复制，锚定不会复制，所以只能每帧写 CFrame
+		r4.CFrame=RT.invPos
+		r4.AssemblyLinearVelocity=Vector3.zero
+		r4.AssemblyAngularVelocity=Vector3.zero
+
+		-- 代理跟着你的输入走（你自己看着还像在原地）
+		if RT.proxyH and RT.proxyH.Parent then
+			local m=mv()
+			local wd=Vector3.new(m.X,0,m.Z)
+			if wd.Magnitude>0.05 then RT.proxyH:Move(wd,false) else RT.proxyH:Move(Vector3.zero,false) end
+			if UIf:IsKeyDown(Enum.KeyCode.Space) then RT.proxyH.Jump=true end
+		end
+
+		-- 相机必须挂在你"看着的位置"（代理 / 锚点），否则视角会被本体带到一万格高空
+		local cam=workspace.CurrentCamera
+		if cam then
+			local sub=RT.proxyH
+			if not (sub and sub.Parent) then
+				sub=RT.camAnchor
+				if not (sub and sub.Parent) and RT.invCF then
+					local a=Instance.new("Part")
+					a.Name="wx_camAnchor" a.Size=Vector3.new(1,2,1) a.Transparency=1
+					a.CanCollide=false a.CanQuery=false a.CanTouch=false a.Anchored=true
+					a.CFrame=RT.invCF a.Parent=workspace
+					RT.camAnchor=a sub=a
+				end
+			end
+			if sub and cam.CameraSubject~=sub then pcall(function() cam.CameraSubject=sub end) end
+		end
+
+		if warm<12 then warm=warm+1 return end
+		local d=(r4.Position-RT.invPos.Position).Magnitude
+		if d>40 then
+			pull=pull+1
+			if pull>=20 then
+				pull=0
+				oi=oi+1
+				if oi>#offs then
+					oi=1
+					if not failAnn then
+						failAnn=true
+						say("隐身失效：服务器反复把本体拉回，这游戏里办不到")
+					end
+				end
+				setPos()
+			end
+		else
+			if not okAnn then
+				okAnn=true
+				say("隐身保持中 · 隐藏点"..tostring(oi))
+			end
+		end
+		if h.Health<=0 and not failAnn then
+			failAnn=true
+			say("本体被游戏判定出界，隐身中断")
+		end
+	end)
+end)()
+--====== 隐身驱动结束 ======
