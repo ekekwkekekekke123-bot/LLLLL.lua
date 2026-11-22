@@ -2861,6 +2861,7 @@ LP.CharacterAdded:Connect(function()
 	for _,k in ipairs({"SpOn","JpOn","JpInf","FlOn"}) do local f=TGS[k] if f then f(false) end end
 	pcall(function() walk() jump() if S.NcOn then clip() end end)
 end)
+pcall(function() local p=safeParent() local g=p and p:FindFirstChild("wx_toast") if g then g:Destroy() end end)
 print("[wx] 加载完成")
 --====== LLL 启动动画：动画跑完才显示 wx 的图标和面板 ======
 ;(function()
@@ -3214,7 +3215,7 @@ end)
 RS.RenderStepped:Connect(function()
 	npcTick(workspace.CurrentCamera,workspace.CurrentCamera.ViewportSize)
 end)
-wxToast=function(msg,dur)
+wxToast=function(msg,dur) do return end
 	dur=dur or 2.2
 	local p=safeParent()
 	if not p then return end
@@ -3926,7 +3927,7 @@ do
 		local ly=Instance.new("UIListLayout") ly.Padding=UDim.new(0,8) ly.HorizontalAlignment=Enum.HorizontalAlignment.Right ly.SortOrder=Enum.SortOrder.LayoutOrder ly.Parent=h
 		return sg
 	end
-	wxToast=function(msg)
+	wxToast=function(msg) do return end
 		local sg=layer()
 		if not sg then return end
 		local h=sg.H
