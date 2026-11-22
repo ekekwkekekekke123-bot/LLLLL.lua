@@ -4478,6 +4478,7 @@ do
 		local surf=nil
 		local missT=0
 		local jumpCd=0
+		local outT=0
 		local ray=RaycastParams.new()
 		ray.FilterType=Enum.RaycastFilterType.Exclude
 
@@ -4577,7 +4578,8 @@ do
 
 			-- 1) 朝四个方向探面，挑最近的、法线跟当前上方差距不大的那个
 			local cand,candD=nil,99
-			local dirs={flat,-flat,up,-up}
+			local dirs={flat,-flat,up,-up,Vector3.new(1,0,0),Vector3.new(-1,0,0),Vector3.new(0,0,1),Vector3.new(0,0,-1)}
+			if mv.Magnitude>0.05 then table.insert(dirs,1,mv.Unit) end
 			for i=1,#dirs do
 				local hit=workspace:Raycast(pos,dirs[i]*3.4,ray)
 				if hit then
@@ -4592,6 +4594,19 @@ do
 			if surf then
 				local hh=workspace:Raycast(pos,-surf*3.2,ray)
 				if hh and math.abs(hh.Normal:Dot(surf))>0.8 then keep=true end
+			end
+
+			-- 想下来：往"远离这个面"的方向推，就松开
+			if surf and mv.Magnitude>0.1 and mv:Dot(up)>0.45 then
+				outT=outT+dt
+				if outT>0.12 then
+					clearP() surf=nil up=UP0 outT=0
+					stopWalk()
+					pcall(function() h.AutoRotate=true end)
+					return
+				end
+			else
+				outT=0
 			end
 
 			-- 3) 定目标上方：已经贴面就保持/跟随；还在平地上则必须"主动往这个面推"才切上去
@@ -4632,7 +4647,14 @@ do
 			local speed=h.WalkSpeed
 			if speed<4 then speed=16 end
 			local want=Vector3.zero
-			if spill.Magnitude>0.05 then want=spill.Unit*speed end
+			if spill.Magnitude>0.08 then
+				want=spill.Unit*speed
+			elseif mv.Magnitude>0.1 and mv:Dot(-up)>0.25 then
+				-- 你是拿脸顶着这个面（输入几乎垂直扎进去）：那就顺着这个面自身的"上"走 —— 也就是往上走
+				local e1=UP0-up*(UP0:Dot(up))
+				if e1.Magnitude<0.15 then e1=flat-up*(flat:Dot(up)) end
+				if e1.Magnitude>0.15 then want=e1.Unit*speed end
+			end
 
 			-- 6) 跳：给一个沿着"上方"的速度，然后脱开这个面
 			local wantJump=(h.Jump==true) or UIS:IsKeyDown(Enum.KeyCode.Space)
