@@ -696,6 +696,10 @@ rowToggle(bodySh, ySh, "循环传送到杀手身后", "ShLoop", tpLoopSet)
 local SNDS = {
 	{ n = "开门音", id = "rbxassetid://140294865036206" },
 	{ n = "静音",   id = "rbxassetid://0" },
+	{ n = "MC·升级",   id = "rbxassetid://6647877129" },
+	{ n = "MC·图腾",   id = "rbxassetid://125970180380068" },
+	{ n = "MC·打火石", id = "rbxassetid://95945557328407" },
+	{ n = "MC·Steve",  id = "rbxassetid://94331644596374" },
 }
 CFG.SndOn = false
 CFG.SndIdx = 1
@@ -709,7 +713,7 @@ local function sndPoolAdd(name, id)
 	if id == nil then return end
 	id = tostring(id)
 	if id == "" or id == "rbxassetid://" or poolSeen[id] then return end
-	if #SNDS >= 9 then return end
+	if #SNDS >= 14 then return end
 	poolSeen[id] = true
 	SNDS[#SNDS+1] = { n = "·"..tostring(name):sub(1,10), id = id }
 end
@@ -960,6 +964,17 @@ local buildPick = function()
 		local on = (i == CFG.SndIdx)
 		local b2 = B("TextButton",{Size=UDim2.new(1,0,0,30),BackgroundColor3=on and C.accent or C.row,BorderSizePixel=0,Text=it.n,Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=on and Color3.new(1,1,1) or C.txt,AutoButtonColor=false,LayoutOrder=i,ZIndex=3,Parent=bx2})
 		B("UIStroke",{Color=Color3.fromRGB(150,140,128),Transparency=0.45,Parent=b2})
+		-- 自动体检：加载不出来的直接在列表里打个 ✕，省得一个个试
+		task.spawn(function()
+			sndTest(it.id,function(ok)
+				if b2 and b2.Parent and not ok then
+					pcall(function()
+						b2.Text=it.n.."  ✕ 不可用"
+						b2.TextColor3=Color3.fromRGB(150,150,150)
+					end)
+				end
+			end)
+		end)
 		b2.MouseButton1Click:Connect(function()
 			CFG.SndIdx = i
 			sndVal.Text = it.n
