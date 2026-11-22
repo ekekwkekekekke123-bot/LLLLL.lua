@@ -1313,7 +1313,7 @@ local AU={Coin=false,GunPick=false}
 -- 所以：① 候选要按"箱子/容器"来找，不能只看枪本身 ② 触碰必须打在箱子那个零件上，
 -- 打枪的 Handle 是没用的 ③ 拾取成功的判据是"背包/身上的 Tool 数量变多"，不是名字匹配。
 do
-	local GUNKEY={"gun","fusil","pompe","shotgun","枪","pistol","revolver","deagle","rifle","smg","sniper","beretta"}
+	local GUNKEY={"gun","fusil","pompe","shotgun","枪","pistol","revolver","deagle","rifle","smg","sniper","beretta","sheriff","colt","firearm","weapon","drop"}
 	local function sub(s)
 		local x=string.lower(tostring(s))
 		for i=1,#GUNKEY do if string.find(x,GUNKEY[i],1,true) then return true end end
@@ -1355,11 +1355,20 @@ do
 	end
 	local function onPlayer(par)
 		if not par then return false end
-		if P:GetPlayerFromCharacter(par) then return true end
-		for _,pl in ipairs(P:GetPlayers()) do
-			if pl.Backpack==par then return true end
+		local function alive(pl)
 			local ch=pl.Character
-			if ch and (par==ch or par:IsDescendantOf(ch)) then return true end
+			if not ch then return false end
+			local hu=ch:FindFirstChildOfClass("Humanoid")
+			if not hu then return false end
+			return hu.Health>0
+		end
+		local p0=P:GetPlayerFromCharacter(par)
+		-- 关键：尸体旁边掉的枪，父级还是那个玩家（已死）。死人身上的东西不能算"别人拿着"
+		if p0 then return alive(p0) end
+		for _,pl in ipairs(P:GetPlayers()) do
+			if pl.Backpack==par then return alive(pl) end
+			local ch=pl.Character
+			if ch and (par==ch or par:IsDescendantOf(ch)) then return alive(pl) end
 		end
 		return false
 	end
@@ -1392,8 +1401,33 @@ do
 		while gui.Parent do
 			task.wait(0.2)
 			if AU.GunPick then
+				-- 兜底识别：名字里没有 gun 的掉落物也要能抓到
+				-- 特征 = 一个小模型，既有"透明(>=0.6)且 CanTouch"的碰撞箱，又有实心可见部件
+				GWNEXT=GWNEXT or 0
+				if os.clock()>=GWNEXT then
+					GWNEXT=os.clock()+1.0
+					pcall(function()
+						for _,o in ipairs(workspace:GetChildren()) do
+							if (o:IsA("Model") or o:IsA("Tool")) and not POOL[o] then
+								local nvis,nbox,tot=0,0,0
+								for _,d in ipairs(o:GetDescendants()) do
+									tot=tot+1
+									if tot>40 then break end
+									if d:IsA("BasePart") then
+										if d.Transparency>=0.6 then
+											if d.CanTouch then nbox=nbox+1 end
+										else
+											nvis=nvis+1
+										end
+									end
+								end
+								if nvis>0 and nbox>0 and tot<=14 then POOL[o]=true end
+							end
+						end
+					end)
+				end
 				local now=os.clock()
-				if now>=nxt and now-(TPBusy or 0)>=1.0 then
+				if now>=nxt and now-(TPBusy or 0)>=1.0 and now>=(COINLOCK or 0) then
 					local r=rootOf()
 					if r then
 						local n0=toolCount()
@@ -1418,6 +1452,7 @@ do
 						if go and bpts then
 							nxt=now+0.8
 							TPBusy=now
+							GUNLOCK=now+0.9
 							local origin=r.CFrame
 							local c0=centerOf(go,bpts)
 							if c0 then r.CFrame=CFrame.new(c0) end
@@ -1493,7 +1528,7 @@ task.spawn(function()
 						local c=coinCache[i]
 						if not c or not c.Parent then table.remove(coinCache,i) end
 					end
-					if now-lastTp>=0.12 and #coinCache>0 and (os.clock()-(TPBusy or 0)>1.6) then
+					if now-lastTp>=0.12 and #coinCache>0 and (os.clock()-(TPBusy or 0)>1.6) and os.clock()>=(GUNLOCK or 0) then
 						local best,bd=nil,300
 						for _,o in ipairs(coinCache) do
 							if o.Parent and not (COINBAD[o] and (os.clock()-COINBAD[o])<2) then
@@ -1502,7 +1537,7 @@ task.spawn(function()
 							end
 						end
 						if best then
-							lastTp=now
+							lastTp=now COINLOCK=now+0.15
 							-- 踩上去就立刻标记为已拿，不等服务器那 0.5 秒删除碰撞箱，否则会被同一枚金币反复吸回去
 							COINBAD[best]=now
 							-- 落在金币本体上，不是悬在头顶
@@ -1527,7 +1562,7 @@ task.spawn(function()
 			end
 			if false and AU.GunPick then -- 旧版捡枪已停用（每次递归扫全地图导致巨卡），新实现在文件末尾
 				pcall(function()
-					local GUNKEY={"gun","fusil","pompe","shotgun","枪","pistol","revolver","deagle","rifle","smg","sniper","beretta"}
+					local GUNKEY={"gun","fusil","pompe","shotgun","枪","pistol","revolver","deagle","rifle","smg","sniper","beretta","sheriff","colt","firearm","weapon","drop"}
 					local function sub(s) local x=string.lower(tostring(s)) for i=1,#GUNKEY do if string.find(x,GUNKEY[i],1,true) then return true end end return false end
 					local function isGunObj(o) if sub(o.Name) then return true end local ok,c=pcall(function() return o:FindFirstChild("ClientFusil",true) end) return ok and c~=nil end
 					GWSnap=true
