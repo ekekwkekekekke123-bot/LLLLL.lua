@@ -3802,6 +3802,25 @@ local pgB=_G.wxB
 				pcall(function() m:Destroy() end)
 			end)
 		end
+		-- 击杀残留改成"谁死了就留一道残影"：不再靠点击，任何服务器都能出效果
+		local boundH=setmetatable({},{__mode="k"})
+		local function bindDeath(c)
+			if not c then return end
+			local hum=c:FindFirstChildOfClass("Humanoid")
+			if not hum or boundH[hum] then return end
+			boundH[hum]=true
+			hum.Died:Connect(function()
+				if not st.on then return end
+				pcall(function() ghost(c) end)
+			end)
+		end
+		local function bindPlayer(p)
+			if p==LP then return end
+			if p.Character then pcall(bindDeath,p.Character) end
+			p.CharacterAdded:Connect(function(c) pcall(bindDeath,c) end)
+		end
+		for _,p in ipairs(P:GetPlayers()) do pcall(bindPlayer,p) end
+		P.PlayerAdded:Connect(function(p) pcall(bindPlayer,p) end)
 		local function hit()
 			if not st.on then return end
 			local cam=workspace.CurrentCamera
@@ -3856,6 +3875,13 @@ local pgB=_G.wxB
 				pcall(applyTracer,o)
 			end
 		end
+		-- 开关打开时把场上"已经存在"的拖尾/光柱也扫一遍。
+		-- 原来只挂 DescendantAdded，等于只改新生成的弹道，场上已有的永远不动 —— 这也是"大多数服务器没效果"的原因之一。
+		local function sweepTrails()
+			for _,o in ipairs(workspace:GetDescendants()) do
+				if o:IsA("Trail") or o:IsA("Beam") then pcall(applyTracer,o) end
+			end
+		end
 		UI.InputBegan:Connect(function(i,g)
 			if g then return end
 			if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
@@ -3871,14 +3897,19 @@ local pgB=_G.wxB
 			if not inVM and o:FindFirstAncestorOfClass("Tool") then inVM = true end
 			if not inVM and LP.Character and o:IsDescendantOf(LP.Character) then inVM = true end
 			if string.find(nm, "handle") or string.find(nm, "gun") or string.find(nm, "barrel") or string.find(nm, "mag") then return end
-			if o:IsA("MeshPart") and (string.find(nm, "bullet") or string.find(nm, "trac")) then
+			local isBullet=(string.find(nm,"bullet")~=nil or string.find(nm,"trac")~=nil or string.find(nm,"projectile")~=nil or string.find(nm,"pellet")~=nil)
+			if not isBullet and o.Parent then
+				local pn=string.lower(o.Parent.Name)
+				if string.find(pn,"bullet") or string.find(pn,"trac") or string.find(pn,"projectile") then isBullet=true end
+			end
+			if o:IsA("BasePart") and isBullet then
 				if inVM then return end
 				pcall(function()
 					if tr.on then
 						o.Color = tr.col
 						o.Material = Enum.Material.Neon
 						o.Reflectance = 0
-						o.TextureID = ""
+						pcall(function() o.TextureID = "" end)
 					end
 					if tr.szOn then
 						if tr.cache[o]==true or tr.cache[o]==nil then tr.cache[o]=o.Size end
@@ -3916,19 +3947,19 @@ local pgB=_G.wxB
 		local b2,t2,k2=rowT("子弹轨迹（不完全通用）",3)
 		b2.MouseButton1Click:Connect(function()
 			tr.on=not tr.on flip(t2,k2,tr.on)
-			if not tr.on then tr.cache=setmetatable({},{__mode="k"}) end
+			if not tr.on then tr.cache=setmetatable({},{__mode="k"}) else pcall(sweepTrails) end
 		end)
 		local c2,blk2=rowC("修改子弹轨迹颜色",4,tr.col)
 		local b3,t3,k3=rowT("修改弹道大小/尺寸",5)
 		b3.MouseButton1Click:Connect(function()
 			tr.szOn=not tr.szOn flip(t3,k3,tr.szOn)
-			if tr.szOn then applyTracerAll() end
+			if tr.szOn then pcall(sweepTrails) applyTracerAll() end
 		end)
 		rowSlider("弹道尺寸",6,0,65,tr.sz,function(v) tr.sz=v if tr.szOn then applyTracerAll() end end)
 		local b4,t4,k4=rowT("修改弹道滞留时间",7)
 		b4.MouseButton1Click:Connect(function()
 			tr.ltOn=not tr.ltOn flip(t4,k4,tr.ltOn)
-			if tr.ltOn then applyTracerAll() end
+			if tr.ltOn then pcall(sweepTrails) applyTracerAll() end
 		end)
 		rowSlider("滞留时间(秒)",8,0.15,12,tr.lt,function(v) tr.lt=v if tr.ltOn then applyTracerAll() end end)
 		trBlk=blk2
@@ -4020,18 +4051,18 @@ do
 		return l
 	end
 		local function tgl(t,k)
-		local r=nr() lbl(r,t)
+		local r=nr() lbl(r,t,-44)
 		local tr=Instance.new("TextButton")
-		tr.Size=UDim2.fromOffset(40,18) tr.Position=UDim2.new(1,-48,0.5,0) tr.AnchorPoint=Vector2.new(0,0.5)
+		tr.Size=UDim2.fromOffset(28,16) tr.Position=UDim2.new(1,-36,0.5,0) tr.AnchorPoint=Vector2.new(0,0.5)
 		tr.BackgroundColor3=S[k] and ACC or OFF tr.BorderSizePixel=0 tr.Text="" tr.AutoButtonColor=false tr.ZIndex=16 tr.Parent=r
 		local a=Instance.new("UICorner") a.CornerRadius=UDim.new(0.5,0) a.Parent=tr
 		local sk2=Instance.new("UIStroke") sk2.Color=Color3.fromRGB(150,140,128) sk2.Thickness=1 sk2.Transparency=0.5 sk2.Parent=tr
 		local kn=Instance.new("Frame")
-		kn.Size=UDim2.fromOffset(14,14) kn.AnchorPoint=Vector2.new(0,0.5) kn.Position=UDim2.new(0,2,0.5,0)
+		kn.Size=UDim2.fromOffset(12,12) kn.AnchorPoint=Vector2.new(0,0.5) kn.Position=UDim2.new(0,2,0.5,0)
 		kn.BackgroundColor3=Color3.new(1,1,1) kn.BorderSizePixel=0 kn.ZIndex=17 kn.Parent=tr
 		local kc=Instance.new("UICorner") kc.CornerRadius=UDim.new(0.5,0) kc.Parent=kn
 		local function paint(on,anim)
-			local to=on and UDim2.new(0,24,0.5,0) or UDim2.new(0,2,0.5,0)
+			local to=on and UDim2.new(0,14,0.5,0) or UDim2.new(0,2,0.5,0)
 			if anim then
 				TS0:Create(kn,TweenInfo.new(0.18,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Position=to}):Play()
 				TS0:Create(tr,TweenInfo.new(0.18),{BackgroundColor3=on and ACC or OFF}):Play()
