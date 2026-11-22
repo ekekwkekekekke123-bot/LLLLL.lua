@@ -1400,7 +1400,7 @@ do
 		end)
 		while gui.Parent do
 			task.wait(0.2)
-			if AU.GunPick then
+					if AU.GunPick or (PICKREQ and os.clock()-PICKREQ<3) then
 				-- 兜底识别：名字里没有 gun 的掉落物也要能抓到
 				-- 特征 = 一个小模型，既有"透明(>=0.6)且 CanTouch"的碰撞箱，又有实心可见部件
 				GWNEXT=GWNEXT or 0
@@ -1427,7 +1427,8 @@ do
 					end)
 				end
 				local now=os.clock()
-				if now>=nxt and now-(TPBusy or 0)>=1.0 and now>=(COINLOCK or 0) then
+				local forced=(PICKREQ and now-PICKREQ<3) and true or false
+				if forced or (now>=nxt and now-(TPBusy or 0)>=1.0 and now>=(COINLOCK or 0)) then
 					local r=rootOf()
 					if r then
 						local n0=toolCount()
@@ -1481,6 +1482,7 @@ do
 							end
 						end
 						if go and bpts then
+							PICKREQ=nil
 							nxt=now+0.8
 							TPBusy=now
 							GUNLOCK=now+0.9
@@ -1546,6 +1548,16 @@ local function mkToggle2(name,key,cb)
 end
 mkToggle2("自动拾取金币","Coin")
 mkToggle2("自动传送捡枪","GunPick")
+-- 一次性捡枪：点一下才捡一次（走的是同一套识别/触碰逻辑，只是不常驻）
+local function mkBtn2(name,cb)
+	local row=B("TextButton",{Size=UDim2.new(1,0,0,30),Position=UDim2.fromOffset(0,ay),BackgroundColor3=C.row,BorderSizePixel=0,Text="",AutoButtonColor=false,ZIndex=130,Parent=bodyAuto})
+	ay=ay+34
+	B("UIStroke",{Color=Color3.fromRGB(150,140,128),Transparency=0.4,Parent=row})
+	B("TextLabel",{Size=UDim2.new(1,-16,1,0),Position=UDim2.fromOffset(10,0),BackgroundTransparency=1,Text=name,Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=C.txt,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=131,Parent=row})
+	row.MouseButton1Click:Connect(function() if cb then pcall(cb) end end)
+	return row
+end
+mkBtn2("捡枪", function() PICKREQ=os.clock() end)
 task.spawn(function()
 	while true do
 		task.wait(0.2)
