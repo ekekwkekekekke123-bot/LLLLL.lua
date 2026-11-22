@@ -1308,6 +1308,119 @@ task.spawn(function()
 end)
 --==== 自动 栏目 ====
 local AU={Coin=false,GunPick=false}
+--==== 自动传送捡枪（新版）====
+-- 旧版每次 tick 都递归扫整个 workspace，还对每个 Tool/Model 做深度 FindFirstChild，
+-- 手机上直接卡死；这里改成"开一次池子 + DescendantAdded 增量补"，搜索只遍历池子里的几十个对象。
+do
+	local GUNKEY={"gun","fusil","pompe","shotgun","枪","pistol","revolver","deagle","rifle","smg","sniper","beretta"}
+	local function sub(s)
+		local x=string.lower(tostring(s))
+		for i=1,#GUNKEY do if string.find(x,GUNKEY[i],1,true) then return true end end
+		return false
+	end
+	local POOL=setmetatable({},{__mode="k"})
+	local BAD=setmetatable({},{__mode="k"})
+	local nxt=0
+	local function rootOf()
+		local c=LP.Character
+		return c and c:FindFirstChild("HumanoidRootPart"), c
+	end
+	local function held(c)
+		if not c then return false end
+		for _,o in ipairs(c:GetChildren()) do
+			if o:IsA("Tool") and sub(o.Name) then
+				local h=o:FindFirstChild("Handle")
+				if h and h.Transparency<0.95 then return true end
+			end
+		end
+		return false
+	end
+	local function partOf(o)
+		if o:IsA("BasePart") then return o end
+		return o:FindFirstChild("Handle") or o.PrimaryPart or o:FindFirstChildWhichIsA("BasePart")
+	end
+	local function onPlayer(par)
+		if not par then return false end
+		if P:GetPlayerFromCharacter(par) then return true end
+		for _,pl in ipairs(P:GetPlayers()) do if pl.Backpack==par then return true end end
+		return false
+	end
+	local function feed(par,depth)
+		for _,o in ipairs(par:GetChildren()) do
+			if (o:IsA("Tool") or o:IsA("Model")) and sub(o.Name) then POOL[o]=true end
+			if depth<2 and o:IsA("Folder") then feed(o,depth+1) end
+		end
+	end
+
+	task.spawn(function()
+		feed(workspace,0)
+		pcall(function()
+			workspace.DescendantAdded:Connect(function(o)
+				if (o:IsA("Tool") or o:IsA("Model")) and sub(o.Name) then POOL[o]=true end
+			end)
+		end)
+		while gui.Parent do
+			task.wait(0.2)
+			if AU.GunPick then
+				local now=os.clock()
+				if now>=nxt and now-(TPBusy or 0)>=1.0 then
+					local r,c=rootOf()
+					if r and c and not held(c) then
+						local go,hp,bd=nil,400,nil
+						for o in pairs(POOL) do
+							if not o.Parent then
+								POOL[o]=nil
+							elseif not (BAD[o] and os.clock()-BAD[o]<6) then
+								local pb=partOf(o)
+								if pb and pb.Parent and pb.Transparency<0.95 and (pb.LocalTransparencyModifier or 0)<0.95 and not onPlayer(o.Parent) then
+									local d=(pb.Position-r.Position).Magnitude
+									if d<bd then bd=d go=o hp=pb end
+								end
+							end
+						end
+						if go and hp then
+							nxt=now+0.8
+							TPBusy=now
+							local origin=r.CFrame
+							r.CFrame=CFrame.new(hp.Position)
+							task.spawn(function()
+								local got=false
+								for i=1,8 do
+									if not hp.Parent then got=true break end
+									if held(LP.Character) then got=true break end
+									for _,d in ipairs(go:GetChildren()) do
+										if d:IsA("ProximityPrompt") then
+											pcall(function() d.Enabled=true d.MaxActivationDistance=math.max(tonumber(d.MaxActivationDistance) or 10,16) end)
+											pcall(function() d:InputHoldBegin() d:InputHoldEnd() end)
+										end
+									end
+									if firetouchinterest then
+										local cc=LP.Character
+										if cc then
+											for _,bp2 in ipairs(cc:GetChildren()) do
+												if bp2:IsA("BasePart") and bp2.Parent then
+													pcall(firetouchinterest,hp,bp2,0)
+													pcall(firetouchinterest,hp,bp2,1)
+												end
+											end
+										end
+									end
+									task.wait(0.07)
+								end
+								if not got then BAD[go]=os.clock() end
+								local c2=LP.Character
+								local r2=c2 and c2:FindFirstChild("HumanoidRootPart")
+								if r2 then pcall(function() r2.CFrame=origin end) end
+							end)
+						end
+					end
+				end
+			else
+				nxt=0
+			end
+		end
+	end)
+end
 autoBtn=B("TextButton",{Size=UDim2.new(1,0,0,26),BackgroundColor3=C.row,BorderSizePixel=0,Text="自动",Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=C.txt,AutoButtonColor=false,LayoutOrder=4,ZIndex=301,Parent=side})
 bodyAuto=B("Frame",{Size=UDim2.new(1,-84,1,-44),Position=UDim2.fromOffset(80,38),BackgroundTransparency=1,Visible=false,ZIndex=108,Parent=pn})
 autoBtn.MouseButton1Click:Connect(function()
@@ -1376,7 +1489,7 @@ task.spawn(function()
 					end
 				end)
 			end
-			if AU.GunPick then
+			if false and AU.GunPick then -- 旧版捡枪已停用（每次递归扫全地图导致巨卡），新实现在文件末尾
 				pcall(function()
 					local GUNKEY={"gun","fusil","pompe","shotgun","枪","pistol","revolver","deagle","rifle","smg","sniper","beretta"}
 					local function sub(s) local x=string.lower(tostring(s)) for i=1,#GUNKEY do if string.find(x,GUNKEY[i],1,true) then return true end end return false end
