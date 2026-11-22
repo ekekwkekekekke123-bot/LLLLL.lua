@@ -293,6 +293,10 @@ end
 -- ---------- 1. 子弹追踪（已按用户要求删除）----------
 
 -- ---------- 2. 甩飞 ----------
+-- 说明：客户端没法直接改别的玩家的位置/速度（他的人体是他自己的客户端在算），
+-- 所以"焊接 + 给自己 6e4 速度"这套原来的写法只会把你自己甩上天摔死，目标纹丝不动。
+-- 这里改成：反复钻到他身上 + 临时放大自己的体积，让"他的客户端"把他顶出去。
+-- 不敢保证一定能飞，但至少不会把你送走。
 local function flingOne(pl, tag)
 	if RT.flingC then mmToast("甩飞进行中") return end
 	local c, h, r = myChar()
@@ -301,44 +305,34 @@ local function flingOne(pl, tag)
 	if not (r and tr) then mmToast("甩飞失败 · 目标无效") return end
 	RT.flingSave = r.CFrame
 	RT.flingSize = r.Size
-	RT.flingWeld = nil
-	pcall(function() r.Size = Vector3.new(10, 10, 10) end)
-	-- 先直接重叠到目标身上，再焊死，避免跟不上
-	pcall(function() r.CFrame = tr.CFrame end)
-	pcall(function()
-		local w = Instance.new("WeldConstraint")
-		w.Part0 = r
-		w.Part1 = tr
-		w.Parent = r
-		RT.flingWeld = w
-	end)
-	local endT = os.clock() + 1.5
+	pcall(function() r.Size = Vector3.new(8, 8, 8) end)
+	local endT = os.clock() + 1.2
 	RT.flingC = RS.RenderStepped:Connect(function()
 		local c2, h2, r2 = myChar()
 		if not r2 then
-			if RT.flingWeld then pcall(function() RT.flingWeld:Destroy() end) RT.flingWeld = nil end
 			if RT.flingC then RT.flingC:Disconnect() RT.flingC = nil end
 			return
 		end
 		local cur = pl.Character and pl.Character:FindFirstChild("HumanoidRootPart")
 		if cur then
 			pcall(function() r2.CFrame = cur.CFrame end)
-			r2.AssemblyLinearVelocity = Vector3.new(0, 6e4, 0)
-			r2.AssemblyAngularVelocity = Vector3.new(6e4, 6e4, 6e4)
+			-- 只给一点点向上的力，别把自己送上天
+			pcall(function() r2.AssemblyLinearVelocity = Vector3.new(0,25,0) end)
 		end
 		if os.clock() >= endT then
 			RT.flingC:Disconnect() RT.flingC = nil
 			local c3, h3, r3 = myChar()
-			if RT.flingWeld then pcall(function() RT.flingWeld:Destroy() end) RT.flingWeld = nil end
 			if r3 then
-				if RT.flingSave then r3.CFrame = RT.flingSave end
+				if RT.flingSave then pcall(function() r3.CFrame = RT.flingSave end) end
 				if RT.flingSize then pcall(function() r3.Size = RT.flingSize end) end
-				r3.AssemblyLinearVelocity = Vector3.zero
-				r3.AssemblyAngularVelocity = Vector3.zero
+				pcall(function()
+					r3.AssemblyLinearVelocity = Vector3.zero
+					r3.AssemblyAngularVelocity = Vector3.zero
+				end)
 			end
 			RT.flingSave = nil
 			RT.flingSize = nil
-			mmToast((tag or "目标") .. " 已甩飞")
+			mmToast((tag or "目标") .. " · 已尝试甩飞")
 		end
 	end)
 end
