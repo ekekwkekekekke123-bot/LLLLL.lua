@@ -3255,18 +3255,21 @@ local function wxCfgSave()
 		writefile("wx_cfg.json",game:GetService("HttpService"):JSONEncode(d))
 	end)
 end
+local wxCfgNoAuto={WallOn=true}   -- 爬墙不在启动时自动恢复：一贴墙就往上爬，容易出事
 local function wxCfgLoad()
 	if not (isfile and readfile) then return end
 	pcall(function()
 		if not isfile("wx_cfg.json") then return end
 		local d=game:GetService("HttpService"):JSONDecode(readfile("wx_cfg.json"))
 		for k,v in pairs(d) do
-			if S[k]~=nil and type(S[k])~=table then
+			if S[k]~=nil and type(S[k])~=table and not wxCfgNoAuto[k] then
 				S[k]=v
 				if TGS and TGS[k] then pcall(TGS[k],v) end
 				if apK then pcall(apK,k) end
 			end
 		end
+		S.WallOn=false
+		if TGS and TGS.WallOn then pcall(TGS.WallOn,false) end
 	end)
 end
 task.delay(1.2,wxCfgLoad)
@@ -3324,7 +3327,7 @@ G(pgM,"锁定部位","AimPart",{"Head","Chest","Legs"})
 T(pgM,"快捷自瞄","QuickOn",false)
 		T(pgM,"柔和自瞄","SoftAim",false)
 		nb(pgM,"柔和强度","SoftV",16,"1-100",1,100)
-T(pgM,"墙壁检察","WallOn",false)
+T(pgM,"墙壁检察","AimChkW",false)
 T(pgM,"预判自瞄","PredOn",false)
 nb(pgM,"预判强度","PredVal",16,"0-100",0,100)
 G(pgM,"自瞄类型","AiType",{"玩家","NPC","所有"})
@@ -3408,7 +3411,7 @@ RS:BindToRenderStep("wxAim",9999,function()
 						if on then
 							local d=math.sqrt((s.X-cx)^2+(s.Y-cy)^2)
 							if d<bd then
-								if (not S.WallOn) or S.wallClear(cam,hr,c) then best=c bd=d end
+								if (not S.AimChkW) or S.wallClear(cam,hr,c) then best=c bd=d end
 							end
 						end
 					end
@@ -3425,7 +3428,7 @@ RS:BindToRenderStep("wxAim",9999,function()
 						if on then
 							local d=math.sqrt((s.X-cx)^2+(s.Y-cy)^2)
 							if d<bd then
-								if (not S.WallOn) or S.wallClear(cam,hr,m) then best=m bd=d end
+								if (not S.AimChkW) or S.wallClear(cam,hr,m) then best=m bd=d end
 							end
 						end
 					end
