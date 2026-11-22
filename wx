@@ -2410,16 +2410,35 @@ bt(pgW,"重新进入服务器",function()
 	local TPS=game:GetService("TeleportService")
 	local pid=game.PlaceId
 	local jid=game.JobId
-	local ok=false
-	local err=nil
-	if jid and jid~="" then
-		ok,err=pcall(function() TPS:TeleportToPlaceInstance(pid,jid,LP) end)
+	-- 客户端读到的 JobId 有可能是空串，那就没法保证回同一个服，只能换新服
+	local same=(jid and jid~="")
+	-- 传送到一半失败（服务器满人/被拦）会自动走这里，再换一条路试
+	pcall(function()
+		TPS.TeleportInitFailed:Connect(function(pl)
+			if pl~=LP then return end
+			pcall(function() TPS:Teleport(pid,LP) end)
+			pcall(function() TPS:Teleport(pid) end)
+		end)
+	end)
+	local done=false
+	-- 1) 新接口：直接指定要回的服务器实例，最稳
+	pcall(function()
+		local opt=Instance.new("TeleportOptions")
+		opt.ShouldReserveServer=false
+		if same then opt.ServerInstanceId=jid end
+		TPS:TeleportAsync(pid,{LP},opt)
+		done=true
+	end)
+	-- 2) 旧接口
+	if not done and same then
+		done=pcall(function() TPS:TeleportToPlaceInstance(pid,jid,LP) end)
 	end
-	if not ok then
-		ok,err=pcall(function() TPS:Teleport(pid,LP) end)
+	-- 3) 实在不行就随机换服重进
+	if not done then
+		done=pcall(function() TPS:Teleport(pid,LP) end)
 	end
-	if not ok then
-		wxToast ("重进失败：该服务器可能已满人")
+	if not done then
+		pcall(function() TPS:Teleport(pid) end)
 	end
 end)
 selp(1)
