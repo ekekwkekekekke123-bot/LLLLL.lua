@@ -777,13 +777,19 @@ local function looksGun(s)
 	if isGunNm(s.Name) then return true end
 	local ok, anc = pcall(function() return s:FindFirstAncestorOfClass("Tool") end)
 	if ok and anc and isGunNm(anc.Name) then return true end
-	return CAP[tostring(s.SoundId)] == true
+	-- 只按"名字"和"所在的工具"判断，不再按 SoundId 判断。
+	-- 按 ID 判断的话，一旦你选的替换音效跟脚步声/按钮音效共用同一个资源，
+	-- 那些声音会被一起当成枪声替换掉 —— 这就是"别人走路声音也变了"。
+	return false
 end
 local function sndOne(s)
 	if not s:IsA("Sound") then return end
+	-- 界面上的按钮音效一律不碰：点一下按钮就响，就是因为它被误判成枪声然后重启了
+	local pg=LP and LP:FindFirstChild("PlayerGui")
+	if pg and s:IsDescendantOf(pg) then return end
 	if not looksGun(s) then return end
 	local sid = tostring(s.SoundId)
-	if CAP[sid] == nil then
+	if CAP[sid] == nil and sndOrig[s] == nil then
 		CAP[sid] = true
 		mmDbg("[音效] 抓到: "..sid.." / "..tostring(s.Name))
 	end
