@@ -4670,6 +4670,16 @@ do
 				if e1.Magnitude>0.15 then want=e1.Unit*speed end
 			end
 
+			-- 5.5) 前方有凸起/柱子就贴着它的面滑过去，不要硬顶（硬顶就是"卡在交界处"）
+			if want.Magnitude>0.5 then
+				local wd=want.Unit
+				local obs=workspace:Raycast(pos+up*0.3,wd*2.2,ray)
+				if obs and math.abs(obs.Normal:Dot(up))<0.7 and wd:Dot(obs.Normal)<-0.15 then
+					local t=wd-obs.Normal*(wd:Dot(obs.Normal))
+					if t.Magnitude>0.2 then want=t.Unit*speed end
+				end
+			end
+
 			-- 6) 凸起/台阶卡住：想走但实际几乎没动 → 往面外抬一下再被重力拉回来，用来翻过凹凸
 			if hopT>0 then
 				hopT=hopT-dt
