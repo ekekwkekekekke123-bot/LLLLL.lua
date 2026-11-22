@@ -2078,14 +2078,14 @@ task.spawn(function()
 				local function txChar()
 			local nm=S.TxName
 			if nm==nil or nm=="" or nm=="无其他玩家" then
-				for _,pl in ipairs(P:GetPlayers()) do
-					if pl~=LP and pl.Character then S.TxName=pl.Name return pl.Character end
-				end
+				-- 没选人就不动，不再"自动挑第一个"，那正是会误伤别人的地方
 				return nil
 			end
 			for _,pl in ipairs(P:GetPlayers()) do
 				if pl.Name==nm and pl.Character then return pl.Character end
 			end
+			-- 名字对不上（人退了/存档是旧的）就明确不动，绝不拿"列表里第一个"顶替，
+			-- 否则就是你选 A 结果搞到 B 的原因
 			return nil
 		end
 		local function txHrp(ch)
@@ -2150,6 +2150,7 @@ task.spawn(function()
 					end
 					if not found then
 						S.TxName=""
+						if txBuild then pcall(txBuild) end
 						wxToast("目标已退出，已自动取消选择")
 					end
 				end
@@ -3282,7 +3283,7 @@ local function wxCfgSave()
 		writefile("wx_cfg.json",game:GetService("HttpService"):JSONEncode(d))
 	end)
 end
-local wxCfgNoAuto={WallOn=true}   -- 爬墙不在启动时自动恢复：一贴墙就往上爬，容易出事
+local wxCfgNoAuto={WallOn=true,TxName=true,TpLoop=true,TxLoop=true,FlLoop=true,SpecOn=true}   -- 爬墙/传送目标/那几个循环不在启动时自动恢复
 local function wxCfgLoad()
 	if not (isfile and readfile) then return end
 	pcall(function()
