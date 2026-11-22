@@ -4337,7 +4337,7 @@ do
 		end
 
 		RSw.RenderStepped:Connect(function(dt)
-			if not Sw.WallOn then if st then stopAll() end return end
+			if st then stopAll() end do return end -- [[ 旧版爬墙已停用，见文件末尾「走墙/走天花板」 ]]
 			local ch=LPw.Character
 			local h=ch and ch:FindFirstChildOfClass("Humanoid")
 			local r=ch and ch:FindFirstChild("HumanoidRootPart")
@@ -4451,3 +4451,143 @@ do
 	end
 end
 --====== 爬墙结束 ======
+
+--====== 走墙 / 走天花板 ======
+-- 思路（通俗版）：把"贴着你的那个面"的法线当成你的上方。
+--   1. BodyForce 把真实重力抵掉，改成把人往这个面里压 → 这个面就变成了你的地板（墙、天花板都一样）
+--   2. BodyVelocity 沿着这个面走，速度直接取 WalkSpeed，不改移速
+--   3. BodyGyro 让身体跟着这个面的朝向转，所以竖墙上人是横着的、天花板下人是倒着的
+-- 所以：贴墙走向墙 → 墙变地板；想看墙往上走就抬头往前推；走到墙顶会自己接到天花板接着走。
+do
+	local Sw=_G.wxS
+	local RSw=game:GetService("RunService")
+	local LPw=game:GetService("Players").LocalPlayer
+	if Sw then
+		local UIS=game:GetService("UserInputService")
+		local UP0=Vector3.new(0,1,0)
+		local FG,BG,BV
+		local up=UP0
+		local surf=nil
+		local missT=0
+		local jumpCd=0
+		local ray=RaycastParams.new()
+		ray.FilterType=Enum.RaycastFilterType.Exclude
+
+		local function clearP()
+			if FG then pcall(function() FG:Destroy() end) FG=nil end
+			if BG then pcall(function() BG:Destroy() end) BG=nil end
+			if BV then pcall(function() BV:Destroy() end) BV=nil end
+		end
+		local function attachP(r)
+			if not FG or FG.Parent~=r then
+				clearP()
+				FG=Instance.new("BodyForce") FG.Name="wxWalkF" FG.Force=Vector3.zero FG.Parent=r
+				BG=Instance.new("BodyGyro") BG.Name="wxWalkG" BG.MaxTorque=Vector3.new(4e5,4e5,4e5) BG.P=6000 BG.D=500 BG.CFrame=r.CFrame BG.Parent=r
+				BV=Instance.new("BodyVelocity") BV.Name="wxWalkV" BV.MaxForce=Vector3.new(4e5,4e5,4e5) BV.P=2000 BV.Parent=r
+			end
+		end
+
+		RSw.RenderStepped:Connect(function(dt)
+			local ch=LPw.Character
+			local h=ch and ch:FindFirstChildOfClass("Humanoid")
+			local r=ch and ch:FindFirstChild("HumanoidRootPart")
+			if not (Sw.WallOn and h and r and h.Health>0) then
+				if FG then clearP() end
+				if surf then surf=nil up=UP0 if h then pcall(function() h.AutoRotate=true end) end end
+				missT=0
+				return
+			end
+			if dt>0.2 then dt=0.2 end
+			local cam=workspace.CurrentCamera
+			ray.FilterDescendantsInstances={ch}
+			local pos=r.Position
+			local look=cam and cam.CFrame.LookVector or r.CFrame.LookVector
+			local flat=Vector3.new(look.X,0,look.Z)
+			if flat.Magnitude<0.05 then flat=Vector3.new(0,0,-1) end
+			flat=flat.Unit
+			local mv=h.MoveDirection
+
+			-- 1) 朝四个方向探面，挑最近的、法线跟当前上方差距不大的那个
+			local cand,candD=nil,99
+			local dirs={flat,-flat,up,-up}
+			for i=1,#dirs do
+				local hit=workspace:Raycast(pos,dirs[i]*3.4,ray)
+				if hit then
+					local dd=(hit.Position-pos).Magnitude
+					if dd<0.9 then dd=0.9 end
+					if hit.Normal:Dot(up)>-0.3 and dd<candD then cand=hit candD=dd end
+				end
+			end
+
+			-- 2) 还在现在这个面上就别换（否则墙/顶交界会来回跳）
+			local keep=false
+			if surf then
+				local hh=workspace:Raycast(pos,-surf*3.2,ray)
+				if hh and math.abs(hh.Normal:Dot(surf))>0.8 then keep=true end
+			end
+
+			-- 3) 定目标上方：已经贴面就保持/跟随；还在平地上则必须"主动往这个面推"才切上去
+			local tgt=nil
+			if surf then
+				if keep then tgt=surf elseif cand then tgt=cand.Normal end
+			elseif cand and mv.Magnitude>0.1 and mv:Dot(-cand.Normal)>0.25 and cand.Normal:Dot(UP0)<0.94 then
+				tgt=cand.Normal
+			end
+
+			if not tgt then
+				missT=missT+dt
+				if missT>0.15 and surf then
+					clearP() surf=nil up=UP0
+					pcall(function() h.AutoRotate=true end)
+				end
+				return
+			end
+
+			missT=0
+			if not surf then
+				surf=tgt
+				attachP(r)
+			else
+				surf=tgt
+			end
+			up=up:Lerp(tgt,math.min(1,dt*14))
+			if up.Magnitude<0.2 then up=tgt end
+			up=up.Unit
+
+			-- 4) 重力改造：净加速度 = -up*g，等于把这个面当成了地板
+			local mass=r.AssemblyMass or r:GetMass()
+			local g=workspace.Gravity
+			FG.Force=mass*g*(UP0-up)
+
+			-- 5) 沿面走，速度直接用 WalkSpeed
+			local spill=mv-up*(mv:Dot(up))
+			local speed=h.WalkSpeed
+			if speed<4 then speed=16 end
+			local want=Vector3.zero
+			if spill.Magnitude>0.05 then want=spill.Unit*speed end
+
+			-- 6) 跳：给一个沿着"上方"的速度，然后脱开这个面
+			local wantJump=(h.Jump==true) or UIS:IsKeyDown(Enum.KeyCode.Space)
+			if wantJump and os.clock()>=jumpCd then
+				jumpCd=os.clock()+0.45
+				h.Jump=false
+				BV.Velocity=up*math.max(g*0.42,45)
+				clearP() surf=nil up=UP0
+				pcall(function() h.AutoRotate=true end)
+				return
+			end
+			h.Jump=false
+
+			BV.MaxForce=Vector3.new(4e5,4e5,4e5)
+			BV.Velocity=want-up*3
+			BG.MaxTorque=Vector3.new(4e5,4e5,4e5)
+			local fwd=look-up*(look:Dot(up))
+			if fwd.Magnitude<0.08 then
+				if want.Magnitude>0.08 then fwd=want else fwd=Vector3.new(0,0,-1) end
+			end
+			BG.CFrame=CFrame.lookAt(pos,pos+fwd.Unit,up)
+			h.AutoRotate=false
+		end)
+	end
+end
+--====== 走墙 / 走天花板结束 ======
