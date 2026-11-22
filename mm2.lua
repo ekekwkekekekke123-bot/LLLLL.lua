@@ -1633,7 +1633,7 @@ end
 mkBtn2("捡枪", function() PICKREQ=os.clock() end)
 task.spawn(function()
 	while true do
-		task.wait(0.2)
+		task.wait(0.05)
 		local ch=LP.Character
 		local hr=ch and ch:FindFirstChild("HumanoidRootPart")
 		if hr then
@@ -1644,16 +1644,16 @@ task.spawn(function()
 						local c=coinCache[i]
 						if not c or not c.Parent then table.remove(coinCache,i) end
 					end
-					if now-lastTp>=0.12 and #coinCache>0 and (os.clock()-(TPBusy or 0)>1.6) and os.clock()>=(GUNLOCK or 0) then
+					if now-lastTp>=0.08 and #coinCache>0 and (os.clock()-(TPBusy or 0)>1.6) and os.clock()>=(GUNLOCK or 0) then
 						local best,bd=nil,300
 						for _,o in ipairs(coinCache) do
-							if o.Parent and not (COINBAD[o] and (os.clock()-COINBAD[o])<2) then
+							if o.Parent and not (COINBAD[o] and (os.clock()-COINBAD[o])<0.8) then
 								local d=(o.Position-hr.Position).Magnitude
 								if d<bd then bd=d best=o end
 							end
 						end
 						if best then
-							lastTp=now COINLOCK=now+0.15
+							lastTp=now
 							-- 踩上去就立刻标记为已拿，不等服务器那 0.5 秒删除碰撞箱，否则会被同一枚金币反复吸回去
 							COINBAD[best]=now
 							-- 落在金币本体上，不是悬在头顶
