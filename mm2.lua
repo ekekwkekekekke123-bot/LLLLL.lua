@@ -1397,8 +1397,7 @@ do
 					local r=rootOf()
 					if r then
 						local n0=toolCount()
-						local goD,bdD,psD=nil,400,nil
-						local goA,bdA,psA=nil,400,nil
+						local go,bd,bpts=nil,400,nil
 						for o in pairs(POOL) do
 							if not o.Parent then
 								POOL[o]=nil
@@ -1408,22 +1407,14 @@ do
 									if #ps>0 then
 										local c0=centerOf(o,ps)
 										if c0 then
+											-- 掉落枪是静止的（警长空中死亡就悬在原地），所以不能拿"有没有物理"来筛，只按距离取最近的
 											local d=(c0-r.Position).Magnitude
-											-- 掉落物通常没锚定（会被物理拖着走），地图摆设是锚定的：先捡会动的
-											local dyn=false
-											for _,pp in ipairs(ps) do if pp.Parent and not pp.Anchored then dyn=true break end end
-											if dyn then
-												if d<bdD then bdD=d goD=o psD=ps end
-											else
-												if d<bdA then bdA=d goA=o psA=ps end
-											end
+											if d<bd then bd=d go=o bpts=ps end
 										end
 									end
 								end
 							end
 						end
-						local go,bpts=goD,psD
-						if not go then go,bpts=goA,psA end
 						if go and bpts then
 							nxt=now+0.8
 							TPBusy=now
