@@ -4473,6 +4473,66 @@ do
 		local ray=RaycastParams.new()
 		ray.FilterType=Enum.RaycastFilterType.Exclude
 
+		-- 走路动画：优先借游戏自己的 run 动画（跟骨骼一定匹配），没有就退回通用 R6/R15 走路
+		local camFix=false
+		local track,animH
+		pcall(function() RSw:UnbindFromRenderStep("wxWalkCam") end)
+		RSw:BindToRenderStep("wxWalkCam",Enum.RenderPriority.Camera.Value+1,function()
+			if not camFix then return end
+			local cam=workspace.CurrentCamera
+			if not cam then return end
+			local cf=cam.CFrame
+			if math.abs(cf.RightVector.Y)>0.002 then
+				local look=cf.LookVector
+				local upv=Vector3.new(0,1,0)
+				if math.abs(look.Y)>0.985 then upv=cf.UpVector end
+				cam.CFrame=CFrame.lookAt(cf.Position,cf.Position+look,upv)
+			end
+		end)
+		local function stopWalk()
+			if track then pcall(function() track:Stop(0.15) end) end
+			camFix=false
+		end
+		local function keepWalk(h,spd,moving)
+			if animH~=h then
+				if track then pcall(function() track:Stop(0.15) end) end
+				track=nil animH=h
+				local id=nil
+				local an=h:FindFirstChild("Animate")
+				if an then
+					local rn=an:FindFirstChild("run")
+					local ra=rn and rn:FindFirstChild("RunAnim")
+					if ra and ra:IsA("Animation") then id=ra.AnimationId end
+				end
+				if not id or id=="" then
+					if h.RigType==Enum.HumanoidRigType.R6 then
+						id="rbxassetid://180426354"
+					else
+						id="rbxassetid://507767714"
+					end
+				end
+				local anm=h:FindFirstChildOfClass("Animator")
+				if anm then
+					local a=Instance.new("Animation") a.AnimationId=id
+					local ok,tr=pcall(function() return anm:LoadAnimation(a) end)
+					if ok and tr then
+						pcall(function()
+							tr.Priority=Enum.AnimationPriority.Action
+							tr.Looped=true
+							tr:Play()
+						end)
+						track=tr
+					end
+				end
+			end
+			if track then
+				pcall(function()
+					if not track.IsPlaying then track:Play() end
+					track:AdjustSpeed(moving and math.clamp(spd/16,0.6,2.5) or 0.05)
+				end)
+			end
+		end
+
 		local function clearP()
 			if FG then pcall(function() FG:Destroy() end) FG=nil end
 			if BG then pcall(function() BG:Destroy() end) BG=nil end
@@ -4493,7 +4553,7 @@ do
 			local r=ch and ch:FindFirstChild("HumanoidRootPart")
 			if not (Sw.WallOn and h and r and h.Health>0) then
 				if FG then clearP() end
-				if surf then surf=nil up=UP0 if h then pcall(function() h.AutoRotate=true end) end end
+				if surf then surf=nil up=UP0 stopWalk() if h then pcall(function() h.AutoRotate=true end) end end
 				missT=0
 				return
 			end
@@ -4530,13 +4590,13 @@ do
 			local tgt=nil
 			if surf then
 				if keep then tgt=surf elseif cand then tgt=cand.Normal end
-			elseif cand and mv.Magnitude>0.1 and mv:Dot(-cand.Normal)>0.25 and cand.Normal:Dot(UP0)<0.94 then
+			elseif cand and os.clock()>=jumpCd and mv.Magnitude>0.1 and mv:Dot(-cand.Normal)>0.25 and cand.Normal:Dot(UP0)<0.94 then
 				tgt=cand.Normal
 			end
 
 			if not tgt then
 				missT=missT+dt
-				if missT>0.15 and surf then
+				if missT>0.15 and surf then stopWalk()
 					clearP() surf=nil up=UP0
 					pcall(function() h.AutoRotate=true end)
 				end
@@ -4571,7 +4631,7 @@ do
 			if wantJump and os.clock()>=jumpCd then
 				jumpCd=os.clock()+0.45
 				h.Jump=false
-				BV.Velocity=up*math.max(g*0.42,45)
+				r.AssemblyLinearVelocity=up*math.max(g*0.42,45) stopWalk()
 				clearP() surf=nil up=UP0
 				pcall(function() h.AutoRotate=true end)
 				return
@@ -4580,6 +4640,7 @@ do
 
 			BV.MaxForce=Vector3.new(4e5,4e5,4e5)
 			BV.Velocity=want-up*3
+			keepWalk(h,speed,want.Magnitude>0.05) camFix=true
 			BG.MaxTorque=Vector3.new(4e5,4e5,4e5)
 			local fwd=look-up*(look:Dot(up))
 			if fwd.Magnitude<0.08 then
