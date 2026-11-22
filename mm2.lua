@@ -696,10 +696,6 @@ rowToggle(bodySh, ySh, "循环传送到杀手身后", "ShLoop", tpLoopSet)
 local SNDS = {
 	{ n = "开门音", id = "rbxassetid://140294865036206" },
 	{ n = "静音",   id = "rbxassetid://0" },
-	{ n = "MC·升级",   id = "rbxassetid://6647877129" },
-	{ n = "MC·图腾",   id = "rbxassetid://125970180380068" },
-	{ n = "MC·打火石", id = "rbxassetid://95945557328407" },
-	{ n = "MC·Steve",  id = "rbxassetid://94331644596374" },
 }
 CFG.SndOn = false
 CFG.SndIdx = 1
