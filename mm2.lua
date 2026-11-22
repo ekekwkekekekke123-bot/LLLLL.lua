@@ -173,7 +173,7 @@ end
 local UIS = game:GetService("UserInputService")
 local RS = game:GetService("RunService")
 
-local CFG = { ShAim = false, ShLoop = false, KnOn = false, KnR = 20, FastKnife = false }
+local CFG = { ShLoop = false, KnOn = false, KnR = 20, FastKnife = false }
 local RT = {}
 
 -- ---------- 角色 / 道具 ----------
@@ -290,21 +290,7 @@ local function rowNum(par, yRef, label, key, ph, mn, mx, cb)
 	end)
 end
 
--- ---------- 1. 子弹追踪(杀手) ----------
-local shTgt = nil
-task.spawn(function()
-	while true do
-		task.wait(0.2)
-		pcall(function()
-			if CFG.ShAim then
-				local _, ch = findKiller()
-				shTgt = ch
-			else
-				shTgt = nil
-			end
-		end)
-	end
-end)
+-- ---------- 1. 子弹追踪（已按用户要求删除）----------
 
 -- ---------- 2. 甩飞 ----------
 local function flingOne(pl, tag)
@@ -641,34 +627,14 @@ pcall(function()
 	end
 	local old
 	old = hookmetamethod(game, "__namecall", function(self, ...)
-		if not (CFG.ShAim or CFG.KnOn) then return old(self, ...) end
+		if not CFG.KnOn then return old(self, ...) end
 		local m = getnamecallmethod()
 		if m ~= "Raycast" and m ~= "FireServer" and m ~= "InvokeServer" then return old(self, ...) end
 
 		local args = {...}
 
 		local ok, newArgs = pcall(function()
-			if CFG.ShAim and shTgt and shTgt.Parent then
-				local head = shTgt:FindFirstChild("Head") or shTgt:FindFirstChild("HumanoidRootPart")
-				if head then
-					local cp = getCamPos()
-					local aim = (head.Position - cp).Unit * 1000
-					if m == "Raycast" and self == workspace then
-						if #args >= 2 and typeof(args[1]) == "Vector3" and typeof(args[2]) == "Vector3" then
-							args[1] = cp
-							args[2] = aim
-							return args
-						end
-					elseif m == "FireServer" and isAtkRemote(self.Name) then
-						local n = #args
-						if n >= 2 and typeof(args[n - 1]) == "Vector3" and typeof(args[n]) == "Vector3" then
-							args[n - 1] = cp
-							args[n] = aim
-							return args
-						end
-					end
-				end
-			end
+			-- 子弹追踪（已删除）
 			if CFG.KnOn and (m == "FireServer" or m == "InvokeServer") then
 				local nm = string.lower(self.Name or "")
 				if string.find(nm, "throw") or string.find(nm, "knife") or string.find(nm, "blade") then
@@ -993,60 +959,7 @@ end
 buildPick()
 sndPick.MouseButton1Click:Connect(function() buildPick() sg2.Enabled = true end)
 sh2.MouseButton1Click:Connect(function() sg2.Enabled = false end)
-local btrOK,btrErr=pcall(function()
-	local BTR={tgt=nil}
-	local function btrHasKnife(pl)
-		if not pl then return false end
-		local function has(c)
-			if not c then return false end
-			for _,o in ipairs(c:GetChildren()) do
-				if o:IsA("Tool") and string.lower(o.Name)=="knife" then return true end
-			end
-			return false
-		end
-		return has(pl:FindFirstChild("Backpack")) or has(pl.Character)
-	end
-	local function btrPick()
-		for _,pl in ipairs(P:GetPlayers()) do
-			if pl~=LP and btrHasKnife(pl) then return pl end
-		end
-		return nil
-	end
-	local function btrAim()
-		local t=BTR.tgt
-		if not t or not t.Parent or not btrHasKnife(t) then BTR.tgt=btrPick() t=BTR.tgt end
-		if not t then return nil end
-		local ch=t.Character
-		local bd=ch and (ch:FindFirstChild("UpperTorso") or ch:FindFirstChild("Torso") or ch:FindFirstChild("HumanoidRootPart"))
-		return bd and bd.Position or nil
-	end
-	local hm=hookmetamethod
-	if type(hm)=="function" then
-		local old
-		old=hm(game,"__namecall",function(self,...)
-			if CFG.ShAim and getnamecallmethod()=="FireServer" and typeof(self)=="Instance" and self.Name=="Shoot" then
-				local pos=btrAim()
-				if pos then
-					local a={...}
-					if #a>=2 and typeof(a[1])=="CFrame" and typeof(a[2])=="CFrame" then
-						a[2]=CFrame.new(pos)*(a[2]-a[2].Position)
-						return old(self,table.unpack(a,1,#a))
-					end
-				end
-			end
-			return old(self,...)
-		end)
-	end
-	task.spawn(function()
-		while gui.Parent do
-			task.wait(0.5)
-			if CFG.ShAim and (not BTR.tgt or not BTR.tgt.Parent or not btrHasKnife(BTR.tgt)) then
-				BTR.tgt=btrPick()
-			end
-		end
-	end)
-end)
-if not btrOK then warn("[MM2] 子弹追踪: "..tostring(btrErr)) end
+-- 警长子弹追踪（把 Shoot Remote 的落点改成持刀者位置）已按用户要求整段删除
 rowButton(bodyMu, yMu, "一键击杀所有人", killAll)
 rowButton(bodyMu, yMu, "击杀警长", killSheriff)
 rowButton(bodyMu, yMu, "击杀最近的人", killNearest)
