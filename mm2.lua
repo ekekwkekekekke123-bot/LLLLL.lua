@@ -1431,19 +1431,50 @@ do
 					local r=rootOf()
 					if r then
 						local n0=toolCount()
+						-- 直接复用「枪ESP」那套已经验证能抓到的识别逻辑：
+						-- workspace 子级 + 子级的子级，名字含 gun，排除玩家身上的 / 挂在人形模型下的 / 被焊在人形上的
 						local go,bd,bpts=nil,400,nil
-						for o in pairs(POOL) do
-							if not o.Parent then
-								POOL[o]=nil
-							elseif not (BAD[o] and os.clock()-BAD[o]<6) then
-								if not onPlayer(o.Parent) then
-									local ps=partsOf(o)
-									if #ps>0 then
-										local c0=centerOf(o,ps)
-										if c0 then
-											-- 掉落枪是静止的（警长空中死亡就悬在原地），所以不能拿"有没有物理"来筛，只按距离取最近的
-											local d=(c0-r.Position).Magnitude
-											if d<bd then bd=d go=o bpts=ps end
+						local gList={}
+						for _,o in ipairs(workspace:GetChildren()) do
+							gList[#gList+1]=o
+							for _,c in ipairs(o:GetChildren()) do gList[#gList+1]=c end
+						end
+						for i=1,#gList do
+							local o=gList[i]
+							if string.find(string.lower(o.Name),"gun") and not (BAD[o] and os.clock()-BAD[o]<6) then
+								local owner=false
+								for _,pl in ipairs(P:GetPlayers()) do
+									local c=pl.Character
+									local b=pl.Backpack
+									if (c and (o==c or o:IsDescendantOf(c))) or (b and (o==b or o:IsDescendantOf(b))) then owner=true break end
+								end
+								if not owner then
+									local inHum=false
+									local pp=o
+									for _=1,6 do
+										pp=pp and pp.Parent
+										if pp and pp:IsA("Model") and pp:FindFirstChildOfClass("Humanoid") then inHum=true break end
+									end
+									local welded=false
+									for _,w in ipairs(o:GetChildren()) do
+										if w:IsA("Weld") or w:IsA("WeldConstraint") or w:IsA("Motor6D") then
+											local a=w.Part0 or w.Part1
+											local m=a and a:FindFirstAncestorOfClass("Model")
+											if m and m:FindFirstChildOfClass("Humanoid") then welded=true break end
+										end
+									end
+									if not inHum and not welded then
+										local h=o:FindFirstChild("Handle") or (o:IsA("BasePart") and o) or (o:IsA("Model") and o.PrimaryPart)
+										if h then
+											local d=(h.Position-r.Position).Magnitude
+											if d<bd then
+												bd=d go=o
+												local ps={h}
+												for _,dp in ipairs(partsOf(o)) do
+													if dp~=h and #ps<12 then ps[#ps+1]=dp end
+												end
+												bpts=ps
+											end
 										end
 									end
 								end
@@ -1454,7 +1485,7 @@ do
 							TPBusy=now
 							GUNLOCK=now+0.9
 							local origin=r.CFrame
-							local c0=centerOf(go,bpts)
+							local c0=bpts[1] and bpts[1].Position or centerOf(go,bpts)
 							if c0 then r.CFrame=CFrame.new(c0) end
 							task.spawn(function()
 								local got=false
