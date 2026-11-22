@@ -1308,9 +1308,10 @@ task.spawn(function()
 end)
 --==== 自动 栏目 ====
 local AU={Coin=false,GunPick=false}
---==== 自动传送捡枪（新版）====
--- 旧版每次 tick 都递归扫整个 workspace，还对每个 Tool/Model 做深度 FindFirstChild，
--- 手机上直接卡死；这里改成"开一次池子 + DescendantAdded 增量补"，搜索只遍历池子里的几十个对象。
+--==== 自动传送捡枪（新版 v2）====
+-- 掉落枪的真实结构：枪外面套了一个白色透明碰撞箱，玩家碰到那个箱子才触发拾取。
+-- 所以：① 候选要按"箱子/容器"来找，不能只看枪本身 ② 触碰必须打在箱子那个零件上，
+-- 打枪的 Handle 是没用的 ③ 拾取成功的判据是"背包/身上的 Tool 数量变多"，不是名字匹配。
 do
 	local GUNKEY={"gun","fusil","pompe","shotgun","枪","pistol","revolver","deagle","rifle","smg","sniper","beretta"}
 	local function sub(s)
@@ -1321,34 +1322,56 @@ do
 	local POOL=setmetatable({},{__mode="k"})
 	local BAD=setmetatable({},{__mode="k"})
 	local nxt=0
+
 	local function rootOf()
 		local c=LP.Character
 		return c and c:FindFirstChild("HumanoidRootPart"), c
 	end
-	local function held(c)
-		if not c then return false end
-		for _,o in ipairs(c:GetChildren()) do
-			if o:IsA("Tool") and sub(o.Name) then
-				local h=o:FindFirstChild("Handle")
-				if h and h.Transparency<0.95 then return true end
-			end
-		end
-		return false
+	local function toolCount()
+		local n=0
+		local c=LP.Character
+		if c then for _,o in ipairs(c:GetChildren()) do if o:IsA("Tool") then n=n+1 end end end
+		local bp=LP.Backpack
+		if bp then for _,o in ipairs(bp:GetChildren()) do if o:IsA("Tool") then n=n+1 end end end
+		return n
 	end
-	local function partOf(o)
-		if o:IsA("BasePart") then return o end
-		return o:FindFirstChild("Handle") or o.PrimaryPart or o:FindFirstChildWhichIsA("BasePart")
+	local function partsOf(o)
+		local list={}
+		if o:IsA("BasePart") then list[#list+1]=o end
+		pcall(function()
+			for _,d in ipairs(o:GetDescendants()) do
+				if d:IsA("BasePart") then list[#list+1]=d end
+				if #list>=12 then break end
+			end
+		end)
+		return list
+	end
+	local function centerOf(o,ps)
+		if o:IsA("BasePart") then return o.Position end
+		local ok,p=pcall(function() return o:GetPivot().Position end)
+		if ok and p then return p end
+		if ps and ps[1] and ps[1].Parent then return ps[1].Position end
+		return nil
 	end
 	local function onPlayer(par)
 		if not par then return false end
 		if P:GetPlayerFromCharacter(par) then return true end
-		for _,pl in ipairs(P:GetPlayers()) do if pl.Backpack==par then return true end end
+		for _,pl in ipairs(P:GetPlayers()) do
+			if pl.Backpack==par then return true end
+			local ch=pl.Character
+			if ch and (par==ch or par:IsDescendantOf(ch)) then return true end
+		end
 		return false
 	end
 	local function feed(par,depth)
 		for _,o in ipairs(par:GetChildren()) do
-			if (o:IsA("Tool") or o:IsA("Model")) and sub(o.Name) then POOL[o]=true end
-			if depth<2 and o:IsA("Folder") then feed(o,depth+1) end
+			if (o:IsA("Tool") or o:IsA("Model") or o:IsA("BasePart")) and sub(o.Name) then POOL[o]=true end
+			if (o:IsA("Model") or o:IsA("Tool")) and not POOL[o] then
+				for _,d in ipairs(o:GetChildren()) do
+					if sub(d.Name) then POOL[o]=true break end
+				end
+			end
+			if depth<2 and (o:IsA("Folder") or o:IsA("Model")) then feed(o,depth+1) end
 		end
 	end
 
@@ -1356,7 +1379,14 @@ do
 		feed(workspace,0)
 		pcall(function()
 			workspace.DescendantAdded:Connect(function(o)
-				if (o:IsA("Tool") or o:IsA("Model")) and sub(o.Name) then POOL[o]=true end
+				if not sub(o.Name) then return end
+				if o:IsA("Tool") or o:IsA("Model") or o:IsA("BasePart") then POOL[o]=true end
+				local p=o
+				for _=1,4 do
+					p=p.Parent
+					if not p or p==workspace then break end
+					if p:IsA("Tool") or p:IsA("Model") or p:IsA("BasePart") then POOL[p]=true end
+				end
 			end)
 		end)
 		while gui.Parent do
@@ -1364,45 +1394,60 @@ do
 			if AU.GunPick then
 				local now=os.clock()
 				if now>=nxt and now-(TPBusy or 0)>=1.0 then
-					local r,c=rootOf()
-					if r and c and not held(c) then
-						local go,hp,bd=nil,400,nil
+					local r=rootOf()
+					if r then
+						local n0=toolCount()
+						local goD,bdD,psD=nil,400,nil
+						local goA,bdA,psA=nil,400,nil
 						for o in pairs(POOL) do
 							if not o.Parent then
 								POOL[o]=nil
 							elseif not (BAD[o] and os.clock()-BAD[o]<6) then
-								local pb=partOf(o)
-								if pb and pb.Parent and pb.Transparency<0.95 and (pb.LocalTransparencyModifier or 0)<0.95 and not onPlayer(o.Parent) then
-									local d=(pb.Position-r.Position).Magnitude
-									if d<bd then bd=d go=o hp=pb end
+								if not onPlayer(o.Parent) then
+									local ps=partsOf(o)
+									if #ps>0 then
+										local c0=centerOf(o,ps)
+										if c0 then
+											local d=(c0-r.Position).Magnitude
+											-- 掉落物通常没锚定（会被物理拖着走），地图摆设是锚定的：先捡会动的
+											local dyn=false
+											for _,pp in ipairs(ps) do if pp.Parent and not pp.Anchored then dyn=true break end end
+											if dyn then
+												if d<bdD then bdD=d goD=o psD=ps end
+											else
+												if d<bdA then bdA=d goA=o psA=ps end
+											end
+										end
+									end
 								end
 							end
 						end
-						if go and hp then
+						local go,bpts=goD,psD
+						if not go then go,bpts=goA,psA end
+						if go and bpts then
 							nxt=now+0.8
 							TPBusy=now
 							local origin=r.CFrame
-							r.CFrame=CFrame.new(hp.Position)
+							local c0=centerOf(go,bpts)
+							if c0 then r.CFrame=CFrame.new(c0) end
 							task.spawn(function()
 								local got=false
 								for i=1,8 do
-									if not hp.Parent then got=true break end
-									if held(LP.Character) then got=true break end
+									if not go.Parent then got=true break end
+									if toolCount()>n0 then got=true break end
+									local cc=LP.Character
+									local rr=cc and cc:FindFirstChild("HumanoidRootPart")
+									if not rr then break end
+									for _,pp in ipairs(bpts) do
+										if pp.Parent and pp.CanTouch~=false and firetouchinterest then
+											pcall(firetouchinterest,pp,rr,0)
+											pcall(firetouchinterest,pp,rr,1)
+										end
+									end
 									for _,d in ipairs(go:GetChildren()) do
 										if d:IsA("ProximityPrompt") then
 											pcall(function() d.Enabled=true d.MaxActivationDistance=math.max(tonumber(d.MaxActivationDistance) or 10,16) end)
 											pcall(function() d:InputHoldBegin() d:InputHoldEnd() end)
-										end
-									end
-									if firetouchinterest then
-										local cc=LP.Character
-										if cc then
-											for _,bp2 in ipairs(cc:GetChildren()) do
-												if bp2:IsA("BasePart") and bp2.Parent then
-													pcall(firetouchinterest,hp,bp2,0)
-													pcall(firetouchinterest,hp,bp2,1)
-												end
-											end
 										end
 									end
 									task.wait(0.07)
