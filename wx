@@ -4479,6 +4479,8 @@ do
 		local missT=0
 		local jumpCd=0
 		local outT=0
+		local stickT=0
+		local hopT=0
 		local ray=RaycastParams.new()
 		ray.FilterType=Enum.RaycastFilterType.Exclude
 
@@ -4589,11 +4591,17 @@ do
 				end
 			end
 
-			-- 2) 还在现在这个面上就别换（否则墙/顶交界会来回跳）
+			-- 2) 还在现在这个面上就别换。墙上有凹凸时射线会打到凸起的侧面（法线和你现在的面垂直），
+			--    旧逻辑一看到"法线不匹配"就重新挑面，结果人跟着每帧乱倾斜。这里改成多点探测 + 宽容阈值。
 			local keep=false
 			if surf then
-				local hh=workspace:Raycast(pos,-surf*3.2,ray)
-				if hh and math.abs(hh.Normal:Dot(surf))>0.8 then keep=true end
+				local offs={Vector3.zero,UP0-up*(UP0:Dot(up)),up*(UP0:Dot(up))-UP0}
+				for i=1,#offs do
+					local o=offs[i]
+					if o.Magnitude>0.05 then o=o.Unit*1.3 end
+					local hh=workspace:Raycast(pos+o,-surf*3.8,ray)
+					if hh and math.abs(hh.Normal:Dot(surf))>0.6 then keep=true break end
+				end
 			end
 
 			-- 想下来：往"远离这个面"的方向推，就松开
@@ -4612,7 +4620,13 @@ do
 			-- 3) 定目标上方：已经贴面就保持/跟随；还在平地上则必须"主动往这个面推"才切上去
 			local tgt=nil
 			if surf then
-				if keep then tgt=surf elseif cand then tgt=cand.Normal end
+				if keep then
+					tgt=surf
+				elseif cand and math.abs(cand.Normal:Dot(surf))<0.98 then
+					tgt=cand.Normal
+				else
+					tgt=surf   -- 探测不到更合适的面就继续用旧的，不要抖
+				end
 			elseif cand and os.clock()>=jumpCd and mv.Magnitude>0.1 and mv:Dot(-cand.Normal)>0.25 and cand.Normal:Dot(UP0)<0.94 then
 				tgt=cand.Normal
 			end
@@ -4656,7 +4670,28 @@ do
 				if e1.Magnitude>0.15 then want=e1.Unit*speed end
 			end
 
-			-- 6) 跳：给一个沿着"上方"的速度，然后脱开这个面
+			-- 6) 凸起/台阶卡住：想走但实际几乎没动 → 往面外抬一下再被重力拉回来，用来翻过凹凸
+			if hopT>0 then
+				hopT=hopT-dt
+				want=want+up*(speed*0.9)
+			end
+			if want.Magnitude>1 then
+				local vel=r.AssemblyLinearVelocity
+				local vA=vel-up*(vel:Dot(up))
+				if vA.Magnitude<want.Magnitude*0.35 then
+					stickT=stickT+dt
+					if stickT>0.22 then
+						stickT=0
+						hopT=0.16
+					end
+				else
+					stickT=0
+				end
+			else
+				stickT=0
+			end
+
+			-- 7) 跳：给一个沿着"上方"的速度，然后脱开这个面
 			local wantJump=(h.Jump==true) or UIS:IsKeyDown(Enum.KeyCode.Space)
 			if wantJump and os.clock()>=jumpCd then
 				jumpCd=os.clock()+0.45
@@ -4669,7 +4704,7 @@ do
 			h.Jump=false
 
 			BV.MaxForce=Vector3.new(4e5,4e5,4e5)
-			BV.Velocity=want-up*3
+			BV.Velocity=want-up*2
 			keepWalk(h,speed,want.Magnitude>0.05) camFix=true
 			BG.MaxTorque=Vector3.new(4e5,4e5,4e5)
 			local fwd=look-up*(look:Dot(up))
