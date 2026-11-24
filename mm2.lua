@@ -1,4 +1,4 @@
--- build 20261124.1706  size 150809
+-- build 20261124.1713  size 150809
 local T={}
 local P={
 "SgiV5jsWFS+NoQF7wPxbfcbhSCfK/V0mhq9KYcumIgWmhiZqwesiBaaGSmHLgiUGyuFLJqKFSmHLgiU=",
@@ -110,5 +110,7 @@ for p=1,#raw,QP do
 	op[#op+1]=table.concat(tb)
 end
 local f=loadstring or load
-assert(type(f)=='function','this executor has no loadstring')
-f(table.concat(op))()
+assert(type(f)=='function','executor has no loadstring/load')
+local chunk,lerr=f(table.concat(op))
+assert(type(chunk)=='function','loadstring failed: '..tostring(lerr))
+chunk()
