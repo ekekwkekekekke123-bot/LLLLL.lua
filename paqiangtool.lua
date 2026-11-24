@@ -292,7 +292,16 @@ local function setOn(v)
 	if not v then stopAll(true) end
 end
 
-pill.MouseButton1Click:Connect(function()
+-- 覆盖整块的全透明按钮：直接点 pill 时，里面的文字/开关会吞掉点击，所以用这一层接管
+local hit = Instance.new("TextButton")
+hit.Size = UDim2.fromScale(1,1)
+hit.Position = UDim2.fromOffset(0,0)
+hit.BackgroundTransparency = 1
+hit.Text = ""
+hit.ZIndex = 3
+hit.AutoButtonColor = false
+hit.Parent = pill
+hit.MouseButton1Click:Connect(function()
 	setOn(not on)
 end)
 
