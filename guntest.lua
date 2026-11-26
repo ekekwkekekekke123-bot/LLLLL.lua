@@ -62,8 +62,8 @@ end
 local function add(l) logs[#logs+1] = l if #logs > 120 then table.remove(logs,1) end render() end
 
 local function findRemotes()
-	local rs = game:GetService("ReplicatedStorage")
 	shootRem, gunFiredRem = nil, nil
+	local rs = game:GetService("ReplicatedStorage")
 	for _, d in ipairs(rs:GetDescendants()) do
 		if d:IsA("RemoteEvent") then
 			local n = string.lower(d.Name)
@@ -71,7 +71,35 @@ local function findRemotes()
 			if n == "gunfired" then gunFiredRem = d end
 		end
 	end
-	add("Shoot 远程: " .. (shootRem and "找到" or "没找到"))
+	-- 开枪远程经常是放在「枪这个工具」里面一起复制的，ReplicatedStorage 里根本找不到
+	local function scan(container, tag)
+		if not container or shootRem then return end
+		local ok = pcall(function()
+			for _, d in ipairs(container:GetDescendants()) do
+				if d:IsA("RemoteEvent") and string.lower(d.Name) == "shoot" then
+					shootRem = d
+					add("Shoot 远程: 在「" .. tag .. "」里找到")
+					return
+				end
+			end
+		end)
+		if not ok then add("扫描「" .. tag .. "」失败") end
+	end
+	scan(LP.Character, "我的角色")
+	scan(LP:FindFirstChild("Backpack"), "我的背包")
+	scan(workspace, "场景")
+	if not shootRem then
+		pcall(function()
+			for _, d in ipairs(game:GetDescendants()) do
+				if d:IsA("RemoteEvent") and string.lower(d.Name) == "shoot" then
+					shootRem = d
+					add("Shoot 远程: 全游戏扫描找到")
+					break
+				end
+			end
+		end)
+	end
+	add("Shoot 远程: " .. (shootRem and ("找到（父级:" .. tostring(shootRem.Parent and shootRem.Parent.Name) .. "）") or "没找到"))
 	add("GunFired 广播: " .. (gunFiredRem and "已挂钩" or "没找到"))
 	if gunFiredRem then
 		pcall(function()
