@@ -912,9 +912,9 @@ local function npcMk(m)
 	local d={m=m,o={},last=-1,hpv=-1}
 	local function rg(x) table.insert(d.o,x) return x end
 	local bb=rg(B("BillboardGui",{Size=UDim2.fromOffset(170,44),StudsOffsetWorldSpace=Vector3.new(0,2.2,0),AlwaysOnTop=true,Adornee=hd,Parent=hd}))
-	local function lb(y,hh) return rg(B("TextLabel",{Size=UDim2.new(1,0,0,hh),Position=UDim2.fromOffset(0,y),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=8,TextStrokeTransparency=0.4,TextStrokeColor3=Color3.new(0,0,0),Text="",Parent=bb})) end
+	local function lb(y,hh) return rg(B("TextLabel",{Size=UDim2.new(1,0,0,hh),Position=UDim2.fromOffset(0,y),BackgroundTransparency=1,Font=Enum.Font.SourceSansBold,TextSize=8,TextColor3=Color3.fromRGB(0,255,190),TextStrokeTransparency=0.4,TextStrokeColor3=Color3.new(0,0,0),Text="",Parent=bb})) end
 	d.n=lb(0,13) d.n.TextSize=9
-	d.d=lb(14,11) d.h=lb(26,11) d.h.TextColor3=YEL
+	d.d=lb(14,11) d.h=lb(26,11) d.h.TextColor3=Color3.fromRGB(0,255,190)
 	d.b=rg(B("Frame",{BackgroundTransparency=1,BorderSizePixel=0,Visible=false,ZIndex=900,Parent=NG}))
 	d.bs=Instance.new("UIStroke") d.bs.Thickness=1.5 d.bs.Color=Color3.fromRGB(0,255,180) d.bs.Parent=d.b
 	ND[m]=d
@@ -2762,7 +2762,56 @@ bt(pgI,"一键互动全部",function()
 	end
 end)
 hd(pgN,"NPC") T(pgN,"启用","NpcOn",false) T(pgN,"NPC高亮","NpcHl",false) T(pgN,"NPC方框","NpcBx",false) T(pgN,"NPC名称","NpcNm",false) T(pgN,"NPC血量","NpcHp",false) T(pgN,"NPC距离","NpcDs",false)
+--==== 客户端天空颜色 / 画面感 / 增强画质（纯客户端，不发给服务器）====
+local LIGHT=game:GetService("Lighting")
+local SKYCLR={["黑色"]=Color3.fromRGB(0,0,0),["白色"]=Color3.fromRGB(255,255,255),["黄色"]=Color3.fromRGB(255,230,120),["青色"]=Color3.fromRGB(120,235,255),["蓝色"]=Color3.fromRGB(90,140,255),["绿色"]=Color3.fromRGB(120,255,160),["紫色"]=Color3.fromRGB(190,140,255),["粉色"]=Color3.fromRGB(255,150,210),["红色"]=Color3.fromRGB(255,90,90)}
+S.SkyColor=S.SkyColor or "黑色"
+S.Look=S.Look or "原生"
+local function ccGet()
+	local e=LIGHT:FindFirstChild("wx_cc")
+	if e and not e:IsA("ColorCorrectionEffect") then pcall(function() e:Destroy() end) e=nil end
+	if not e then e=Instance.new("ColorCorrectionEffect") e.Name="wx_cc" pcall(function() e.Parent=LIGHT end) end
+	return e
+end
+function skyApply()
+	pcall(function()
+		local e=ccGet()
+		if S.SkyOn then
+			local c=SKYCLR[S.SkyColor or "黑色"] or SKYCLR["黑色"]
+			e.TintColor=c e.Brightness=0.02 e.Contrast=0.06 e.Saturation=0.05
+		else
+			e.TintColor=Color3.fromRGB(255,255,255) e.Brightness=0 e.Contrast=0 e.Saturation=0
+		end
+	end)
+end
+local LOOKS={["冷清"]={t=Color3.fromRGB(190,215,255),s=-0.35,c=0.12,b=-0.02},["电影"]={t=Color3.fromRGB(255,240,225),s=-0.05,c=0.28,b=0.01},["写实"]={t=Color3.fromRGB(255,250,245),s=0.08,c=0.10,b=0.03},["凄凉"]={t=Color3.fromRGB(170,200,205),s=-0.55,c=0.05,b=-0.05},["鲜艳"]={t=Color3.fromRGB(255,255,255),s=0.45,c=0.16,b=0.02},["原生"]={t=Color3.fromRGB(255,255,255),s=0,c=0,b=0}}
+function lookApply()
+	pcall(function()
+		local e=ccGet() local p=LOOKS[S.Look or "原生"] or LOOKS["原生"]
+		e.TintColor=p.t e.Saturation=p.s e.Contrast=p.c e.Brightness=p.b
+	end)
+end
+local HQ_SAVE=nil
+function hiqApply()
+	pcall(function()
+		local ok,st=pcall(function() return settings() end)
+		if ok and st and st.Rendering then st.Rendering.QualityLevel=(S.HiQ and Enum.QualityLevel.Level10) or Enum.QualityLevel.Level01 end
+	end)
+	if S.HiQ then
+		if not HQ_SAVE then HQ_SAVE={gs=LIGHT.GlobalShadows,eds=LIGHT.EnvironmentDiffuseScale,ess=LIGHT.EnvironmentSpecularScale,fe=LIGHT.FogEnd} end
+		pcall(function() LIGHT.GlobalShadows=true LIGHT.EnvironmentDiffuseScale=1 LIGHT.EnvironmentSpecularScale=1 if (LIGHT.FogEnd or 0)<5000 then LIGHT.FogEnd=5000 end end)
+	else
+		if HQ_SAVE then
+			pcall(function() LIGHT.GlobalShadows=HQ_SAVE.gs LIGHT.EnvironmentDiffuseScale=HQ_SAVE.eds LIGHT.EnvironmentSpecularScale=HQ_SAVE.ess LIGHT.FogEnd=HQ_SAVE.fe end)
+			HQ_SAVE=nil
+		end
+	end
+end
 hd(pgV,"画面") T(pgV,"普通夜视","NV",false) T(pgV,"超亮夜视","NVX",false) T(pgV,"去雾","NoFog",false) T(pgV,"防摄像机晃动","NoShake",false) T(pgV,"自由视角","FC",false) nb(pgV,"自由视角速度","FCSpd",S.FCSpd,"1-15",1,15)
+tg(pgV,"修改天空颜色（客户端）",false,function(v) S.SkyOn=v pcall(skyApply) end)
+sg(pgV,"选择颜色",{"黑色","白色","黄色","青色","蓝色","绿色","紫色","粉色","红色"},S.SkyColor,function(v) S.SkyColor=v pcall(skyApply) end)
+tg(pgV,"增强画质",false,function(v) S.HiQ=v pcall(hiqApply) end)
+sg(pgV,"切换画面感",{"冷清","电影","写实","凄凉","鲜艳","原生"},S.Look,function(v) S.Look=v pcall(lookApply) end)
 hd(pgW,"危险")
 bt(pgW,"自杀",function() local _,h=chr() if h then pcall(function() h.Health=0 end) end end)
 bt(pgW,"原位自杀",function()
