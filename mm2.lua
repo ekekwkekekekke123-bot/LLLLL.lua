@@ -2681,48 +2681,6 @@ mkToggle2("自动传送捡枪","GunPick")
 -- 依据抓包：掉落枪的判定盒叫 GunDrop（1x1x1、CanTouch=true、锚定、带 TouchTransmitter），
 -- 刀掉出来叫 KnifeDrop。碰到它才算捡到，碰枪身没用。
 _G.MM2SNATCH = true
---==== 出局门禁：本回合一旦出局，捡枪 / 传送捡枪全部停手，直到下一回合开始 ====
-_G.MM2OUT = false
-do
-	local lastR = tonumber(_G.MM2ROUND) or 0
-	local function lockOut()
-		if _G.MM2OUT then return end
-		_G.MM2OUT = true
-		PICKREQ = nil
-		pcall(function() mmToast("已出局 · 本回合不再捡枪") end)
-	end
-	local function bindH()
-		local c = LP.Character
-		local h = c and c:FindFirstChildOfClass("Humanoid")
-		if not h then return end
-		if h:GetAttribute("mm2OutBind") then return end
-		h:SetAttribute("mm2OutBind", true)
-		h.Died:Connect(function() lockOut() end)
-	end
-	pcall(bindH)
-	LP.CharacterAdded:Connect(function()
-		_G.MM2OUT = false
-		tWait(0.3)
-		pcall(bindH)
-	end)
-	tSpawn(function()
-		while gui.Parent do
-			tWait(0.4)
-			pcall(function()
-				-- ① 血量/角色判死（Died 事件偶发不触发，血量兜底）
-				local c = LP.Character
-				local h = c and c:FindFirstChildOfClass("Humanoid")
-				if (h and h.Health <= 0) or (c and not h) then lockOut() end
-				-- ② 新回合兜底：MM2ROUND 由 0 变非 0 = 开新回合，解锁
-				local rr = tonumber(_G.MM2ROUND) or 0
-				if rr ~= lastR then
-					lastR = rr
-					if rr > 0 then _G.MM2OUT = false end
-				end
-			end)
-		end
-	end)
-end
 do
 	local busy = false
 	local function myCharR()
@@ -2799,19 +2757,28 @@ do
 		while true do
 			tWait(0.1)
 			if AU.GunPick or (PICKREQ and os.clock() - PICKREQ < 3) then
-				if _G.MM2OUT then
-					-- 本回合已出局：直接放弃，不再传送
-					PICKREQ = nil
-				else
-					local part = findDrop()
-					if part then
+				local part = findDrop()
+				if part then
+					--==== 距离门禁：掉落枪离自己超过 MM2PKMAX（默认 4000 格）就不传送 ====
+					local _, r = myCharR()
+					local dist = 0
+					pcall(function() if r then dist = (part.Position - r.Position).Magnitude end end)
+					local maxD = tonumber(_G.MM2PKMAX) or 4000
+					if r and dist <= maxD then
 						snatch(part)
 						-- 手动点「捡枪」只来回传送一次，不再重复
 						if (not AU.GunPick) and PICKREQ then PICKREQ = nil end
 						tWait(0.4)
 					else
-						if (not AU.GunPick) and PICKREQ then PICKREQ = nil end
+						-- 太远（人还在大厅 / 已经出局）：不传送
+						if PICKREQ then
+							PICKREQ = nil
+							local msg = r and ("太远（"..tostring(math.floor(dist)).."格）· 不传送") or "没有角色 · 不传送"
+							pcall(function() mmToast(msg) end)
+						end
 					end
+				else
+					if (not AU.GunPick) and PICKREQ then PICKREQ = nil end
 				end
 			end
 		end
@@ -2828,7 +2795,6 @@ local function mkBtn2(name,cb)
 	return row
 end
 mkBtn2("捡枪", function()
-	if _G.MM2OUT then pcall(function() mmToast("已出局 · 等下一回合") end) return end
 	PICKREQ=os.clock() local t0=PICKREQ tDelay(1.5,function() if PICKREQ==t0 then pcall(function() mmToast("没找到掉落枪") end) end end)
 end)
 tSpawn(function()
