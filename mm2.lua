@@ -2687,6 +2687,21 @@ do
 		local c = LP.Character
 		return c, c and (c:FindFirstChild("HumanoidRootPart") or c.PrimaryPart)
 	end
+	--==== 硬限制：自己身上/背包里有 Knife = 自己是杀手 → 永不传送捡枪 ====
+	local function selfHasKnife()
+		local function chk(par)
+			if not par then return false end
+			local ok, kids = pcall(function() return par:GetChildren() end)
+			if not ok then return false end
+			for _, o in ipairs(kids) do
+				if o:IsA("Tool") and string.find(string.lower(tostring(o.Name)), "knife", 1, true) then return true end
+			end
+			return false
+		end
+		if chk(LP.Character) then return true end
+		if chk(LP.Backpack) then return true end
+		return false
+	end
 	local function isDropPart(o)
 		if not o or not o:IsA("BasePart") then return false end
 		local n = string.lower(tostring(o.Name))
@@ -2757,6 +2772,13 @@ do
 		while true do
 			tWait(0.1)
 			if AU.GunPick or (PICKREQ and os.clock() - PICKREQ < 3) then
+				if selfHasKnife() then
+					--==== 硬限制：身上/背包里有 Knife（自己是杀手）→ 永不传送捡枪 ====
+					if PICKREQ then
+						PICKREQ = nil
+						pcall(function() mmToast("你是杀手 · 不捡枪") end)
+					end
+				else
 				local part = findDrop()
 				if part then
 					--==== 距离门禁：掉落枪离自己超过 MM2PKMAX（默认 4000 格）就不传送 ====
@@ -2779,6 +2801,7 @@ do
 					end
 				else
 					if (not AU.GunPick) and PICKREQ then PICKREQ = nil end
+				end
 				end
 			end
 		end
